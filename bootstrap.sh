@@ -53,6 +53,8 @@ echo "[Process Start]
 # export global env path
 export DOT_FILES="$HOME/Documents/dotfiles"
 export WASTE_BASKET="$HOME/.local/share/Trash"
+export ZSH="$HOME/.local/share/oh-my-zsh"
+export ZSH_CUSTOM="$ZSH/custom"
 
 error_cnt=0
 
