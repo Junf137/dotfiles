@@ -130,7 +130,7 @@ if [ $error_cnt == 0 ]; then
     echo -e ""
     echo -e "********************************************************"
     echo -e "Almost done, there are few things you need to do:"
-    echo -e "  1.Please change your password in $DOT_FILES.update"
+    echo -e "  1.Please change your password in $DOT_FILES/utils/update_auto"
     echo -e "  2.check what else files you need in $DOT_FILES that didn't automatically linked by this script"
     echo -e ""
     echo -e "--*               Enjoy your day!  :D                *--"

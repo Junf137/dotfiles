@@ -131,9 +131,9 @@ cat "$DOT_FILES/msg/msg_welcome"
 # ============================================================
 # custom bash-script
 # ============================================================
-# source $DOT_FILES/handy_tools/del.sh
-# source $DOT_FILES/handy_tools/cdls.sh
-source $DOT_FILES/handy_tools/update_auto.sh
+# source $DOT_FILES/utils/del.sh
+# source $DOT_FILES/utils/cdls.sh
+source $DOT_FILES/utils/update_auto.sh
 
 
 # correting mistake-typing

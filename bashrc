@@ -132,9 +132,9 @@ cat "$DOT_FILES/msg/msg_welcome"
 # ============================================================
 # custom bash-script
 # ============================================================
-# source $DOT_FILES/handy_tools/del.sh
-# source $DOT_FILES/handy_tools/cdls.sh
-source $DOT_FILES/handy_tools/update_auto.sh
+# source $DOT_FILES/utils/del.sh
+# source $DOT_FILES/utils/cdls.sh
+source $DOT_FILES/utils/update_auto.sh
 
 
 # correting mistake-typing
@@ -189,27 +189,27 @@ alias gc="git commit"
 # keymapping
 # ============================================================
 # hjkl move
-bindkey '\eh' backward-char
-bindkey '\el' forward-char
-bindkey '\ej' down-line-or-history
-bindkey '\ek' up-line-or-history
-bindkey '\eH' backward-word
-bindkey '\eL' forward-word
-bindkey '\eJ' beginning-of-line
-bindkey '\eK' end-of-line
-
-bindkey -s '\ev' 'vim\n'
-bindkey -s '\eu' 'cd ..\n'
-bindkey -s '\ei' 'll \n'
-bindkey -s '\eI' 'ls \n'
-
-# up, down, left, right
-bindkey '\e[1;3D' backward-word
-bindkey '\e[1;3C' forward-word
-bindkey '\e[1;3A' beginning-of-line
-bindkey '\e[1;3B' end-of-line
-
-bindkey '\ef' autosuggest-accept
+# bindkey '\eh' backward-char
+# bindkey '\el' forward-char
+# bindkey '\ej' down-line-or-history
+# bindkey '\ek' up-line-or-history
+# bindkey '\eH' backward-word
+# bindkey '\eL' forward-word
+# bindkey '\eJ' beginning-of-line
+# bindkey '\eK' end-of-line
+# 
+# bindkey -s '\ev' 'vim\n'
+# bindkey -s '\eu' 'cd ..\n'
+# bindkey -s '\ei' 'll \n'
+# bindkey -s '\eI' 'ls \n'
+# 
+# # up, down, left, right
+# bindkey '\e[1;3D' backward-word
+# bindkey '\e[1;3C' forward-word
+# bindkey '\e[1;3A' beginning-of-line
+# bindkey '\e[1;3B' end-of-line
+# 
+# bindkey '\ef' autosuggest-accept
 
 
 
