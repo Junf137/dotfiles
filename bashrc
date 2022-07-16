@@ -120,73 +120,97 @@ fi
 # ============================================================
 # Initialization(set up env)
 # ============================================================
-
-# env WASTE_BASKET
-export WASTE_BASKET="$HOME/.junk"
-if [[ ! -d "$WASTE_BASKET" ]]; then
-    mkdir $WASTE_BASKET
-fi
-
-# env DOT_FILES
-export DOT_FILES="$HOME/Documents/dotfiles/"
-
-# If not running interactively, don't do anything ???
-case $- in
-    *i*) ;;
-      *) return;;
-esac
+export PATH="$HOME/.local/bin:$PATH"
+export TRASH="$HOME/.local/share/Trash"
+export DOT_FILES="$HOME/Documents/dotfiles"
 
 # print welcome msg
-figlet Welcome eric
+cat "$DOT_FILES/msg/msg_welcome"
+
+
 
 # ============================================================
 # custom bash-script
 # ============================================================
-source $DOT_FILES/portable_shell_script/del.sh
-source $DOT_FILES/portable_shell_script/cdls.sh
+# source $DOT_FILES/handy_tools/del.sh
+# source $DOT_FILES/handy_tools/cdls.sh
+source $DOT_FILES/handy_tools/update_auto.sh
 
 
-# mistake-typing
-# """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+# correting mistake-typing
 alias ..="cd .."
-
+alias ll="ls -lath --color=auto"
 alias la="ll"
 alias lsa="ll"
-alias ll="ls -lath --color=auto"
-
+alias ls="ls --color=auto"
 alias sl="ls"
 alias l="ls"
-alias ls="ls --color=auto"
-
 alias dc="cd"
 
 
 # secur-typing
-# """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-alias rmi="rm -r -i"
-alias cpi="cp -i"
-alias mvi="mv -i"
+alias cp="cp -i"
+alias mv="mv -i"
 
+# trash-cli
+alias rm="trash"
+alias tcd="cd $TRASH"
+alias tlist="trash-list"
+alias trestore="trash-restore"
+alias trm="trash-rm"
+alias tempty="trash-empty"
 
 # short-command
-# """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 alias tls="tmux ls"
 alias tks="tmux kill-session -t"
 
+# conda
 alias condaa="conda activate"
 alias condad="conda deactivate"
 
-alias bash_config="vim $HOME/.bashrc"
-alias zsh_config="vim $HOME/.zshrc"
+# vim-configuration
+alias bashConfig="vim $HOME/.bashrc"
+alias zshConfig="vim $HOME/.zshrc"
+alias vimConfig="vim $HOME/.vimrc"
+alias ohmyzshConfig="vim $HOME/.oh-my-zsh"
+
 
 # Add an "alert" alias for long running commands.  Use like so:
 #   sleep 10; alert
 alias alert='notify-send --urgency=low -i "$([ $? = 0 ] && echo terminal || echo error)" "$(history|tail -n1|sed -e '\''s/^\s*[0-9]\+\s*//;s/[;&|]\s*alert$//'\'')"'
 
 # git-short-command
-# """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 alias gs="git status"
 alias gc="git commit"
+
+
+
+# ============================================================
+# keymapping
+# ============================================================
+# hjkl move
+bindkey '\eh' backward-char
+bindkey '\el' forward-char
+bindkey '\ej' down-line-or-history
+bindkey '\ek' up-line-or-history
+bindkey '\eH' backward-word
+bindkey '\eL' forward-word
+bindkey '\eJ' beginning-of-line
+bindkey '\eK' end-of-line
+
+bindkey -s '\ev' 'vim\n'
+bindkey -s '\eu' 'cd ..\n'
+bindkey -s '\ei' 'll \n'
+bindkey -s '\eI' 'ls \n'
+
+# up, down, left, right
+bindkey '\e[1;3D' backward-word
+bindkey '\e[1;3C' forward-word
+bindkey '\e[1;3A' beginning-of-line
+bindkey '\e[1;3B' end-of-line
+
+bindkey '\ef' autosuggest-accept
+
 
 
 # >>> conda initialize >>>
@@ -204,3 +228,8 @@ fi
 unset __conda_setup
 # <<< conda initialize <<<
 
+
+# automatically start conda environment
+if command -v conda >/dev/null 2>&1; then
+    conda activate base
+fi

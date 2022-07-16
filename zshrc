@@ -72,7 +72,7 @@ HIST_STAMPS="yyyy-mm-dd"
 # Add wisely, as too many plugins slow down shell startup.
 plugins=(
     git
-    git-open
+#    git-open
     z
     sudo
     zsh-autosuggestions
@@ -138,17 +138,18 @@ source $DOT_FILES/handy_tools/update_auto.sh
 
 # correting mistake-typing
 alias ..="cd .."
+alias ll="ls -lath --color=auto"
 alias la="ll"
 alias lsa="ll"
-alias ll="ls -lath --color=auto"
+alias ls="ls --color=auto"
 alias sl="ls"
 alias l="ls"
-alias ls="ls --color=auto"
 alias dc="cd"
 
 
 # secur-typing
 alias cp="cp -i"
+alias mv="mv -i"
 
 # trash-cli
 alias rm="trash"

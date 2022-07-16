@@ -7,7 +7,8 @@
 	excludesfile = /home/eric/.gitignore_global
 [alias]
 	last = log -1 HEAD
-	graph = log --all --graph --decorate --oneline
+	graph = log --all --graph --decorate
+	oneline = log --all --graph --decorate --oneline
 	co = checkout
 	br = branch
 [credential]

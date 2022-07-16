@@ -10,20 +10,20 @@ let mapleader=","
 "   Plugins setting
 " =============================================================================
 " ---* call plugins
-call plug#begin('~/.vim/plugged')
-    Plug 'preservim/nerdtree'                       " display directory
-    Plug 'ryanoasis/vim-devicons'                   " add file icon in NERDTree
-    Plug 'tiagofumo/vim-nerdtree-syntax-highlight'  " highlight file in NERDTree
-    Plug 'Yggdroot/LeaderF', { 'do': ':LeaderfInstallCExtension' }  " search file, search function
-    Plug 'mhinz/vim-startify'                       " display most recently used file when vim started with no arguments
-    Plug 'Valloric/YouCompleteMe'                   " completion
-    " Plug 'dense-analysis/ale'                       " asynchronous lint engine
-    Plug 'scrooloose/nerdcommenter'                 " shortcut for comment(optional)
-    Plug 'vim-airline/vim-airline'                  " modify display in bottom status line and head line, display buffer
-    Plug 'vim-airline/vim-airline-themes'           " theme for air-line
-    Plug 'yggdroot/indentline'                      " show indent line with nested code layer
-    Plug 'tpope/vim-surround'                       " trick for surround symbol
-call plug#end()
+"call plug#begin('~/.vim/plugged')
+"    Plug 'preservim/nerdtree'                       " display directory
+"    Plug 'ryanoasis/vim-devicons'                   " add file icon in NERDTree
+"    Plug 'tiagofumo/vim-nerdtree-syntax-highlight'  " highlight file in NERDTree
+"    Plug 'Yggdroot/LeaderF', { 'do': ':LeaderfInstallCExtension' }  " search file, search function
+"    Plug 'mhinz/vim-startify'                       " display most recently used file when vim started with no arguments
+"    Plug 'Valloric/YouCompleteMe'                   " completion
+"    " Plug 'dense-analysis/ale'                       " asynchronous lint engine
+"    Plug 'scrooloose/nerdcommenter'                 " shortcut for comment(optional)
+"    Plug 'vim-airline/vim-airline'                  " modify display in bottom status line and head line, display buffer
+"    Plug 'vim-airline/vim-airline-themes'           " theme for air-line
+"    Plug 'yggdroot/indentline'                      " show indent line with nested code layer
+"    Plug 'tpope/vim-surround'                       " trick for surround symbol
+"call plug#end()
 
 
 " ---* nerdtree
@@ -275,16 +275,17 @@ nnoremap <silent>  iecho "[Log]: "<ESC>i
 
 
 " ---* shortcut for Warning print
-inoremap <silent>  echo "[Warring]: "<ESC>i
-nnoremap <silent>  iecho "[Warring]: "<ESC>i
+"inoremap <silent>  echo "[Warring]: "<ESC>i
+"nnoremap <silent>  iecho "[Warring]: "<ESC>i
 
 
 " ---* using vim build-in register as clipboard
-xnoremap y "*y
-nnoremap y "*y
-xnoremap d "*d
-nnoremap d "*d
-nnoremap p "*p
+" requiring vim-gtk or other version of vim that support build-in rgister
+"xnoremap y "*y
+"nnoremap y "*y
+"xnoremap d "*d
+"nnoremap d "*d
+"nnoremap p "*p
 
 
 

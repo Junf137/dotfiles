@@ -52,7 +52,7 @@ echo "[Process Start]
 
 # export global env path
 export DOT_FILES="$HOME/Documents/dotfiles"
-export WASTE_BASKET="$HOME/.local/share/Trash"
+export TRASH="$HOME/.local/share/Trash"
 export ZSH="$HOME/.local/share/oh-my-zsh"
 export ZSH_CUSTOM="$ZSH/custom"
 
@@ -75,7 +75,7 @@ for ((i=0;i<${#link_array[*]};i++)); do
                 echo -e "[Log]: rm $HOME/.${link_array[$i]}"
                 rm $HOME/.${link_array[$i]}
                 if [ $? == 1 ]; then
-                    exit_script rm_failed
+                    error_print rm_failed
                 fi
 
                 echo -e "[Log]: ln -s $DOT_FILES/${link_array[$i]} $HOME/.${link_array[$i]}" >> ./bootstrap.log
