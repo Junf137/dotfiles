@@ -2,7 +2,7 @@
 
 
 update_auto() {
-    local passwd="eriCode"
+    local passwd=""
     echo $passwd |  sudo -S apt update
     echo $passwd |  sudo -S apt upgrade -y
 }

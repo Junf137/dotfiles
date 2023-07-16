@@ -129,7 +129,7 @@ cat "$DOT_FILES/msg/msg_welcome"
 
 
 # ============================================================
-# custom bash-script
+# custom zsh-script
 # ============================================================
 # source $DOT_FILES/utils/del.sh
 # source $DOT_FILES/utils/cdls.sh
@@ -148,11 +148,11 @@ alias dc="cd"
 
 
 # secur-typing
+alias rm="rm -i"
 alias cp="cp -i"
 alias mv="mv -i"
 
 # trash-cli
-alias rm="trash"
 alias tcd="cd $TRASH"
 alias tlist="trash-list"
 alias trestore="trash-restore"
@@ -209,23 +209,3 @@ bindkey '\e[1;3B' end-of-line
 
 bindkey '\ef' autosuggest-accept
 
-
-# >>> conda initialize >>>
-# !! Contents within this block are managed by 'conda init' !!
-__conda_setup="$('/home/eric/.local/share/miniconda3/bin/conda' 'shell.zsh' 'hook' 2> /dev/null)"
-if [ $? -eq 0 ]; then
-    eval "$__conda_setup"
-else
-    if [ -f "/home/eric/.local/share/miniconda3/etc/profile.d/conda.sh" ]; then
-        . "/home/eric/.local/share/miniconda3/etc/profile.d/conda.sh"
-    else
-        export PATH="/home/eric/.local/share/miniconda3/bin:$PATH"
-    fi
-fi
-unset __conda_setup
-# <<< conda initialize <<<
-
-# automatically start conda environment
-if command -v conda >/dev/null 2>&1; then
-    conda activate base
-fi
