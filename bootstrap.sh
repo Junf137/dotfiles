@@ -1,149 +1,150 @@
 #!/bin/bash
 
-# __auther__ == eric
+# __auther__ == Junfeng Lei
 # --------------------------------
 # Description:
-#   links dots files to your home directory
+#   Linking dot files to home directory
 # usage:
 # 	1) ./bootstrap.sh
-# 	2) sh ./bootstrap.sh
 # --------------------------------
 
+# ---* Global Variable *---
+# Set log file name
+LOG_FILE_NAME="bootstrap_$(date +'%Y_%m_%d_%H_%M_%S').log"
+# Keep recording error count
+error_cnt=0
 
-# detect whether command foo exist - (1)
-# command -v foo >/dev/null 2>&1 || { echo >&2 "I require foo but it's not installed.  Aborting." }
-
-# detect whether command foo exist - (2)
-# if command -v git >/dev/null 2>&1; then
-#     echo "foo exist"
-# else
-#     echo "foo doesn't exist"
-# fi
-
-
-
-
-# --------------------------------
-# Description:
-#   Terminate this shell script and print limited information at the same time.
-# Usage:
-#   error_print 0
-#   error_print information
-# --------------------------------
-function error_print() {
-    if [ $# != 0 ]; then    # parameters are given
-        echo -e "[Log]: Error_[$1]" >> ./bootstrap.log
-        echo -e "[Log]: Error_[$1]"
-    fi
-    error_cnt=$(($error_cnt+1))
-}
-
-
-
-# ---* Process Start *---
-cat "./msg/msg_enjoy_your_day"  # print welcome msg
-echo -e "current time: $(date +%F%t%T)" >> ./bootstrap.log
-echo -e "current time: $(date +%F%t%T)"
-echo "  -------------------------------------------------------------------  " >> ./bootstrap.log
-echo "  -------------------------------------------------------------------  "
-echo "[Process Start]
---* This script helps you finish trivial settings *--
-"
-
-# export global env path
+# ---* Global env *---
 export DOT_FILES="$HOME/Documents/dotfiles"
-export TRASH="$HOME/.local/share/Trash"
 export ZSH="$HOME/.local/share/oh-my-zsh"
 export ZSH_CUSTOM="$ZSH/custom"
 
-error_cnt=0
+export ORI_PATH="$DOT_FILES"
+export DST_PATH="$HOME"
 
-# create link in home directory
-link_array=(bashrc vimrc tmux.conf gitconfig zshrc)
-for ((i=0;i<${#link_array[*]};i++)); do
-    echo -e "--* $HOME/.${link_array[$i]}"
-
-    if [ -L "$HOME/.${link_array[$i]}"  ] || [ -f "$HOME/.${link_array[$i]}"  ]; then
-        echo -e "[Warning]: $HOME/.${link_array[$i]} already exist!"
-        echo -n "Continue and delete it ? Your data won't be saved [y/n] >> "
-        read ifDelete
-        echo -e ""
-
-        case $ifDelete in
-            [yY])
-                echo -e "[Log]: rm $HOME/.${link_array[$i]}" >> ./bootstrap.log
-                echo -e "[Log]: rm $HOME/.${link_array[$i]}"
-                rm $HOME/.${link_array[$i]}
-                if [ $? == 1 ]; then
-                    error_print rm_failed
-                fi
-
-                echo -e "[Log]: ln -s $DOT_FILES/${link_array[$i]} $HOME/.${link_array[$i]}" >> ./bootstrap.log
-                echo -e "[Log]: ln -s $DOT_FILES/${link_array[$i]} $HOME/.${link_array[$i]}"
-                ln -s $DOT_FILES/${link_array[$i]} $HOME/.${link_array[$i]}
-                if [ $? == 1 ]; then
-                    error_print link_failed
-                fi
-                ;;
-            [nN])
-                error_print FILE_EXIST
-                ;;
-            *)
-                echo "[Warning]: Invalid option, enter y or n, plz:)"
-                error_print FILE_EXIST
-                ;;
-        esac
-
-    else
-        echo -e "[Log]: ln -s $DOT_FILES/${link_array[$i]} $HOME/.${link_array[$i]}" >> ./bootstrap.log
-        echo -e "[Log]: ln -s $DOT_FILES/${link_array[$i]} $HOME/.${link_array[$i]}"
-        ln -s $DOT_FILES/${link_array[$i]} $HOME/.${link_array[$i]}
-        if [ $? == 1 ]; then
-            error_print link_failed
-        fi
+# ---* Functions *---
+function error_print() {
+    if [ $# != 0 ]; then    # parameters are given
+        echo -e "[Error]: $1"
     fi
 
-    echo ""
+    error_cnt=$(($error_cnt+1))
+}
+
+function log_print() {
+    if [ $# != 0 ]; then    # parameters are given
+        echo -e "[Log]: $1"
+    fi
+}
+
+function warn_print() {
+    if [ $# != 0 ]; then    # parameters are given
+        echo -e "[Warn]: $1"
+    fi
+}
+
+create_soft_link() {
+    # Check if the required number of arguments is provided
+    if [ "$#" -ne 2 ]; then
+        error_print "Usage: create_soft_link ori_name dst_name"
+        return 1
+    fi
+
+    ori_name="$1"
+    dst_name="$2"
+
+    log_print "$dst_name -> $ori_name"
+
+    # Check if the destination file already exists
+    if [ -e "$dst_name" ]; then
+        warn_print "File '$dst_name' already exists."
+
+        # Ask the user whether to delete the existing file
+        read -p "Do you want to delete it and create a symbolic link? (y/n): " choice
+
+        case "$choice" in
+            y|Y)
+                # Delete the existing file
+                if rm "$dst_name"; then
+                    log_print "File '$dst_name' deleted."
+                else
+                    error_print "Failed to delete '$dst_name'."
+                    return 1
+                fi
+                ;;
+
+            n|N)
+                # User chose not to delete the file
+                error_print "Symbolic link creation aborted."
+                return
+                ;;
+
+            *)
+                # Invalid choice
+                error_print "Invalid choice. Symbolic link creation aborted."
+                return
+                ;;
+        esac
+    fi
+
+    # Create a symbolic link
+    if ln -s "$ori_name" "$dst_name"; then
+        log_print "Symbolic link created: $dst_name -> $ori_name"
+    else
+        error_print "Failed to create symbolic link."
+        return 1
+    fi
+}
+
+# ---* Process Start *---
+
+# Redirect stdin and stdout to the log file and tee
+exec > >(tee -a "$LOG_FILE_NAME") 2>&1
+
+# Print welcome msg
+cat "./msg/msg_enjoy_your_day"
+echo -e "--------------------------------------------------"
+echo -e "time: $(date +%F%t%T)"
+echo -e "--------------------------------------------------"
+echo -e ""
+echo -e "[Process Start]"
+echo -e "--* This script helps you finish trivial settings *--"
+echo -e ""
+
+# Create link in home directory
+link_array=(bashrc vimrc tmux.conf gitconfig zshrc)
+for ((i=0;i<${#link_array[*]};i++)); do
+
+    ori_name="$ORI_PATH/${link_array[$i]}"
+    dst_name="$DST_PATH/.${link_array[$i]}"
+
+    create_soft_link "$ori_name" "$dst_name"
 done
 
-# todo
-echo -e "--* $ZSH/themes/ys_customized.zsh-theme"
+# Create link for customized zsh theme
+ori_name="$ORI_PATH/ys_customized"
+dst_name="$ZSH/themes/ys_customized.zsh-theme"
 
-if [ -L "$ZSH/themes/ys_customized.zsh-theme"  ] || [ -f "$ZSH/themes/ys_customized.zsh-theme"  ]; then
-    echo -e "[Warning]: $ZSH/themes/ys_customized.zsh-theme already exist!"
-
-    echo -e "[Log]: rm $ZSH/themes/ys_customized.zsh-theme" >> ./bootstrap.log
-    echo -e "[Log]: rm $ZSH/themes/ys_customized.zsh-theme"
-    rm $ZSH/themes/ys_customized.zsh-theme
-fi
-
-echo -e "[Log]: ln -s $DOT_FILES/ys_customized  $ZSH/themes/ys_customized.zsh-theme" >> ./bootstrap.log
-echo -e "[Log]: ln -s $DOT_FILES/ys_customized  $ZSH/themes/ys_customized.zsh-theme"
-ln -s $DOT_FILES/ys_customized  $ZSH/themes/ys_customized.zsh-theme
-echo ""
-
-
-
-
-
-if [ $error_cnt == 0 ]; then
-    echo -e ""
-    echo -e "********************************************************"
-    echo -e "Almost done, there are few things you need to do:"
-    echo -e "  1.Please change your password in $DOT_FILES/utils/update_auto"
-    echo -e "  2.check what else files you need in $DOT_FILES that didn't automatically linked by this script"
-    echo -e ""
-    echo -e "--*               Enjoy your day!  :D                *--"
-    echo -e "********************************************************"
-else
-    echo "[Log]: script executing failed" >> ./bootstrap.log
-    echo "[Log]: script executing failed"
-    echo "[Log]: total error: $error_cnt" >> ./bootstrap.log
-    echo "[Log]: total error: $error_cnt"
-    echo "[Log]: please check the error and rerun this script again :)" >> ./bootstrap.log
-    echo "[Log]: please check the error and rerun this script again :)"
-fi
+create_soft_link "$ori_name" "$dst_name"
 
 # ---* Process End *---
-echo "  -------------------------------------------------------------------  "
-echo -e "[Process End]"
+echo ""
+
+if [ $error_cnt == 0 ]; then
+    log_print ""
+    log_print "********************************************************"
+    log_print "Almost done, there are few things you need to do:"
+    log_print "  1. Change the password in $DOT_FILES/utils/update_auto"
+    log_print "  2. Check what else files you need in $DOT_FILES that didn't automatically linked by this script"
+    log_print ""
+    log_print "--*               Enjoy your day!  :D                *--"
+    log_print "********************************************************"
+else
+    log_print "script executing failed"
+    log_print "total error: $error_cnt"
+    log_print "Check the error and rerun this script :)"
+fi
+
+log_print ""
+log_print "--------------------------------------------------"
+log_print "[Process End]"
