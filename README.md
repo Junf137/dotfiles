@@ -1,18 +1,16 @@
 # README
-Personalizing your system with dotfiles.
+Personalizing your Linux system with dot-files.
 
 
 ## Usage
 ``` bash
 # ---* Attention *---
-# Don't run this script blindly unless you are aware of what effect it will take
+# Don't run this script blindly unless you are aware of what effect it will cause
 # ---*  *---
 
 ./bootstrap.sh
 ```
 
-
-## Todo-list
-1. VIM
-- ale not working properly
-- leaderF rg, goto reference, goto definition, keymapping
+## Todo
+1. Neovim
+2. LazyVim

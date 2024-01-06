@@ -1,2 +1,5 @@
 # ignore all log file
 *.log
+
+# ignore temporary file created by vim
+*.swp

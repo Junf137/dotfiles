@@ -103,42 +103,34 @@ exec > >(tee -a "$LOG_FILE_NAME") 2>&1
 
 # Print welcome msg
 cat "./msg/msg_enjoy_your_day"
-echo -e "--------------------------------------------------"
-echo -e "time: $(date +%F%t%T)"
-echo -e "--------------------------------------------------"
-echo -e ""
-echo -e "[Process Start]"
-echo -e "--* This script helps you finish trivial settings *--"
-echo -e ""
+log_print "--------------------------------------------------"
+log_print "time: $(date +%F%t%T)"
+log_print "--------------------------------------------------"
+log_print ""
+log_print "[Process Start]"
+log_print "--* This script helps you finish trivial settings *--"
+log_print ""
 
 # Create link in home directory
 link_array=(bashrc vimrc tmux.conf gitconfig zshrc)
 for ((i=0;i<${#link_array[*]};i++)); do
-
     ori_name="$ORI_PATH/${link_array[$i]}"
     dst_name="$DST_PATH/.${link_array[$i]}"
-
     create_soft_link "$ori_name" "$dst_name"
 done
 
 # Create link for customized zsh theme
 ori_name="$ORI_PATH/ys_customized"
 dst_name="$ZSH/themes/ys_customized.zsh-theme"
-
 create_soft_link "$ori_name" "$dst_name"
 
 # ---* Process End *---
-echo ""
-
 if [ $error_cnt == 0 ]; then
     log_print ""
-    log_print "********************************************************"
-    log_print "Almost done, there are few things you need to do:"
-    log_print "  1. Change the password in $DOT_FILES/utils/update_auto"
-    log_print "  2. Check what else files you need in $DOT_FILES that didn't automatically linked by this script"
-    log_print ""
-    log_print "--*               Enjoy your day!  :D                *--"
-    log_print "********************************************************"
+    log_print "--------------------------------------------------"
+    log_print "time: $(date +%F%t%T)"
+    log_print "Enjoy your day! :D"
+    log_print "--------------------------------------------------"
 else
     log_print "script executing failed"
     log_print "total error: $error_cnt"

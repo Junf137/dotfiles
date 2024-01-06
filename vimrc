@@ -10,20 +10,15 @@ let mapleader=","
 "   Plugins setting
 " =============================================================================
 " ---* call plugins
-"call plug#begin('~/.vim/plugged')
-"    Plug 'preservim/nerdtree'                       " display directory
-"    Plug 'ryanoasis/vim-devicons'                   " add file icon in NERDTree
-"    Plug 'tiagofumo/vim-nerdtree-syntax-highlight'  " highlight file in NERDTree
-"    Plug 'Yggdroot/LeaderF', { 'do': ':LeaderfInstallCExtension' }  " search file, search function
-"    Plug 'mhinz/vim-startify'                       " display most recently used file when vim started with no arguments
-"    Plug 'Valloric/YouCompleteMe'                   " completion
-"    " Plug 'dense-analysis/ale'                       " asynchronous lint engine
-"    Plug 'scrooloose/nerdcommenter'                 " shortcut for comment(optional)
-"    Plug 'vim-airline/vim-airline'                  " modify display in bottom status line and head line, display buffer
-"    Plug 'vim-airline/vim-airline-themes'           " theme for air-line
-"    Plug 'yggdroot/indentline'                      " show indent line with nested code layer
-"    Plug 'tpope/vim-surround'                       " trick for surround symbol
-"call plug#end()
+call plug#begin('~/.vim/plugged')
+    Plug 'preservim/nerdtree'                       " display directory
+    Plug 'ryanoasis/vim-devicons'                   " add file icon in NERDTree
+    Plug 'tiagofumo/vim-nerdtree-syntax-highlight'  " highlight file in NERDTree
+    Plug 'mhinz/vim-startify'                       " display most recently used file when vim started with no arguments
+    Plug 'vim-airline/vim-airline'                  " modify display in bottom status line and head line, display buffer
+    Plug 'vim-airline/vim-airline-themes'           " theme for air-line
+    Plug 'christoomey/vim-tmux-navigator'           " unify pane navigation in vim and tmux
+call plug#end()
 
 
 " ---* nerdtree
@@ -44,48 +39,6 @@ let NERDTreeShowBookmarks       = 1     " enable bookmarks
 let NERDTreeHighlightCursorline = 1     " highlight current line
 let NERDTreeShowLineNumbers     = 1     " display line number
 let NERDTreeIgnore = [ '\.pyc$', '\.pyo$', '\.obj$', '\.o$', '\.egg$', '^\.git$', '^\.repo$', '^\.svn$', '^\.hg$' ]  " set ignore file
-
-
-" ---* leaderF
-" leaderF itself is alreadyvery fast, but you can still install a extention to make it almost 10 times faster.(see more detail in github)
-let g:Lf_ShowDevIcons   = 1                                 " Show icons, icons are shown by default
-let g:Lf_DevIconsFont   = "DroidSansMono Nerd Font Mono"    " For GUI vim, the icon font can be specify like this, for example
-set ambiwidth=double                                        " If needs
-let g:Lf_HideHelp        = 1                                " don't show the help in normal mode
-let g:Lf_UseCache        = 0
-let g:Lf_UseVersionControlTool = 0
-let g:Lf_IgnoreCurrentBufferName = 1
-" popup mode
-let g:Lf_WindowPosition = 'popup'   " open leaderF ina popup window or floating window(gvim)
-let g:Lf_PreviewInPopup = 1         " open preview window in popup window(use <Ctrl-pop> again)
-let g:Lf_StlSeparator = { 'left': "\ue0b0", 'right': "\ue0b2", 'font': "DejaVu Sans Mono for Powerline" }
-let g:Lf_PreviewResult = {'Function': 0, 'BufTag': 0 }
-" keymappings
-let g:Lf_ShortcutF      = '<C-P>'
-" let g:Lf_CommandMap = {'<C-K>': ['<Left>', '<C-K>'], '<C-J>': ['<Right>', '<C-J>']}
-noremap <leader>b :<C-U><C-R>=printf("Leaderf buffer %s", "")<CR><CR>
-noremap <leader>m :<C-U><C-R>=printf("Leaderf mru %s", "")<CR><CR>
-noremap <leader>t :<C-U><C-R>=printf("Leaderf bufTag %s", "")<CR><CR>
-noremap <leader>l :<C-U><C-R>=printf("Leaderf line %s", "")<CR><CR>
-noremap <C-B> :<C-U><C-R>=printf("Leaderf! rg --current-buffer -e %s ", expand("<cword>"))<CR>
-noremap <C-F> :<C-U><C-R>=printf("Leaderf! rg -e %s ", expand("<cword>"))<CR>
-" search visually selected text literally
-xnoremap gf :<C-U><C-R>=printf("Leaderf! rg -F -e %s ", leaderf#Rg#visual())<CR>
-noremap go :<C-U>Leaderf! rg --recall<CR>
-" gtags
-let g:Lf_GtagsAutoGenerate = 1
-let g:GtagsCscope_Quiet = 1
-let g:Lf_Gtagslabel = 'native-pygments'
-" Show reference to a symbol which has definitions
-noremap <leader>r :<C-U><C-R>=printf("Leaderf! gtags --reference %s --auto-jump", expand("<cword>"))<CR><CR>
-" Show locations of definitions
-noremap <leader>d :<C-U><C-R>=printf("Leaderf! gtags --definition %s --auto-jump", expand("<cword>"))<CR><CR>
-" Recall last search. If the result window is closed, reopen it
-noremap <leader>fo :<C-U><C-R>=printf("Leaderf! gtags --recall %s", "")<CR><CR>
-" Jump to the next result
-noremap <leader>n :<C-U><C-R>=printf("Leaderf gtags --next %s", "")<CR><CR>
-" Jump to the ptprevious result
-noremap <leader>p :<C-U><C-R>=printf("Leaderf gtags --previous %s", "")<CR><CR>
 
 
 " ---* startify
@@ -119,72 +72,6 @@ let g:startify_lists = [
         \ ]
 
 
-" ---* YouCompleteMe
-let g:ycm_global_ycm_extra_conf                         = '/home/eric/.vim/plugged/YouCompleteMe/third_party/ycmd/.ycm_extra_conf.py'
-let g:ycm_min_num_of_chars_for_completion               = 2 " enable completion when 2 characters are entered
-let g:ycm_seed_identifiers_with_syntax                  = 1 " enable completion with syntax keyword
-let g:ycm_complete_in_comments                          = 1 " enable completion in comments
-let g:ycm_complete_in_strings                           = 1 " enable completion in string
-let g:ycm_collect_identifiers_from_tag_files            = 1 " using tags files generated by ctags
-let g:ycm_collect_identifiers_from_comments_and_strings = 1 " content in comments and string will be used for completion
-let g:ycm_cache_omnifunc                                = 0 " generating match every time, forbidden matching cache
-let g:ycm_use_ultisnips_completer                       = 0 " don't search ultisnips for completion, set it to 1 if needed
-let g:ycm_show_diagnostics_ui                           = 0 " forbidden syntax checking
-" Unbind keys for YouCompleteMe
-let g:ycm_key_list_select_completion                    = ['<C-j>', '<TAB>']    " choose next completion ['<TAB>', '<Down>']
-let g:ycm_key_list_previous_completion                  = ['<C-k>']             " choose last completion ['<S-TAB>', '<Up>']
-let g:ycm_key_list_stop_completion                      = ['<Enter>']           " confirm completion ['<C-y>']
-
-
-" ---* ale
-let g:ale_lint_on_text_changed       = 'normal'                     " check after text changed
-let g:ale_lint_on_insert_leave       = 1                            " check after leaving insert mode
-let g:ale_sign_column_always         = 1                            " show result dynamicly
-let g:ale_sign_error                 = '>>'
-let g:ale_sign_warning               = '--'
-let g:ale_echo_msg_error_str         = 'E'
-let g:ale_echo_msg_warning_str       = 'W'
-let g:ale_echo_msg_format            = '[%linter%] %s [%severity%]'
-" C 语言配置检查参数
-let g:ale_c_gcc_options              = '-Wall -Werror -O2 -std=c11'
-let g:ale_c_clang_options            = '-Wall -Werror -O2 -std=c11'
-let g:ale_c_cppcheck_options         = ''
-" C++ 配置检查参数
-let g:ale_cpp_gcc_options            = '-Wall -Werror -O2 -std=c++14'
-let g:ale_cpp_clang_options          = '-Wall -Werror -O2 -std=c++14'
-let g:ale_cpp_cppcheck_options       = ''
-"使用clang对c和c++进行语法检查，对python使用pylint进行语法检查
-let g:ale_linters = {
-\   'c++': ['clang', 'gcc'],
-\   'c': ['clang', 'gcc'],
-\   'python': ['pylint'],
-\}
-" <F9> toggle checking
-map <F9> :ALEToggle<CR>
-" normal mode, goto next and previous error
-nmap ,ak <Plug>(ale_previous_wrap)
-nmap ,aj <Plug>(ale_next_wrap)
-" check detailed error msg
-nmap ,ad :ALEDetail<CR>
-
-
-" ---* nerdcommenter
-" Usage:
-" (1) Comment out the current line or text selected in visual mode.
-"   [count]<leader>c<space> |NERDCommenterToggle| (recommended)
-" (2) Adds comment delimiters to the end of line and goes into insert mode between them. (default in <leader>cA, modified in plugin source code)
-"   <leader>ca |NERDCommenterAppend|
-filetype plugin on
-let g:NERDSpaceDelims            = 1                                    " Add spaces after comment delimiters by default
-let g:NERDTrimTrailingWhitespace = 1                                    " Enable trimming of trailing whitespace when uncommenting
-let g:NERDCompactSexyComs        = 1                                    " Use compact syntax for prettified multi-line comments
-let g:NERDDefaultAlign           = 'left'                               " Align line-wise comment delimiters flush left instead of following code indentation
-let g:NERDAltDelims_java         = 1                                    " Set a language to use its alternate delimiters by default
-let g:NERDCustomDelimiters       = {'c': {'left': '/*', 'right': '*/'}} " Add your own custom formats or override the defaults
-let g:NERDCommentEmptyLines      = 1                                    " Allow commenting and inverting empty lines (useful when commenting a region)
-let g:NERDToggleCheckAllLines    = 1                                    " Enable NERDCommenterToggle to check all selected lines is commented or not
-
-
 " ---* vim-airline
 let g:airline#extensions#whitespace#checks =
   \  [ 'indent', 'trailing', 'mixed-indent-file', 'conflicts' ]  " disable trailing warnings
@@ -194,7 +81,9 @@ let g:airline#extensions#ale#enabled            = 1 " enable ale integration
 let g:airline_theme                             = 'luna'  " bubblegum
 
 
-
+" =============================================================================
+"   CUSTOM SHORTCUTS  (LEADER, FN, &c)
+" =============================================================================
 " ---* setting buffer keymappings
 " (avoid using new tab if you are not familier with buffer, window and tab in vim)
 " close current buffer
@@ -217,76 +106,10 @@ nnoremap <silent> <leader>[ :bprevious<CR>
 
 
 " setting window operation
-nnoremap <silent> <Right> :vertical res+2<CR>
-nnoremap <silent> <Left> :vertical res-2<CR>
-nnoremap <silent> <Up> :res+2<CR>
-nnoremap <silent> <Down> :res-2<CR>
-
-
-" ---* vim-surround
-"   cs [current surround] [replecement surround], replace surround symbol
-"   ds [current surround], delete surround symbol
-"   csw [symbol], add surround for a word
-"   css [symbol], add surround for a line
-nmap csw ysiw
-nmap css yss
-
-
-" ---* indentline
-let g:indentLine_char_list = ['|', '¦', '┆', '┊']  " Change Indent Char
-
-
-
-" =============================================================================
-"   CUSTOM SHORTCUTS  (LEADER, FN, &c)
-" =============================================================================
-" ---* autocompile with c & c++ & Java & Python language
-noremap <F5> :call CompileRunGcc()<CR>
-func! CompileRunGcc()
-    exec "w"
-    if &filetype == 'c'
-        exec "!gcc % -o %<"
-        exec "!time ./%<"
-    elseif &filetype == 'cpp'
-        exec "!g++ % -o %<"
-        exec "!time ./%<"
-    elseif &filetype == 'java'
-        exec "!javac %"
-        exec "!time java %<"
-    elseif &filetype == 'sh'
-        :!time bash %
-    elseif &filetype == 'python'
-        exec "!time python2.7 %"
-    elseif &filetype == 'html'
-        exec "!firefox % &"
-    elseif &filetype == 'go'
-        exec "!go build %<"
-        exec "!time go run %"
-    elseif &filetype == 'mkd'
-        exec "!~/.vim/markdown.pl % > %.html &"
-        exec "!firefox %.html &"
-    endif
-endfunc
-
-
-" ---* shortcut for log print
-inoremap <silent>  echo "[Log]: "<ESC>i
-nnoremap <silent>  iecho "[Log]: "<ESC>i
-
-
-" ---* shortcut for Warning print
-"inoremap <silent>  echo "[Warring]: "<ESC>i
-"nnoremap <silent>  iecho "[Warring]: "<ESC>i
-
-
-" ---* using vim build-in register as clipboard
-" requiring vim-gtk or other version of vim that support build-in rgister
-"xnoremap y "*y
-"nnoremap y "*y
-"xnoremap d "*d
-"nnoremap d "*d
-"nnoremap p "*p
-
+" nnoremap <silent> <Right> :vertical res+2<CR>
+" nnoremap <silent> <Left> :vertical res-2<CR>
+" nnoremap <silent> <Up> :res+2<CR>
+" nnoremap <silent> <Down> :res-2<CR>
 
 
 " =============================================================================
@@ -298,7 +121,7 @@ set shortmess+=I    " Disable the default Vim startup message.
 
 
 " ---* UI Config
-set number		" show line numbers
+set number		        " show line numbers
 set relativenumber		" show relative numbering
 set laststatus=2		" Show the status line at the bottom
 
@@ -360,17 +183,18 @@ set smartcase	" But make it case sensitive if an uppercase is entered
 nnoremap // :nohlsearch<CR>
 set wildignore+=*/.git/*,*/tmp/*,*.swp  " Ignore files for completion
 
+
 " ---* Undo
 set undofile " Maintain undo history between sessions
 set undodir=~/.vim/undodir
 
 
 " ---* auto type mached (){}[]
-inoremap { {}<ESC>i<CR><ESC>V<O
-inoremap ( ()<ESC>i
-inoremap [ []<ESC>i
-inoremap < <><ESC>i
-inoremap <C-[> <ESC>
+" inoremap { {}<ESC>i<CR><ESC>V<O
+" inoremap ( ()<ESC>i
+" inoremap [ []<ESC>i
+" inoremap < <><ESC>i
+" inoremap <C-[> <ESC>
 
 
 " Try to prevent bad habits like using the arrow keys for movement. This is
