@@ -118,6 +118,10 @@ export PATH="$HOME/.local/bin:$PATH"
 export TRASH="$HOME/.local/share/Trash"
 export DOT_FILES="$HOME/Documents/dotfiles"
 
+# rust path setup
+export RUSTUP_HOME="$HOME/.local/share/rustup"
+export CARGO_HOME="$HOME/.local/share/cargo"
+
 # If not running interactively, don't do anything ???
 case $- in
     *i*) ;;
