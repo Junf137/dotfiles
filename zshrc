@@ -129,7 +129,9 @@ case $- in
 esac
 
 # print welcome msg
-cat "$DOT_FILES/msg/msg_welcome"
+echo ""
+echo ""
+rcat "$DOT_FILES/msg/msg_welcome"
 
 
 
@@ -148,7 +150,7 @@ alias ls="ls --color=auto"
 alias sl="ls"
 alias l="ls"
 alias dc="cd"
-
+alias cl="clear"
 
 # secur-typing
 alias rm="rm -i"
@@ -170,7 +172,7 @@ alias tks="tmux kill-session -t"
 alias condaa="conda activate"
 alias condad="conda deactivate"
 
-# vim-configuration
+# configuration
 alias bashConfig="vim $HOME/.bashrc"
 alias zshConfig="vim $HOME/.zshrc"
 alias vimConfig="vim $HOME/.vimrc"
@@ -184,11 +186,16 @@ alias alert='notify-send --urgency=low -i "$([ $? = 0 ] && echo terminal || echo
 # git-short-command
 alias gs="git status"
 alias gc="git commit"
-alias gl="git log --decorate --graph --oneline"
-alias gll="git log --decorate --graph"
-alias gla="git log --decorate --graph --all --oneline"
-alias glaa="git log --decorate --graph --all"
+alias gl="git log --decorate=auto --graph --oneline"
+alias gll="git log --decorate=auto --graph"
+alias gla="git log --decorate=auto --graph --all --oneline"
+alias glaa="git log --decorate=auto --graph --all"
+alias gsl="git stash list"
+alias gsp="git stash pop"
+alias gsa="git stash apply"
 
+# tmuxinator
+alias mux="tmuxinator"
 
 # ============================================================
 # keymapping
@@ -203,10 +210,10 @@ bindkey '\eL' forward-word
 bindkey '\eJ' beginning-of-line
 bindkey '\eK' end-of-line
 
-bindkey -s '\ev' 'vim\n'
-bindkey -s '\eu' 'cd ..\n'
-bindkey -s '\ei' 'll \n'
-bindkey -s '\eI' 'ls \n'
+# bindkey -s '\ev' 'vim\n'
+# bindkey -s '\eu' 'cd ..\n'
+# bindkey -s '\ei' 'll \n'
+# bindkey -s '\eI' 'ls \n'
 
 # up, down, left, right
 bindkey '\e[1;3D' backward-word

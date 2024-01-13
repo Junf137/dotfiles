@@ -121,7 +121,7 @@ done
 
 # Create link for customized zsh theme
 ori_name="$ORI_PATH/ys_customized"
-dst_name="$ZSH/themes/ys_customized.zsh-theme"
+dst_name="$ZSH_CUSTOM/themes/ys_customized.zsh-theme"
 create_soft_link "$ori_name" "$dst_name"
 
 # ---* Process End *---

@@ -7,8 +7,9 @@
 #
 # ---
 # Modified from ys.zsh-theme
-# Date: 2022/4/3
-# eric
+# Init Date: 2022/4/3
+# Update Date: 2024/3/19
+# Junfeng Lei
 
 
 # Allow substitutions and expansions in the prompt
@@ -83,7 +84,7 @@ _conda_prompt_info() {
 }
 # Call function conda_prompt_info before each prompt
 # precmd_functions is reserved functions that execute before prompt
-precmd_functions+=( _conda_prompt_info )  
+precmd_functions+=( _conda_prompt_info )
 
 # Prompt format:
 #

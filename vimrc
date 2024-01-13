@@ -78,7 +78,7 @@ let g:airline#extensions#whitespace#checks =
 let g:airline#extensions#tabline#enabled        = 1 " enable tabline
 let g:airline#extensions#tabline#buffer_nr_show = 1 " display buffer number
 let g:airline#extensions#ale#enabled            = 1 " enable ale integration
-let g:airline_theme                             = 'luna'  " bubblegum
+let g:airline_theme                             = 'luna'  " bubblegum, violet
 
 
 " =============================================================================
