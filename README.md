@@ -1,16 +1,11 @@
 # README
-Personalizing your Linux system with dot-files.
-
+Synchronizing my dotfiles
 
 ## Usage
 ``` bash
 # ---* Attention *---
-# Don't run this script blindly unless you are aware of what effect it will cause
-# ---*  *---
+# Don't run this script until you know what it does
 
-./bootstrap.sh
+git clone git@github.com:Junf137/dotfiles.git ${DOT_FILES:-$HOME/Documents/dotfiles}
+cd ${DOT_FILES:-$HOME/Documents/dotfiles} && ./bootstrap.sh
 ```
-
-## Todo
-1. Neovim
-2. LazyVim

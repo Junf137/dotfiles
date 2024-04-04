@@ -1,10 +1,10 @@
 [user]
-	name = eric
+	name = Junfeng Lei
     email = 3086638517@qq.com
 
 [core]
     editor = vim
-	excludesfile = /home/eric/.gitignore_global
+	excludesfile = ~/.gitignore_global
 
 [alias]
 
