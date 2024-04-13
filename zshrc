@@ -115,9 +115,9 @@ fi
 # ============================================================
 # Initialization(set up env)
 # ============================================================
-export PATH="$HOME/.local/bin:$PATH"
 export TRASH="$HOME/.local/share/Trash"
 export DOT_FILES="$HOME/Documents/dotfiles"
+export PATH="$HOME/.local/bin:$DOT_FILES/utils:$PATH"
 
 # rust path setup
 export RUSTUP_HOME="$HOME/.local/share/rustup"
@@ -132,56 +132,58 @@ esac
 # print welcome msg
 echo ""
 echo ""
-rcat "$DOT_FILES/msg/msg_welcome"
+if ! command -v rcat &>/dev/null; then
+  cat "$DOT_FILES/msg/msg_welcome"
+else
+  rcat "$DOT_FILES/msg/msg_welcome"
+fi
 
 
 
 # ============================================================
 # custom zsh-script
 # ============================================================
-source $DOT_FILES/utils/update_auto.sh
-
 # Setup fzf
-if [[ ! "$PATH" == */home/eric/.local/share/fzf/bin* ]]; then
-  PATH="${PATH:+${PATH}:}/home/eric/.local/share/fzf/bin"
+if [[ ! "$PATH" == *$HOME/.local/share/fzf/bin* ]]; then
+  PATH="${PATH:+${PATH}:}$HOME/.local/share/fzf/bin"
 fi
 
 eval "$(fzf --zsh)"
 
-# Use ~~ as the trigger sequence instead of the default **
-export FZF_COMPLETION_TRIGGER='~~'
-
-
 export FZF_DEFAULT_COMMAND='fd --unrestricted'
 export FZF_DEFAULT_OPTS="
-  --height=40% --layout=reverse --info=inline --border --margin=1 --padding=1"
-export FZF_TMUX_OPTS='-p80%,60%'
+  --height=60% --layout=reverse --info=inline --border --margin=1 --padding=1"
 
+# apply tmux mode when accessible
+export FZF_TMUX_OPTS='-p 80%,60%'
+
+# Use ~~ as the trigger sequence instead of the default **
+export FZF_COMPLETION_TRIGGER='~~'
 export FZF_COMPLETION_OPTS='--border --info=inline'
 
+# CTRL-T runs $FZF_CTRL_T_COMMAND to get a list of files and directories
 export FZF_CTRL_T_COMMAND="fd --unrestricted"
 export FZF_CTRL_T_OPTS="
   --walker-skip .git
   --preview 'bat -n --color=always {}'
-  --bind 'ctrl-/:change-preview-window(down|hidden|)'"
+  --bind 'ctrl-/:toggle-preview'"
 
+# CTRL-R filters command history
 export FZF_CTRL_R_OPTS="
   --preview 'echo {}' --preview-window up:3:hidden:wrap
   --bind 'ctrl-/:toggle-preview'"
 
+# ALT-C runs $FZF_ALT_C_COMMAND to get a list of directories
 export FZF_ALT_C_COMMAND="fd --type d"
 export FZF_ALT_C_OPTS="
   --walker-skip .git
-  --preview 'tree -C {}'"
+  --preview 'tree -C {}'
+  --bind 'ctrl-/:toggle-preview'"
 
-# Use fd (https://github.com/sharkdp/fd) for listing path candidates.
-# - The first argument to the function ($1) is the base path to start traversal
-# - See the source code (completion.{bash,zsh}) for the details.
 _fzf_compgen_path() {
   fd --unrestricted --follow --exclude ".git" . "$1"
 }
 
-# Use fd to generate the list for directory completion
 _fzf_compgen_dir() {
   fd --type d --unrestricted --follow --exclude ".git" . "$1"
 }
@@ -201,7 +203,7 @@ _fzf_comprun() {
   esac
 }
 
-# correting mistake-typing
+# correcting mistake-typing
 alias ..="cd .."
 alias ll="ls -lath --color=auto"
 alias la="ll"
@@ -212,7 +214,7 @@ alias l="ls"
 alias dc="cd"
 alias cl="clear"
 
-# secur-typing
+# secure-typing
 alias rm="rm -i"
 alias cp="cp -i"
 alias mv="mv -i"

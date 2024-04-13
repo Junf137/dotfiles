@@ -1,0 +1,62 @@
+#!/bin/bash
+
+# Inspired by: https://github.com/junegunn/fzf/blob/master/ADVANCED.md#dynamic-reloading-of-the-list
+
+# Usage: kill_ps [signal]
+# Interactively select and kill processes by name or PID.
+# If a signal is provided, it will be sent to the selected processes.
+# If no signal is provided, SIGKILL (9) will be sent by default.
+
+kill_ps() {
+    # Check if the first argument is --help or -h
+    case "$1" in
+        --help|-h)
+            echo "Usage: kill_ps [signal]"
+            echo "Interactively select and kill processes by name or PID."
+            echo "If a signal is provided, it will be sent to the selected processes."
+            echo "If no signal is provided, SIGKILL (9) will be sent by default."
+            return
+            ;;
+    esac
+
+    # Check if fzf-tmux is installed
+    if ! command -v fzf-tmux &>/dev/null; then
+        echo "Error: fzf-tmux is not installed. Please install fzf-tmux to use this script."
+        return 1
+    fi
+
+    # Get PID interactively using fzf
+    local pid
+
+    # fzf-tmux --multi: pipes the output of ps -ef into fzf, which allows the user to interactively select one or more processes.
+    #   --header-lines=2 is used to disallow selecting the first two lines of the output (i.e., the header).
+    #   --preview part simply prints the selected line in case it is too long to fit selection window.
+    # awk '{print $2}': extracts the second column (PID) from the output of fzf and assigns it to the pid variable.
+    pid=$((date; ps -ef) | \
+        fzf-tmux --multi -p 80%,70% \
+            --header=$'Press CTRL-R to reload\n' --header-lines=2 \
+            --preview='echo {}' --preview-window=down,3,wrap \
+            --bind='ctrl-r:reload(date; ps -ef)' \
+            --bind='ctrl-/:toggle-preview' | \
+        awk '{print $2}')
+
+    # Check if a PID is selected
+    if [ -n "$pid" ]; then
+        # Remove leading and trailing whitespace
+        pid="${pid#"${pid%%[![:space:]]*}"}"
+        pid="${pid%"${pid##*[![:space:]]}"}"
+
+        # Kill selected processes
+        echo "Killing processes: $pid"
+
+        # echo "$pid": This command prints the PID(s) of the selected process(es).
+        # | xargs: This command passes the output of echo (i.e., the PID(s)) as arguments to the kill command.
+        # kill -${1:-9}: This command sends the specified signal to the processes. ${1:-9} is a parameter expansion that uses the first argument passed to the function ($1). If no argument is provided, it defaults to 9, which is the signal number for SIGKILL (forceful termination).
+        echo "$pid" | xargs kill -${1:-9}
+    else
+        echo "No processes selected."
+    fi
+}
+
+# Call the main function
+kill_ps "$@"
