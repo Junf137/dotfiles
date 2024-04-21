@@ -1,7 +1,127 @@
 #!/bin/bash
 
+# Default color
+front="green"
+background="none"
+underline="true"
+
+format_code=""
+
+# Parse command line arguments.
+# -f|--f chooses the front color.
+# -b|--b chooses the background color.
+# -u|--underline underlines the text.
+# -h|--help shows the help message.
+while [[ $# -gt 0 ]]; do
+    key="$1"
+    case $key in
+        -f|--front)
+            front="$2"
+            shift
+            shift
+            ;;
+        -b|--background)
+            background="$2"
+            shift
+            shift
+            ;;
+        -u|--underline)
+            underline="$2"
+            shift
+            shift
+            ;;
+        -h|--help)
+            echo "Usage: color_pwd [options]"
+            echo "Options:"
+            echo "  -f|--front <color>      Choose the front color."
+            echo "  -b|--background <color> Choose the background color."
+            echo "  -u|--underline <bool>   Underline the text."
+            echo "  -h|--help               Show this help message."
+            exit 0
+            ;;
+        *)
+            echo "Unknown option: $1"
+            exit 1
+            ;;
+    esac
+done
+
+# Set the front color.
+case $front in
+    r|red)
+        format_code+="\e[31m"
+        ;;
+    g|green)
+        format_code+="\e[32m"
+        ;;
+    o|orange)
+        format_code+="\e[33m"
+        ;;
+    b|blue)
+        format_code+="\e[34m"
+        ;;
+    p|purple)
+        format_code+="\e[35m"
+        ;;
+    c|cyan)
+        format_code+="\e[36m"
+        ;;
+    w|white)
+        format_code+="\e[37m"
+        ;;
+    ""|none|default)
+        ;;
+    *)
+        echo "Unknown front color: $front"
+        exit 1
+        ;;
+esac
+
+# Set the background color.
+case $background in
+    r|red)
+        format_code+="\e[41m"
+        ;;
+    g|green)
+        format_code+="\e[42m"
+        ;;
+    o|orange)
+        format_code+="\e[43m"
+        ;;
+    b|blue)
+        format_code+="\e[44m"
+        ;;
+    p|purple)
+        format_code+="\e[45m"
+        ;;
+    c|cyan)
+        format_code+="\e[46m"
+        ;;
+    w|white)
+        format_code+="\e[47m"
+        ;;
+    ""|none|default)
+        ;;
+    *)
+        echo "Unknown background color: $background"
+        ;;
+esac
+
+# Set the underline.
+case $underline in
+    y|yes|t|true)
+        format_code+="\e[4m"
+        ;;
+    n|no|f|false)
+        ;;
+    *)
+        echo "Unknown underline: $underline"
+        exit 1
+        ;;
+esac
+
 color_pwd() {
-    echo -e "\e[32m ---* $(pwd) *--- \e[0m"
+    echo -e "$format_code---* $(pwd) \e[0m"
 }
 
 color_pwd
