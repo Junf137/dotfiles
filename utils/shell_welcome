@@ -1,0 +1,105 @@
+#!/bin/bash
+
+# Default arguments
+MSG_PATH="$DOT_FILES/msg/msg_shell_welcome"
+MAX_RETRY_NUM=10
+DEFAULT_MSG="HI. Enjoy Your Day. :P"
+
+# Identify the start and end of a message
+START_MARK="---start---"
+END_MARK="---end---"
+
+# Parse command line arguments
+while [[ $# -gt 0 ]]; do
+    key="$1"
+    case $key in
+        -p|--path)
+        MSG_PATH="$2"
+        shift
+        shift
+        ;;
+        -n|--number)
+        MAX_RETRY_NUM="$2"
+        shift
+        shift
+        ;;
+        -h|--help)
+        echo "Usage: $0 [-p|--path <msg_path>] [-n|--number <max_retry_num>] [-h|--help]"
+        exit 0
+        ;;
+        *)
+        echo "Unknown option: $1"
+        exit 1
+        ;;
+    esac
+done
+
+
+# Validate arguments
+if [[ ! -f $MSG_PATH ]]; then
+    echo "Error: Invalid message file path: $MSG_PATH"
+    exit 1
+fi
+
+if [[ ! $MAX_RETRY_NUM =~ ^[0-9]+$ ]]; then
+    echo "Error: Invalid maximum retry number: $MAX_RETRY_NUM"
+    exit 1
+fi
+
+print_msg() {
+    # echo "debug msg index: $1 end"
+
+    # Find the line range for the ASCII art
+    msg_blk=$(sed -n "/^msg index: $1$/,/^$END_MARK$/p" $MSG_PATH)
+
+    # echo "debug msg block: $msg_blk end"
+
+    font_name=$(echo "$msg_blk" | grep -o 'font name: .*' | awk -F 'font name: ' '{print $2}')
+    line_range=$(echo "$msg_blk" | grep -o 'line range: [0-9]\+,[0-9]\+' | awk -F 'line range: ' '{print $2}')
+    max_line_width=$(echo "$msg_blk" | grep -o 'max line width: [0-9]\+' | awk -F 'max line width: ' '{print $2}')
+
+    # echo "debug font name: $font_name end"
+    # echo "debug lines range: $line_range end"
+    # echo "debug max line width: $max_line_width end"
+
+    # Get current terminal line width
+    terminal_width=$(tput cols)
+
+    if [ $terminal_width -lt $max_line_width ]; then
+        # echo "Error: terminal width is smaller than the max line width"
+        return 1
+    fi
+
+    # echo "debug terminal width: $terminal_width end"
+
+    # Extract the ASCII art content based on the line range
+    ascii_art=$(sed -n "$line_range p" $MSG_PATH)
+
+    echo "$ascii_art"
+    return 0
+}
+
+# Read the number of messages from the file
+num_msg=$(sed -n '/msg nums: /s/.* //p' $MSG_PATH)
+
+retry_num=0
+index_upper=$((num_msg))
+# while loop to retry if the terminal width is smaller than the max line width
+while true; do
+
+    # Generate a random index between 0 and index_upper-1
+    random_index=$((RANDOM % index_upper))
+    print_msg $random_index
+    if [ $? -eq 0 ]; then
+        break
+    fi
+
+    retry_num=$((retry_num+1))
+    if [ $retry_num -ge $MAX_RETRY_NUM ]; then
+        echo "$DEFAULT_MSG"
+        break
+    fi
+
+    # Update the index_upper
+    index_upper=$((random_index))
+done

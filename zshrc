@@ -132,11 +132,7 @@ esac
 # print welcome msg
 echo ""
 echo ""
-if ! command -v rcat &>/dev/null; then
-  cat "$DOT_FILES/msg/msg_welcome"
-else
-  rcat "$DOT_FILES/msg/msg_welcome"
-fi
+shell_welcome
 
 
 

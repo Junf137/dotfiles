@@ -1,0 +1,4111 @@
+# ASCII Art file. Inspired by: https://github.com/patorjk/figlet.js
+---start---
+msg nums: 274
+---end---
+
+---start---
+msg index: 0
+font name: taag_font_DWhistled
+line range: 12,21
+max line width: 10
+msg content:
+HI Jun  n 
+      XX X
+      XX X
+      XX X
+      XX .
+      .X .
+      .. .
+          
+HI Junfeng
+          
+---end---
+
+---start---
+msg index: 1
+font name: taag_font_ICL1900
+line range: 30,42
+max line width: 10
+msg content:
+HI Junfeng
+**    ** *
+   * *  * 
+    *     
+   *      
+          
+          
+    *     
+     * ** 
+      *   
+         *
+*         
+ *        
+---end---
+
+---start---
+msg index: 2
+font name: taag_font_Term
+line range: 51,51
+max line width: 10
+msg content:
+HI Junfeng
+---end---
+
+---start---
+msg index: 3
+font name: taag_font_Mnemonic
+line range: 60,60
+max line width: 12
+msg content:
+HI&SPJunfeng
+---end---
+
+---start---
+msg index: 4
+font name: taag_font_EftiPiti
+line range: 69,71
+max line width: 17
+msg content:
+    ()   ()      
+[]-|[]   ||unfeng
+        [_|      
+---end---
+
+---start---
+msg index: 5
+font name: taag_font_tmplr
+line range: 80,83
+max line width: 18
+msg content:
+┓┏┳  ┏┳    ┏      
+┣┫┃   ┃┓┏┏┓╋┏┓┏┓┏┓
+┛┗┻  ┗┛┗┻┛┗┛┗ ┛┗┗┫
+                 ┛
+---end---
+
+---start---
+msg index: 6
+font name: taag_font_Mshebrew210
+line range: 92,95
+max line width: 20
+msg content:
+                    
+ |Y"\ ""|""|Y"\ \  |
+ || _|__|| '| _| \/ 
+         |      -'  
+---end---
+
+---start---
+msg index: 7
+font name: taag_font_Runic
+line range: 104,109
+max line width: 21
+msg content:
+|    | |       /     
+|\   | |      /      
+| \  | |   _  \   \  
+|  \ | |  |_|  \   \ 
+|   \| |           / 
+|    | |          /  
+---end---
+
+---start---
+msg index: 8
+font name: taag_font_Short
+line range: 118,120
+max line width: 21
+msg content:
+|_||   |  ,_[` _ ,_  
+| ||  _|L|||| (/_||(|
+                   _|
+---end---
+
+---start---
+msg index: 9
+font name: taag_font_Benjamin
+line range: 129,129
+max line width: 22
+msg content:
+|-|| .]|_||\||=[-|\|[,
+---end---
+
+---start---
+msg index: 10
+font name: taag_font_Digital
+line range: 138,140
+max line width: 22
+msg content:
+ +-+-+ +-+-+-+-+-+-+-+
+ |H|I| |J|u|n|f|e|n|g|
+ +-+-+ +-+-+-+-+-+-+-+
+---end---
+
+---start---
+msg index: 11
+font name: taag_font_Italic
+line range: 149,152
+max line width: 23
+msg content:
+               _       
+ )__//    /   (_ _   _ 
+/  /(  (_/(//)/ (-/)(/ 
+                   _/  
+---end---
+
+---start---
+msg index: 12
+font name: taag_font_TwoPoint
+line range: 161,162
+max line width: 25
+msg content:
+|_||   |   ._  |~ _._ (~|
+| ||  _||_|| |~|~}_| | _|
+---end---
+
+---start---
+msg index: 13
+font name: taag_font_Pepper
+line range: 171,174
+max line width: 26
+msg content:
+        _                 
+ /_//    /   _ _/|_  _  _ 
+/ //  (_//_// // /_'/ //_/
+                       _/ 
+---end---
+
+---start---
+msg index: 14
+font name: taag_font_EftiChess
+line range: 183,187
+max line width: 27
+msg content:
+         ##################
+         ##':v:`####':v:`##
+         ##(o:0)####(o:0)##
+         ###(:)######(:)###
+         ##################
+---end---
+
+---start---
+msg index: 15
+font name: taag_font_Straight
+line range: 196,199
+max line width: 27
+msg content:
+                 _         
+|__||    |    _ (_ _ _  _  
+|  ||  __)|_|| )| (-| )(_) 
+                       _/  
+---end---
+
+---start---
+msg index: 16
+font name: taag_font_Hex
+line range: 208,208
+max line width: 28
+msg content:
+48 49  4A 75 6E 66 65 6E 67 
+---end---
+
+---start---
+msg index: 17
+font name: taag_font_ThreePoint
+line range: 217,219
+max line width: 28
+msg content:
+|_|~|~  ~|~   _  |` _  _  _ 
+| |_|_  L||_|| |~|~(/_| |(_|
+                          _|
+---end---
+
+---start---
+msg index: 18
+font name: taag_font_Cygnet
+line range: 228,232
+max line width: 29
+msg content:
+                             
+. .-.-  .-.       .-         
+|-| |     ;. ..-.-|-.-,.-..-.
+' '-'-  `' '-'' ' ' `'-' '`-|
+                          `-'
+---end---
+
+---start---
+msg index: 19
+font name: taag_font_Bigfig
+line range: 241,243
+max line width: 30
+msg content:
+   ___              _       _ 
+|_| |      |   __ _|_ _ __ (_|
+| |_|_   \_||_|| | | (/_| |__|
+---end---
+
+---start---
+msg index: 20
+font name: taag_font_Contessa
+line range: 252,255
+max line width: 30
+msg content:
+.  .._.     .      ._         
+|__| |      |. .._ |, _ ._  _ 
+|  |_|_  \__|(_|[ )| (/,[ )(_]
+                           ._|
+---end---
+
+---start---
+msg index: 21
+font name: taag_font_Mike
+line range: 264,266
+max line width: 30
+msg content:
+ |                 |\  _      
+ |\ _|    | |/| |\ |  |/ |\ /|
+          |                  |
+---end---
+
+---start---
+msg index: 22
+font name: taag_font_EftiFont
+line range: 275,279
+max line width: 32
+msg content:
+ _ _  _     _         __        
+| U || |   | |     _ / _|  _  _ 
+|   || | n_| ||U||/ \| ]o\/ \/o\
+|_n_||_| \__/ \_/L_n|L|\(L_n|\_/
+                              _)
+---end---
+
+---start---
+msg index: 23
+font name: taag_font_1Row
+line range: 288,289
+max line width: 33
+msg content:
+|-| |   _T |_| |\| /= [- |\| (_, 
+                                 
+---end---
+
+---start---
+msg index: 24
+font name: taag_font_Decimal
+line range: 298,298
+max line width: 34
+msg content:
+72 73  74 117 110 102 101 110 103 
+---end---
+
+---start---
+msg index: 25
+font name: taag_font_Madrid
+line range: 307,310
+max line width: 35
+msg content:
+/ \ |   /=\         /=             
+|=| =   _ | | | /=\ |= /=\ /=\ /=| 
+\ / |   \=/ \=/ | | |  \=  | | \=| 
+                               \=| 
+---end---
+
+---start---
+msg index: 26
+font name: taag_font_FourTops
+line range: 319,322
+max line width: 36
+msg content:
+|  |~|~  ~~|~         /~\           
+|--| |     ||   ||/~\-|-/~/|/~\ /~~|
+|  |_|_  \_| \_/||   || \/_|   |\__|
+                                \__|
+---end---
+
+---start---
+msg index: 27
+font name: taag_font_Maxfour
+line range: 331,334
+max line width: 36
+msg content:
+|  |~|~  ~~|~         /~\           
+|--| |     ||   ||/~\-|-/~/|/~\ /~~|
+|  |_|_  \_| \_/||   || \/_|   |\__|
+                                \__|
+---end---
+
+---start---
+msg index: 28
+font name: taag_font_Shimrod
+line range: 343,348
+max line width: 36
+msg content:
+.  . ,    ,                         
+|  | |    |          ,-             
+|--| |    | . . ;-.  |  ,-. ;-. ,-: 
+|  | |    | | | | |  |- |-' | | | | 
+'  ' '   -' `-` ' '  |  `-' ' ' `-| 
+                    -'          `-' 
+---end---
+
+---start---
+msg index: 29
+font name: taag_font_Mini
+line range: 357,360
+max line width: 37
+msg content:
+     ___                _            
+ |_|  |      |     ._ _|_ _  ._   _  
+ | | _|_   \_| |_| | | | (/_ | | (_| 
+                                  _| 
+---end---
+
+---start---
+msg index: 30
+font name: taag_font_Morse
+line range: 369,369
+max line width: 37
+msg content:
+.... ..    .--- ..- -. ..-. . -. --. 
+---end---
+
+---start---
+msg index: 31
+font name: taag_font_Octal
+line range: 378,378
+max line width: 37
+msg content:
+110 111  112 165 156 146 145 156 147 
+---end---
+
+---start---
+msg index: 32
+font name: taag_font_AMC3Line
+line range: 387,390
+max line width: 38
+msg content:
+. . .-.     . . . . . .-. .-. . . .-. 
+|-|  |      | | | |\| |-  |-  |\| |.. 
+' ` `-'   `-' `-' ' ` '   `-' ' ` `-' 
+                                      
+---end---
+
+---start---
+msg index: 33
+font name: taag_font_Tombstone
+line range: 399,403
+max line width: 38
+msg content:
+ _,_ _    __ _,_ _, _ __, __, _, _  _,
+ |_| |   , | | | |\ | |_  |_  |\ | / _
+ | | |   ( | | | | \| |   |   | \| \ /
+ ~ ~ ~    ~~ `~' ~  ~ ~   ~~~ ~  ~  ~ 
+                                      
+---end---
+
+---start---
+msg index: 34
+font name: taag_font_SmallTengwar
+line range: 412,414
+max line width: 39
+msg content:
+\  '        ?  _ _  |_  ,'  _ _  _____ 
+/\ |  (_(_| | | ) ) |_)  | | ) ) (_(_| 
+          |                          | 
+---end---
+
+---start---
+msg index: 35
+font name: taag_font_3x5
+line range: 423,428
+max line width: 40
+msg content:
+                                        
+# # ###      ##          ##             
+# #  #        # # # ##   #  ### ##  ### 
+###  #        # # # # # ### ##  # # # # 
+# #  #      # # ### # #  #  ### # #  ## 
+# # ###      #          ##          ### 
+---end---
+
+---start---
+msg index: 36
+font name: taag_font_Bubble
+line range: 437,440
+max line width: 40
+msg content:
+   _   _     _   _   _   _   _   _   _  
+  / \ / \   / \ / \ / \ / \ / \ / \ / \ 
+ ( H | I ) ( J | u | n | f | e | n | g )
+  \_/ \_/   \_/ \_/ \_/ \_/ \_/ \_/ \_/ 
+---end---
+
+---start---
+msg index: 37
+font name: taag_font_EftiItalic
+line range: 449,453
+max line width: 40
+msg content:
+   _ __ __    __           _            
+  /// // /   / /    _    ,'_7__ _     _ 
+ / ` // / n_/ //7/7/ \/7/_7,'o// \/7,'o|
+/_n_//_/  \_,'/__//_n_///  |_(/_n_/ |_,'
+                                    _// 
+---end---
+
+---start---
+msg index: 38
+font name: taag_font_EftiWater
+line range: 462,465
+max line width: 40
+msg content:
+ _ _  _     _            __             
+ )L`) ))    )) _    _ _  )L`__ _ _  ___ 
+(( ( ((    (( ((_( ((\( (( (('((\( ((_( 
+          ._))                       _))
+---end---
+
+---start---
+msg index: 39
+font name: taag_font_Muzzle
+line range: 474,477
+max line width: 40
+msg content:
+          __            __  __      __  
+|  | >      | |  | | | |   |   | | |    
+|><| |   << | |  | |\| |<< |<< |\| | >> 
+|  | |   |__' '<<' | | |   |__ | | '__| 
+---end---
+
+---start---
+msg index: 40
+font name: taag_font_Wavy
+line range: 486,489
+max line width: 40
+msg content:
+     ___   ___                          
+ )_)  )      (       _ _(_  _   _   _   
+( ( _(_    \__) (_( ) )  ) )_) ) ) (_(  
+                          (_         _) 
+---end---
+
+---start---
+msg index: 41
+font name: taag_font_DrPepper
+line range: 498,502
+max line width: 42
+msg content:
+ _ _  _    _            ___               
+| | || |  | | _ _ ._ _ | | '___ ._ _  ___ 
+|   || | _| || | || ' || |-/ ._>| ' |/ . |
+|_|_||_| \__/`___||_|_||_| \___.|_|_|\_. |
+                                     <___'
+---end---
+
+---start---
+msg index: 42
+font name: taag_font_Stampate
+line range: 511,516
+max line width: 42
+msg content:
+,-_/,. ,-_/   ,-_/         ,_             
+' |_|/ '  |   '  | . . ,-. |_ ,-. ,-. ,-. 
+ /| |  .- |      | | | | | |  |-' | | | | 
+ `' `' `--'      | `-' ' ' |  `-' ' ' `-| 
+              /  |         '           ,| 
+              `--'                     `' 
+---end---
+
+---start---
+msg index: 43
+font name: taag_font_Stampatello
+line range: 525,530
+max line width: 42
+msg content:
+,-_/,. ,-_/   ,-_/                        
+' |_|/ '  |   '  | . . ,-. ," ,-. ,-. ,-. 
+ /| |  .^ |      | | | | | |- |-' | | | | 
+ `' `' `--'      | `-^ ' ' |  `-' ' ' `-| 
+              /` |         '           ,| 
+              `--'                     `' 
+---end---
+
+---start---
+msg index: 44
+font name: taag_font_Swan
+line range: 539,547
+max line width: 42
+msg content:
+                                          
+                                          
+.   .--.--  .---.          .-.            
+|   |  |        |          |              
+|---|  |        |.  . .--.-|-.-. .--. .-..
+|   |  |        ;|  | |  | |(.-' |  |(   |
+'   '--'--  `--' `--`-'  `-' `--''  `-`-`|
+                                      ._.'
+                                          
+---end---
+
+---start---
+msg index: 45
+font name: taag_font_Thorned
+line range: 556,560
+max line width: 42
+msg content:
+ , ,  ___,    ___,  ,,  , __, _,,  ,  _,  
+ |_|,' |     ',| |  ||\ |'|_,/_,|\ | / _  
+'| |  _|_,   (_|'\__||'\| | '\_ |'\|'\_|` 
+ ' ` '              `'  ` '    `'  `  _|  
+                                     '    
+---end---
+
+---start---
+msg index: 46
+font name: taag_font_Cybermedium
+line range: 569,572
+max line width: 43
+msg content:
+_  _ _     _ _  _ _  _ ____ ____ _  _ ____ 
+|__| |     | |  | |\ | |___ |___ |\ | | __ 
+|  | |    _| |__| | \| |    |___ | \| |__] 
+                                           
+---end---
+
+---start---
+msg index: 47
+font name: taag_font_SantaClara
+line range: 581,586
+max line width: 43
+msg content:
+ __    ___      ___                        
+( /  /( /      ( /           /)            
+ /--/  /        / , , _ _   // _  _ _   _, 
+/  /__/_      _/_(_/_/ / /_//_(/_/ / /_(_)_
+             //           /)            /| 
+            (/           (/            (/  
+---end---
+
+---start---
+msg index: 48
+font name: taag_font_Cybersmall
+line range: 595,596
+max line width: 44
+msg content:
+ _  _ _      _ _  _ __ _ ____ ____ __ _ ____
+ |--| |   ___| |__| | \| |--- |=== | \| |__,
+---end---
+
+---start---
+msg index: 49
+font name: taag_font_Stforek
+line range: 605,608
+max line width: 44
+msg content:
+ _  _ _   __  _  _ __  _ ___ ___ __  _  __  
+| || | | |_ \| || |  \| | __| __|  \| |/ _] 
+| >< | |  _\ | \/ | | ' | _|| _|| | ' | [/\ 
+|_||_|_| /___|\__/|_|\__|_| |___|_|\__|\__/ 
+---end---
+
+---start---
+msg index: 50
+font name: taag_font_SmallSlant
+line range: 617,621
+max line width: 45
+msg content:
+   __ ______     __          ___             
+  / // /  _/ __ / /_ _____  / _/__ ___  ___ _
+ / _  // /  / // / // / _ \/ _/ -_) _ \/ _ `/
+/_//_/___/  \___/\_,_/_//_/_/ \__/_//_/\_, / 
+                                      /___/  
+---end---
+
+---start---
+msg index: 51
+font name: taag_font_Cursive
+line range: 630,635
+max line width: 45
+msg content:
+ _    ,   _     ___                          
+' )  /   | )   (   >           /)            
+ /--/,---|/     __/_. . ____  // _  ____  _, 
+/  (_ \_/ \_   / / (_/_/ / <_//_</_/ / <_(_)_
+              <_/           />            /| 
+                           </            |/  
+---end---
+
+---start---
+msg index: 52
+font name: taag_font_JSStickLetters
+line range: 644,647
+max line width: 45
+msg content:
+                          ___  ___       __  
+|__| |       | |  | |\ | |__  |__  |\ | / _` 
+|  | |    \__/ \__/ | \| |    |___ | \| \__> 
+                                             
+---end---
+
+---start---
+msg index: 53
+font name: taag_font_SLScript
+line range: 656,661
+max line width: 45
+msg content:
+ _    ,   _     ___                          
+' )  /   | )   (   >           /)            
+ /--/,---|/     __/_. . ____  // _  ____  _, 
+/  (_ \_/ \_   / / (_/_/ / <_//_</_/ / <_(_)_
+              <_/           />            /| 
+                           </            |/  
+---end---
+
+---start---
+msg index: 54
+font name: taag_font_StickLetters
+line range: 670,673
+max line width: 45
+msg content:
+                          ___  ___       __  
+|__| |       | |  | |\ | |__  |__  |\ | / _` 
+|  | |    \__/ \__/ | \| |    |___ | \| \__> 
+                                             
+---end---
+
+---start---
+msg index: 55
+font name: taag_font_Thin
+line range: 682,687
+max line width: 45
+msg content:
+                                             
+|   ||        |          ,---.               
+|---||        |.   .,---.|__. ,---.,---.,---.
+|   ||        ||   ||   ||    |---'|   ||   |
+`   '`    `---'`---'`   '`    `---'`   '`---|
+                                        `---'
+---end---
+
+---start---
+msg index: 56
+font name: taag_font_Weird
+line range: 696,701
+max line width: 45
+msg content:
+                           __                
+ /  | /       |           /                  
+(___|(        |      ___ (     ___  ___  ___ 
+|   )|        )|   )|   )|___ |___)|   )|   )
+|  / |      _/ |__/ |  / |    |__  |  / |__/ 
+                                        __/  
+---end---
+
+---start---
+msg index: 57
+font name: taag_font_Rectangles
+line range: 710,715
+max line width: 46
+msg content:
+                                              
+ _____ _____       __         ___             
+|  |  |     |   __|  |_ _ ___|  _|___ ___ ___ 
+|     |-   -|  |  |  | | |   |  _| -_|   | . |
+|__|__|_____|  |_____|___|_|_|_| |___|_|_|_  |
+                                         |___|
+---end---
+
+---start---
+msg index: 58
+font name: taag_font_Small
+line range: 724,728
+max line width: 46
+msg content:
+  _  _ ___      _            __               
+ | || |_ _|  _ | |_  _ _ _  / _|___ _ _  __ _ 
+ | __ || |  | || | || | ' \|  _/ -_) ' \/ _` |
+ |_||_|___|  \__/ \_,_|_||_|_| \___|_||_\__, |
+                                        |___/ 
+---end---
+
+---start---
+msg index: 59
+font name: taag_font_Alphabet
+line range: 737,743
+max line width: 46
+msg content:
+H  H III         J            ff              
+H  H  I          J            f               
+HHHH  I          J u  u nnn  fff eee nnn  ggg 
+H  H  I      J   J u  u n  n  f  e e n  n g g 
+H  H III      JJJ   uuu n  n  f  ee  n  n ggg 
+                                            g 
+                                          ggg 
+---end---
+
+---start---
+msg index: 60
+font name: taag_font_Runyc
+line range: 752,757
+max line width: 46
+msg content:
+|    | |       /                              
+|\   | |      /                               
+| \  | |   _  \   \                           
+|  \ | |  |_|  \   \ |\   |  |// |\/|  |  \ / 
+|   \| |           / | | `|  |/  |  | `|   X  
+|    | |          /  | |  |` |   |  |  |` / \ 
+---end---
+
+---start---
+msg index: 61
+font name: taag_font_Wow
+line range: 766,766
+max line width: 46
+msg content:
+][-][ ]][   ;_][ ][_][ ][\][ ][= ]E ][\][ ((6 
+---end---
+
+---start---
+msg index: 62
+font name: taag_font_EftiRobot
+line range: 775,780
+max line width: 47
+msg content:
+ _  _  _       _              _                
+( )( )( )     ( )           ,'_)               
+| L| || |   _ | | _ _  ____ | |  ___  ____  __ 
+( __ )( )  ((_( )( U )( __ )( _)( o_)( __ )/o )
+/_\/_\/_\   \__/ /___\/_\/_\/_\  \(  /_\/_\\__\
+                                            _|/
+---end---
+
+---start---
+msg index: 63
+font name: taag_font_Glenyn
+line range: 789,792
+max line width: 47
+msg content:
+_  _ ____   ____ _    __   ____ ____ __   ____ 
+||_|\|___\  |_  \|| \ | \|\|  _\| __\| \|\|  _\
+| _ || /    ,_/ /||_|\|  \|| _\ |  ]_|  \|| [ \
+|/ |/|/     \__/ |___/|/\_/|/   |___/|/\_/|___/
+---end---
+
+---start---
+msg index: 64
+font name: taag_font_SmallScript
+line range: 801,805
+max line width: 47
+msg content:
+  ,                                            
+ /|  |   |\     /|             |\  _        _, 
+  |--| _ |/    | | |  |  /|/|  |/ |/ /|/|  / | 
+  |  |)\_/\/    \|/ \/|_/ | |_/|_/|_/ | |_/\/|/
+                (|             |)           (| 
+---end---
+
+---start---
+msg index: 65
+font name: taag_font_JSCursive
+line range: 814,819
+max line width: 48
+msg content:
+                                                
+  /_   .       .       ,__,   /)  _   ,__,   __ 
+_/ (__/_     _/__(_/__/ / (__//__(/__/ / (__(_/_
+            _/_            _/               _/_ 
+           (/              /)              (/   
+                           `                    
+---end---
+
+---start---
+msg index: 66
+font name: taag_font_Pyramid
+line range: 828,830
+max line width: 48
+msg content:
+  ^    ^       ^    ^    ^    ^    ^    ^    ^  
+ /H\  /I\     /J\  /u\  /n\  /f\  /e\  /n\  /g\ 
+<___><___>   <___><___><___><___><___><___><___>
+---end---
+
+---start---
+msg index: 67
+font name: taag_font_Rotated
+line range: 839,841
+max line width: 48
+msg content:
+_____|___|    (      __  __. __    _   __.   _  
+__|__|   |     `--| (__  __)  |)  (|)  __) ((_) 
+                                                
+---end---
+
+---start---
+msg index: 68
+font name: taag_font_Slide
+line range: 850,855
+max line width: 48
+msg content:
+##  ||#HH|      ||           #H|                
+##  || #|       ||## H|##H| ##   #H| ##H|  #HH| 
+##HH|| #|       ||## H|## H|##| ##HH|## H|## H| 
+##  || #|   ##  ||## H|## H|##  ##   ## H| #HH| 
+##  ||#HH|   #HH|  #HH|## H|##   #HH|## H|   H| 
+                                          ##H|  
+---end---
+
+---start---
+msg index: 69
+font name: taag_font_DANC4
+line range: 864,867
+max line width: 49
+msg content:
+\O/# \O/#\O   \O     O/    O/    \O/    O/'\   /`
+ Y.___Y  _|#   |_   <|     |_     Y    <|   \ /  
+ |    |_| |   /  |  / \   /  |   / \   / \   Y   
+_|_   |_  |_./   |__| |_./   |_./   \,_| |_ /O   
+---end---
+
+---start---
+msg index: 70
+font name: taag_font_Invita
+line range: 876,881
+max line width: 49
+msg content:
+   ____  ___) _____    _____                     
+  (, /   /   (, /     (, /          /)           
+    /---/      /        /     __   //  _ __   _  
+ ) /   (__ ___/__   ___/__(_(_/ (_/(__(/_/ (_(_/_
+(_/      (__ /    /   /          /)         .-/  
+                 (__ /          (/         (_/   
+---end---
+
+---start---
+msg index: 71
+font name: taag_font_Linux
+line range: 890,893
+max line width: 49
+msg content:
+.-. .-..-.   .-..-..-..-..-..---..---..-..-..---.
+| |=| || |  ,| || || || .` || |- | |- | .` || |'_
+`-' `-'`-' `---'`----'`-'`-'`-'  `---'`-'`-'`-'-/
+                                                 
+---end---
+
+---start---
+msg index: 72
+font name: taag_font_TinkerToy
+line range: 902,908
+max line width: 49
+msg content:
+o  o o-O-o         o            o-o              
+|  |   |           |            |                
+O--O   |           | o  o o-o  -O- o-o o-o  o--o 
+|  |   |       \   o |  | |  |  |  |-' |  | |  | 
+o  o o-O-o      o-o  o--o o  o  o  o-o o  o o--O 
+                                               | 
+                                            o--o 
+---end---
+
+---start---
+msg index: 73
+font name: taag_font_FireFonts
+line range: 917,925
+max line width: 50
+msg content:
+    ) (                                           
+ ( /( )\ )                  (                     
+ )\()|()/(     (    (       )\ )   (       (  (   
+((_)\ /(_))    )\  ))\  (  (()/(  ))\ (    )\))(  
+ _((_|_))     ((_)/((_) )\ )/(_))/((_))\ )((_))\  
+| || |_ _|   _ | (_))( _(_/(_) _(_)) _(_/( (()(_) 
+| __ || |   | || | || | ' \))  _/ -_) ' \)) _` |  
+|_||_|___|   \__/ \_,_|_||_||_| \___|_||_|\__, |  
+                                          |___/   
+---end---
+
+---start---
+msg index: 74
+font name: taag_font_ASCIINewRoman
+line range: 934,937
+max line width: 50
+msg content:
+ __, _,__,    _, _, _,_,  _,____,____,_,  _,____, 
+(-|__|(-|    (-|(-|  (-|\ |(-|_,(-|_,(-|\ |(-/ _, 
+ _|  |,_|_,  __|,_|__/_| \|,_|   _|__,_| \|,_\__| 
+(     (     (   (    (     (    (    (     (      
+---end---
+
+---start---
+msg index: 75
+font name: taag_font_Fuzzy
+line range: 946,952
+max line width: 50
+msg content:
+.-..-..-.     .-.             .--.                
+: :; :: :     : :            : .-'                
+:    :: :   _ : :.-..-.,-.,-.: `;.--. ,-.,-. .--. 
+: :: :: :  : :; :: :; :: ,. :: :' '_.': ,. :' .; :
+:_;:_;:_;  `.__.'`.__.':_;:_;:_;`.__.':_;:_;`._. ;
+                                             .-. :
+                                             `._.'
+---end---
+
+---start---
+msg index: 76
+font name: taag_font_Serifcap
+line range: 961,964
+max line width: 50
+msg content:
+ _  _  __      __  _  _  _  _  ___  ___  _  _  __ 
+( )( )(  )    (  )( )( )( \( )(  _)(  _)( \( )/ _)
+ )__(  )(    __)(  )()(  )  (  ) _) ) _) )  (( (/\
+(_)(_)(__)  (___/  \__/ (_)\_)(_)  (___)(_)\_)\__/
+---end---
+
+---start---
+msg index: 77
+font name: taag_font_Mirror
+line range: 973,978
+max line width: 52
+msg content:
+ _   _ ___   _                 __                   
+| | | |_ _| | |    _   _  __ _|_ \ ___   __ _ _ __  
+| |_| || |  | |  _| | | |/ _` |_| / _ \ / _` | '_ \ 
+|  _  || |  | |_| | |_| | | | |_  \__  | | | | |_) |
+|_| |_|___|  \___/|_.__/|_| |_| |_|___/|_| |_| .__/ 
+                                              \___| 
+---end---
+
+---start---
+msg index: 78
+font name: taag_font_Doom
+line range: 987,994
+max line width: 53
+msg content:
+ _   _ _____     ___              __                 
+| | | |_   _|   |_  |            / _|                
+| |_| | | |       | |_   _ _ __ | |_ ___ _ __   __ _ 
+|  _  | | |       | | | | | '_ \|  _/ _ \ '_ \ / _` |
+| | | |_| |_  /\__/ / |_| | | | | ||  __/ | | | (_| |
+\_| |_/\___/  \____/ \__,_|_| |_|_| \___|_| |_|\__, |
+                                                __/ |
+                                               |___/ 
+---end---
+
+---start---
+msg index: 79
+font name: taag_font_Standard
+line range: 1003,1008
+max line width: 53
+msg content:
+  _   _ ___       _              __                  
+ | | | |_ _|     | |_   _ _ __  / _| ___ _ __   __ _ 
+ | |_| || |   _  | | | | | '_ \| |_ / _ \ '_ \ / _` |
+ |  _  || |  | |_| | |_| | | | |  _|  __/ | | | (_| |
+ |_| |_|___|  \___/ \__,_|_| |_|_|  \___|_| |_|\__, |
+                                               |___/ 
+---end---
+
+---start---
+msg index: 80
+font name: taag_font_Computer
+line range: 1017,1023
+max line width: 53
+msg content:
+8   8 8         8                                    
+8   8 8         8  e   e eeeee eeee eeee eeeee eeeee 
+8eee8 8e        8e 8   8 8   8 8    8    8   8 8   8 
+88  8 88        88 8e  8 8e  8 8eee 8eee 8e  8 8e    
+88  8 88    e   88 88  8 88  8 88   88   88  8 88 "8 
+88  8 88    8eee88 88ee8 88  8 88   88ee 88  8 88ee8 
+                                                     
+---end---
+
+---start---
+msg index: 81
+font name: taag_font_Ivrit
+line range: 1032,1037
+max line width: 53
+msg content:
+  _   _ ___       _              __                  
+ | | | |_ _|     | |_   _ _ __  / _| ___ _ __   __ _ 
+ | |_| || |   _  | | | | | '_ \| |_ / _ \ '_ \ / _` |
+ |  _  || |  | |_| | |_| | | | |  _|  __/ | | | (_| |
+ |_| |_|___|  \___/ \__,_|_| |_|_|  \___|_| |_|\__, |
+                                               |___/ 
+---end---
+
+---start---
+msg index: 82
+font name: taag_font_Lockergnome
+line range: 1046,1049
+max line width: 53
+msg content:
+::| ::|::::::|      ::|          ,::|                
+::::::|  ::|    ::> ::|:\:| :::\ ::|  :~~/ :::\ /::| 
+::| ::|::::::|   ::::/ `::| :|:| :|   :::, :|:| \::| 
+                                                ,.:/ 
+---end---
+
+---start---
+msg index: 83
+font name: taag_font_SmallShadow
+line range: 1058,1061
+max line width: 53
+msg content:
+  |  | _ _|       |              _|                  
+  __ |   |     \  | |  |    \    _| -_)    \    _` | 
+ _| _| ___|   \__/ \_,_| _| _| _| \___| _| _| \__, | 
+                                              ____/  
+---end---
+
+---start---
+msg index: 84
+font name: taag_font_Thick
+line range: 1070,1074
+max line width: 53
+msg content:
+8   8 888     8888              d8b                  
+8www8  8        8  8   8 8d8b.  8'  .d88b 8d8b. .d88 
+8   8  8     w  8  8b d8 8P Y8 w8ww 8.dP' 8P Y8 8  8 
+8   8 888    `Yw"  `Y8P8 8   8  8   `Y88P 8   8 `Y88 
+                                                wwdP 
+---end---
+
+---start---
+msg index: 85
+font name: taag_font_Graceful
+line range: 1083,1086
+max line width: 54
+msg content:
+ _  _  __      __  _  _  __ _  ____  ____  __ _   ___ 
+/ )( \(  )   _(  )/ )( \(  ( \(  __)(  __)(  ( \ / __)
+) __ ( )(   / \) \) \/ (/    / ) _)  ) _) /    /( (_ \
+\_)(_/(__)  \____/\____/\_)__)(__)  (____)\_)__) \___/
+---end---
+
+---start---
+msg index: 86
+font name: taag_font_Ogre
+line range: 1095,1100
+max line width: 54
+msg content:
+        _____    __               __                  
+  /\  /\\_   \   \ \ _   _ _ __  / _| ___ _ __   __ _ 
+ / /_/ / / /\/    \ \ | | | '_ \| |_ / _ \ '_ \ / _` |
+/ __  /\/ /_   /\_/ / |_| | | | |  _|  __/ | | | (_| |
+\/ /_/\____/   \___/ \__,_|_| |_|_|  \___|_| |_|\__, |
+                                                |___/ 
+---end---
+
+---start---
+msg index: 87
+font name: taag_font_Jazmine
+line range: 1109,1118
+max line width: 54
+msg content:
+                                                      
+ o    o o     o               d'b                     
+ 8    8 8     8               8                       
+o8oooo8 8     8 o    o odYo. o8P  .oPYo. odYo. .oPYo. 
+ 8    8 8     8 8    8 8' `8  8   8oooo8 8' `8 8    8 
+ 8    8 8     8 8    8 8   8  8   8.     8   8 8    8 
+ 8    8 8   oP' `YooP' 8   8  8   `Yooo' 8   8 `YooP8 
+:..:::....::...::.....:..::..:..:::.....:..::..:....8 
+:::::::::::::::::::::::::::::::::::::::::::::::::ooP'.
+:::::::::::::::::::::::::::::::::::::::::::::::::...::
+---end---
+
+---start---
+msg index: 88
+font name: taag_font_Avatar
+line range: 1127,1132
+max line width: 55
+msg content:
+ _     _       _  _     _      _____ _____ _      _____
+/ \ /|/ \     / |/ \ /\/ \  /|/    //  __// \  /|/  __/
+| |_||| |     | || | ||| |\ |||  __\|  \  | |\ ||| |  _
+| | ||| |  /\_| || \_/|| | \||| |   |  /_ | | \||| |_//
+\_/ \|\_/  \____/\____/\_/  \|\_/   \____\\_/  \|\____\
+                                                       
+---end---
+
+---start---
+msg index: 89
+font name: taag_font_Slant
+line range: 1141,1146
+max line width: 55
+msg content:
+    __  ______       __            ____                
+   / / / /  _/      / /_  ______  / __/__  ____  ____ _
+  / /_/ // /   __  / / / / / __ \/ /_/ _ \/ __ \/ __ `/
+ / __  // /   / /_/ / /_/ / / / / __/  __/ / / / /_/ / 
+/_/ /_/___/   \____/\__,_/_/ /_/_/  \___/_/ /_/\__, /  
+                                              /____/   
+---end---
+
+---start---
+msg index: 90
+font name: taag_font_Big
+line range: 1155,1162
+max line width: 56
+msg content:
+  _    _ _____        _              __                 
+ | |  | |_   _|      | |            / _|                
+ | |__| | | |        | |_   _ _ __ | |_ ___ _ __   __ _ 
+ |  __  | | |    _   | | | | | '_ \|  _/ _ \ '_ \ / _` |
+ | |  | |_| |_  | |__| | |_| | | | | ||  __/ | | | (_| |
+ |_|  |_|_____|  \____/ \__,_|_| |_|_| \___|_| |_|\__, |
+                                                   __/ |
+                                                  |___/ 
+---end---
+
+---start---
+msg index: 91
+font name: taag_font_Flipped
+line range: 1171,1174
+max line width: 56
+msg content:
+ ____           _    ____  ____  ____  ____  ____  ____ 
+|_  _| ____    / |  |   _||__  ||_   ||    ||__  || _  |
+ _||_ |____|  | |__ |  |_  _/ /   || |||_| | _/ / | \|_|
+|____|         \___||____||____|   |_||_||_||____|\__|  
+---end---
+
+---start---
+msg index: 92
+font name: taag_font_Greek
+line range: 1183,1191
+max line width: 56
+msg content:
+                                                        
+ _   _ ___      ___                 _                   
+| | | (   )    / _ \               | |                  
+| |_| || |    ( (_| |_ _   _ _  ___| |_  ___ _  ___   _ 
+|  _  || |   _ \ _   _) | | | |/ /     \/ __) |/ ( \ / )
+| | | || |  | |___| | | |_| | / ( (| |) > _)| / / \ v / 
+|_| |_(___)  \_____/   \___/|__/ \_   _/\___)__/   | |  
+                                   | |             | |  
+                                   |_|             |_|  
+---end---
+
+---start---
+msg index: 93
+font name: taag_font_NTGreek
+line range: 1200,1208
+max line width: 56
+msg content:
+                                                        
+ _   _ ___      ___                 _                   
+| | | (   )    / _ \               | |                  
+| |_| || |    ( (_| |_ _   _ _  ___| |_  ___ _  ___   _ 
+|  _  || |   _ \ _   _) | | | |/ /     \/ __) |/ ( \ / )
+| | | || |  | |___| | | |_| | / ( (| |) > _)| / / \ v / 
+|_| |_(___)  \_____/   \___/|__/ \_   _/\___)__/   | |  
+                                   | |             | |  
+                                   |_|             |_|  
+---end---
+
+---start---
+msg index: 94
+font name: taag_font_Rounded
+line range: 1217,1223
+max line width: 56
+msg content:
+ _     _ _    _______             ___                   
+(_)   (_) |  (_______)           / __)                  
+ _______| |       _ _   _ ____ _| |__ _____ ____   ____ 
+|  ___  | |   _  | | | | |  _ (_   __) ___ |  _ \ / _  |
+| |   | | |  | |_| | |_| | | | || |  | ____| | | ( (_| |
+|_|   |_|_|   \___/|____/|_| |_||_|  |_____)_| |_|\___ |
+                                                 (_____|
+---end---
+
+---start---
+msg index: 95
+font name: taag_font_Script
+line range: 1232,1238
+max line width: 56
+msg content:
+  ,        _                        _                   
+ /|   |   | |   /\                 | |                  
+  |___|   | |  |  |         _  _   | |  _   _  _    __, 
+  |   |\_ |/   |  | |   |  / |/ |  |/  |/  / |/ |  /  | 
+  |   |/\_/\/   \_|/ \_/|_/  |  |_/|__/|__/  |  |_/\_/|/
+                 /|                |\                /| 
+                 \|                |/                \| 
+---end---
+
+---start---
+msg index: 96
+font name: taag_font_SmallKeyboard
+line range: 1247,1250
+max line width: 56
+msg content:
+ ____ ____ _________ ____ ____ ____ ____ ____ ____ ____ 
+||H |||I |||       |||J |||u |||n |||f |||e |||n |||g ||
+||__|||__|||_______|||__|||__|||__|||__|||__|||__|||__||
+|/__\|/__\|/_______\|/__\|/__\|/__\|/__\|/__\|/__\|/__\|
+---end---
+
+---start---
+msg index: 97
+font name: taag_font_FireFontk
+line range: 1259,1267
+max line width: 57
+msg content:
+    )  (                                                 
+ ( /(  )\ )                     (                        
+ )\())(()/(     (     (         )\ )    (         (  (   
+((_)\  /(_))    )\   ))\   (   (()/(   ))\  (     )\))(  
+ _((_)(_))     ((_) /((_)  )\ ) /(_)) /((_) )\ ) ((_))\  
+| || ||_ _|   _ | |(_))(  _(_/((_) _|(_))  _(_/(  (()(_) 
+| __ | | |   | || || || || ' \))|  _|/ -_)| ' \))/ _` |  
+|_||_||___|   \__/  \_,_||_||_| |_|  \___||_||_| \__, |  
+                                                 |___/   
+---end---
+
+---start---
+msg index: 98
+font name: taag_font_JSBlockLetters
+line range: 1276,1278
+max line width: 57
+msg content:
+ _   _  _      __  __ __  __  _  ____  ____  __  _  ____ 
+| |_| || |   __) ||  |  ||  \| || ===|| ===||  \| |/ (_,`
+|_| |_||_|   \___/ \___/ |_|\__||__|  |____||_|\__|\____)
+---end---
+
+---start---
+msg index: 99
+font name: taag_font_BroadwayKB
+line range: 1287,1289
+max line width: 58
+msg content:
+ _     _         _   _     _      ____  ____  _      __   
+| |_| | |       | | | | | | |\ | | |_  | |_  | |\ | / /`_ 
+|_| | |_|     \_|_| \_\_/ |_| \| |_|   |_|__ |_| \| \_\_/ 
+---end---
+
+---start---
+msg index: 100
+font name: taag_font_DoubleShorts
+line range: 1298,1300
+max line width: 58
+msg content:
+__  __ __       __ __ __ __  __ _____ _____ __  __  ____  
+||==|| ||       || || || ||\\|| ||==  ||==  ||\\|| (( ___ 
+||  || ||    |__|| \\_// || \|| ||    ||___ || \||  \\_|| 
+---end---
+
+---start---
+msg index: 101
+font name: taag_font_Double
+line range: 1309,1313
+max line width: 58
+msg content:
+ __  __ __       __ __ __ __  __  ____  ____ __  __   ___ 
+ ||  || ||       || || || ||\ || ||    ||    ||\ ||  // \\
+ ||==|| ||       || || || ||\\|| ||==  ||==  ||\\|| (( ___
+ ||  || ||    |__|| \\_// || \|| ||    ||___ || \||  \\_||
+                                                          
+---end---
+
+---start---
+msg index: 102
+font name: taag_font_Moscow
+line range: 1322,1327
+max line width: 58
+msg content:
+                                                          
+#   # #   #     # # # #   # #   #   #   ##### #   # ##### 
+ # #  #  ##      ###   # #  #   #  ###  #     #   # #   # 
+  #   # # #       #     #   ##### # # # ####  ##### #     
+ # #  ##  #      ###   #    #   #  ###  #     #   # #     
+#   # #   #     # # # #     #   #   #   ##### #   # #     
+---end---
+
+---start---
+msg index: 103
+font name: taag_font_Stop
+line range: 1336,1342
+max line width: 58
+msg content:
+ _     _ _____      _____            ___                  
+| |   | (_____)    (_____)          / __)                 
+| |__ | |  _          _ _   _ ____ | |__ ____ ____   ____ 
+|  __)| | | |        | | | | |  _ \|  __) _  )  _ \ / _  |
+| |   | |_| |_    ___| | |_| | | | | | ( (/ /| | | ( ( | |
+|_|   |_(_____)  (____/ \____|_| |_|_|  \____)_| |_|\_|| |
+                                                   (_____|
+---end---
+
+---start---
+msg index: 104
+font name: taag_font_Bulbhead
+line range: 1351,1354
+max line width: 59
+msg content:
+ _   _  ____     ____  __  __  _  _  ____  ____  _  _  ___ 
+( )_( )(_  _)   (_  _)(  )(  )( \( )( ___)( ___)( \( )/ __)
+ ) _ (  _)(_   .-_)(   )(__)(  )  (  )__)  )__)  )  (( (_-.
+(_) (_)(____)  \____) (______)(_)\_)(__)  (____)(_)\_)\___/
+---end---
+
+---start---
+msg index: 105
+font name: taag_font_JSBracketLetters
+line range: 1363,1366
+max line width: 59
+msg content:
+.-. .-..-.      .-..-. .-..-. .-..----..----..-. .-. .---. 
+| {_} || |   .-.| || { } ||  `| || {_  | {_  |  `| |/   __}
+| { } || |   | {} || {_} || |\  || |   | {__ | |\  |\  {_ }
+`-' `-'`-'   `----'`-----'`-' `-'`-'   `----'`-' `-' `---' 
+---end---
+
+---start---
+msg index: 106
+font name: taag_font_Jerusalem
+line range: 1375,1381
+max line width: 59
+msg content:
+                                                           
+ _   _ ___       _ ___ _______ _____ ______ _______ __   _ 
+| | | |_ _|     | |_  |.  __  |____ |____  |.  __  |\ \ | |
+| |_| || |   _  | | | || |  | |    | |_  | || |  | | \ \| |
+|  _  || |  | |_| | | || | _| |____| | | |_|| | _| |__\ ` |
+|_| |_|___|  \___/  |_||_||___|_____/| |    |_||___|______|
+                                     |_|                   
+---end---
+
+---start---
+msg index: 107
+font name: taag_font_WetLetter
+line range: 1390,1396
+max line width: 60
+msg content:
+ .-. .-.,-.    .-,.-. .-..-. .-.,---.,---.  .-. .-.  ,--,   
+ | | | ||(|    | || | | ||  \| || .-'| .-'  |  \| |.' .'    
+ | `-' |(_)    | || | | ||   | || `-.| `-.  |   | ||  |  __ 
+ | .-. || |    | || | | || |\  || .-'| .-'  | |\  |\  \ ( _)
+ | | |)|| | (`-' || `-')|| | |)|| |  |  `--.| | |)| \  `-) )
+ /(  (_)`-'  \_ )|`---(_)/(  (_))\|  /( __.'/(  (_) )\____/ 
+(__)           (_)      (__)   (__) (__)   (__)    (__)     
+---end---
+
+---start---
+msg index: 108
+font name: taag_font_Braced
+line range: 1405,1409
+max line width: 60
+msg content:
+.-. .-..-.       .-..-. .-..-. .-..----..----..-. .-..----. 
+{ {_} |{ |       | || } { ||  \{ |} |__}} |__}|  \{ || |--' 
+| { } }| }    {`-' }\ `-' /| }\  {} '_} } '__}| }\  {| }-`} 
+`-' `-'`-'     `---' `---' `-' `-'`--'  `----'`-' `-'`----' 
+                                                            
+---end---
+
+---start---
+msg index: 109
+font name: taag_font_HeartLeft
+line range: 1418,1421
+max line width: 60
+msg content:
+ .-.-. .-.-.      .-.-. .-.-. .-.-. .-.-. .-.-. .-.-. .-.-. 
+( H .'( I .'.-.-.( J .'( u .'( n .'( f .'( e .'( n .'( g .' 
+ `.(   `.(  '._.' `.(   `.(   `.(   `.(   `.(   `.(   `.(   
+                                                            
+---end---
+
+---start---
+msg index: 110
+font name: taag_font_HeartRight
+line range: 1430,1433
+max line width: 60
+msg content:
+.-.-. .-.-.      .-.-. .-.-. .-.-. .-.-. .-.-. .-.-. .-.-.  
+'. H )'. I ).-.-.'. J )'. u )'. n )'. f )'. e )'. n )'. g ) 
+  ).'   ).' '._.'  ).'   ).'   ).'   ).'   ).'   ).'   ).'  
+                                                            
+---end---
+
+---start---
+msg index: 111
+font name: taag_font_LCD
+line range: 1442,1447
+max line width: 60
+msg content:
+       ___                             _                 _  
+|   |   |             |               |                 | | 
+|-+-|   +             |       |-     -+-   -    |-       -| 
+|   |   |         |   | | |   | |     |   |/    | |       | 
+       ---         ---   --                --            -  
+                                                            
+---end---
+
+---start---
+msg index: 112
+font name: taag_font_Puffy
+line range: 1456,1463
+max line width: 60
+msg content:
+ _   _  _     _____                  ___                    
+( ) ( )(_)   (___  )               /'___)                   
+| |_| || |       | | _   _   ___  | (__   __    ___     __  
+|  _  || |    _  | |( ) ( )/' _ `\| ,__)/'__`\/' _ `\ /'_ `\
+| | | || |   ( )_| || (_) || ( ) || |  (  ___/| ( ) |( (_) |
+(_) (_)(_)   `\___/'`\___/'(_) (_)(_)  `\____)(_) (_)`\__  |
+                                                     ( )_) |
+                                                      \___/'
+---end---
+
+---start---
+msg index: 113
+font name: taag_font_Cricket
+line range: 1472,1479
+max line width: 61
+msg content:
+  ___ ___ ___     _______              ___                   
+ |   Y   |   |   |   _   .--.--.-----.'  _.-----.-----.-----.
+ |.  1   |.  |   |___|   |  |  |     |   _|  -__|     |  _  |
+ |.  _   |.  |   |.  |   |_____|__|__|__| |_____|__|__|___  |
+ |:  |   |:  |   |:  1   |                            |_____|
+ |::.|:. |::.|   |::.. . |                                   
+ `--- ---`---'   `-------'                                   
+                                                             
+---end---
+
+---start---
+msg index: 114
+font name: taag_font_Bell
+line range: 1488,1493
+max line width: 62
+msg content:
+ __  __ _       _______              ,__                      
+ |   |  |      '   /    ,   . , __   /  `   ___  , __     ___.
+ |___|  |          |    |   | |'  `. |__  .'   ` |'  `. .'   `
+ |   |  |          |    |   | |    | |    |----' |    | |    |
+ /   /  /       `--/    `._/| /    | |    `.___, /    |  `---|
+                                     /                   \___/
+---end---
+
+---start---
+msg index: 115
+font name: taag_font_Gothic
+line range: 1502,1510
+max line width: 63
+msg content:
+                                                               
+_-_-      _-_,        _-_,,               /\                   
+  /,        //       (  //               ||                _   
+  || __     ||         _||  \\ \\ \\/\\ =||=  _-_  \\/\\  / \\ 
+ ~||-  -   ~||         _||  || || || ||  ||  || \\ || || || || 
+  ||===||   ||          ||  || || || ||  ||  ||/   || || || || 
+ ( \_, |  _-_,       -__-,  \\/\\ \\ \\  \\, \\,/  \\ \\ \\_-| 
+       `                                                  /  \ 
+                                                         '----`
+---end---
+
+---start---
+msg index: 116
+font name: taag_font_Shadow
+line range: 1519,1523
+max line width: 63
+msg content:
+  |   | _ _|          |                 _|                     
+  |   |   |           |  |   |  __ \   |     _ \  __ \    _` | 
+  ___ |   |       \   |  |   |  |   |  __|   __/  |   |  (   | 
+ _|  _| ___|     \___/  \__,_| _|  _| _|   \___| _|  _| \__, | 
+                                                        |___/  
+---end---
+
+---start---
+msg index: 117
+font name: taag_font_SmallCaps
+line range: 1532,1536
+max line width: 63
+msg content:
+ _  _    ___      ___   _  _   _  _   ___   ___   _  _   ____  
+) () (  )_ _(    )_ _( ) () ( ) \/ ( ) __( ) __( ) \/ ( ).-._( 
+| -- |  _| |_    _) |  | \/ | |  \ | | _)  | _)  |  \ | |( ,-. 
+)_()_( )_____(  )___(  )____( )_()_( )_(   )___( )_()_( )_`__( 
+                                                               
+---end---
+
+---start---
+msg index: 118
+font name: taag_font_Spliff
+line range: 1545,1549
+max line width: 63
+msg content:
+ __ __  ___     ____  __ __  _____  _____  _____  _____  _____ 
+/  |  \/___\    \_  \/  |  \/  _  \/   __\/   __\/  _  \/   __\
+|  _  ||   |  ---|  ||  |  ||  |  ||   __||   __||  |  ||  |_ |
+\__|__/\___/  \_____/\_____/\__|__/\__/   \_____/\__|__/\_____/
+                                                               
+---end---
+
+---start---
+msg index: 119
+font name: taag_font_Crawford2
+line range: 1558,1565
+max line width: 64
+msg content:
+ __ __  ____       ____  __ __  ____   _____  ___  ____    ____ 
+|  |  ||    |     |    ||  |  ||    \ |     |/  _]|    \  /    |
+|  |  | |  |      |__  ||  |  ||  _  ||   __/  [_ |  _  ||   __|
+|  _  | |  |      __|  ||  |  ||  |  ||  |_|    _]|  |  ||  |  |
+|  |  | |  |     /  |  ||  :  ||  |  ||   _]   [_ |  |  ||  |_ |
+|  |  | |  |     \  `  ||     ||  |  ||  | |     ||  |  ||     |
+|__|__||____|     \____j \__,_||__|__||__| |_____||__|__||___,_|
+                                                                
+---end---
+
+---start---
+msg index: 120
+font name: taag_font_4Max
+line range: 1574,1577
+max line width: 65
+msg content:
+88  88 88      88888 88   88 88b 88 888888 888888 88b 88  dP""b8 
+88  88 88         88 88   88 88Yb88 88__   88__   88Yb88 dP   `" 
+888888 88     o.  88 Y8   8P 88 Y88 88""   88""   88 Y88 Yb  "88 
+88  88 88     "bodP' `YbodP' 88  Y8 88     888888 88  Y8  YboodP 
+---end---
+
+---start---
+msg index: 121
+font name: taag_font_Crawford
+line range: 1586,1593
+max line width: 65
+msg content:
+ __ __  ____       ____  __ __  ____   _____   ___  ____    ____ 
+|  T  Tl    j     |    ||  T  T|    \ |     | /  _]|    \  /    T
+|  l  | |  T      l__  ||  |  ||  _  Y|   __j/  [_ |  _  YY   __j
+|  _  | |  |      __j  ||  |  ||  |  ||  l_ Y    _]|  |  ||  T  |
+|  |  | |  |     /  |  ||  :  ||  |  ||   _]|   [_ |  |  ||  l_ |
+|  |  | j  l     \  `  |l     ||  |  ||  T  |     T|  |  ||     |
+l__j__j|____j     \____j \__,_jl__j__jl__j  l_____jl__j__jl___,_j
+                                                                 
+---end---
+
+---start---
+msg index: 122
+font name: taag_font_OldBanner
+line range: 1602,1608
+max line width: 65
+msg content:
+#     # ###          #                                           
+#     #  #           # #    # #    # ###### ###### #    #  ####  
+#     #  #           # #    # ##   # #      #      ##   # #    # 
+#######  #           # #    # # #  # #####  #####  # #  # #      
+#     #  #     #     # #    # #  # # #      #      #  # # #  ### 
+#     #  #     #     # #    # #   ## #      #      #   ## #    # 
+#     # ###     #####   ####  #    # #      ###### #    #  ####  
+---end---
+
+---start---
+msg index: 123
+font name: taag_font_Stacey
+line range: 1617,1623
+max line width: 65
+msg content:
+___________        ______________________________________________
+7  7  77  7        7  77  7  77     77     77     77     77     7
+|  !  ||  |     ___|  ||  |  ||  _  ||  ___!|  ___!|  _  ||   __!
+|     ||  |     7  !  ||  |  ||  7  ||  __| |  __|_|  7  ||  !  7
+|  7  ||  |     |     ||  !  ||  |  ||  7   |     7|  |  ||     |
+!__!__!!__!     !_____!!_____!!__!__!!__!   !_____!!__!__!!_____!
+                                                                 
+---end---
+
+---start---
+msg index: 124
+font name: taag_font_Graffiti
+line range: 1632,1637
+max line width: 66
+msg content:
+  ___ ___ .___       ____.             _____                      
+ /   |   \|   |     |    |__ __  _____/ ____\____   ____    ____  
+/    ~    \   |     |    |  |  \/    \   __\/ __ \ /    \  / ___\ 
+\    Y    /   | /\__|    |  |  /   |  \  | \  ___/|   |  \/ /_/  >
+ \___|_  /|___| \________|____/|___|  /__|  \___  >___|  /\___  / 
+       \/                           \/          \/     \//_____/  
+---end---
+
+---start---
+msg index: 125
+font name: taag_font_Banner
+line range: 1646,1653
+max line width: 66
+msg content:
+ #     # ###          #                                           
+ #     #  #           # #    # #    # ###### ###### #    #  ####  
+ #     #  #           # #    # ##   # #      #      ##   # #    # 
+ #######  #           # #    # # #  # #####  #####  # #  # #      
+ #     #  #     #     # #    # #  # # #      #      #  # # #  ### 
+ #     #  #     #     # #    # #   ## #      #      #   ## #    # 
+ #     # ###     #####   ####  #    # #      ###### #    #  ####  
+                                                                  
+---end---
+
+---start---
+msg index: 126
+font name: taag_font_Chunky
+line range: 1662,1666
+max line width: 67
+msg content:
+ _______ _______        _____               ___                    
+|   |   |_     _|     _|     |.--.--.-----.'  _|.-----.-----.-----.
+|       |_|   |_     |       ||  |  |     |   _||  -__|     |  _  |
+|___|___|_______|    |_______||_____|__|__|__|  |_____|__|__|___  |
+                                                            |_____|
+---end---
+
+---start---
+msg index: 127
+font name: taag_font_Hieroglyphs
+line range: 1675,1678
+max line width: 67
+msg content:
+()  ;.     _   <~)_                                                
+() ; |    `-)   ( v~\          \/                ||          ____  
+() `.|    _/,'   \_/'         `-'_      ....     ||          /  \  
+/\   |   (___)   /\   ^^^^^^^     `---. `=.`''===.' ^^^^^^^ /_/\_\ 
+---end---
+
+---start---
+msg index: 128
+font name: taag_font_BigChief
+line range: 1687,1694
+max line width: 68
+msg content:
+____________________________________________________________________
+    _     _     __          __                  _                   
+    /    /      /           /                 /  `                  
+---/___ /------/-----------/------------__--_/__-----__----__----__-
+  /    /      /           /    /   /  /   ) /      /___) /   ) /   )
+_/____/____ _/_ _____(___/____(___(__/___/_/______(___ _/___/_(___/_
+                                                                 /  
+                                                             (_ /   
+---end---
+
+---start---
+msg index: 129
+font name: taag_font_JSCapitalCurves
+line range: 1703,1706
+max line width: 68
+msg content:
+ __   _, ____,     ____, __   _, ____,   ____, ____, ____,   ____   
+(-|__|  (-|       (-|   (-|  |  (-|  |  (-|_, (-|_, (-|  |  (-/  `_,
+ _|  |_, _|__,    _ |     |__|_, _|  |_, _|    _|__, _|  |_,  \___) 
+(       (        (__/           (       (     (     (               
+---end---
+
+---start---
+msg index: 130
+font name: taag_font_Letters
+line range: 1715,1720
+max line width: 69
+msg content:
+HH   HH IIIII        JJJ                  fff                        
+HH   HH  III         JJJ uu   uu nn nnn  ff     eee  nn nnn   gggggg 
+HHHHHHH  III         JJJ uu   uu nnn  nn ffff ee   e nnn  nn gg   gg 
+HH   HH  III     JJ  JJJ uu   uu nn   nn ff   eeeee  nn   nn ggggggg 
+HH   HH IIIII     JJJJJ   uuuu u nn   nn ff    eeeee nn   nn      gg 
+                                                              ggggg  
+---end---
+
+---start---
+msg index: 131
+font name: taag_font_Pawp
+line range: 1729,1737
+max line width: 70
+msg content:
+                                                                      
+ _     _  _______     ______                 ____                     
+(_)   (_)(_______)   (______)        _      (____) ____  _            
+(_)___(_)   (_)           (_) _   _ (_)__  (_)__  (____)(_)__    ____ 
+(_______)   (_)       _   (_)(_) (_)(____) (____)(_)_(_)(____)  (____)
+(_)   (_) __(_)__    ( )__(_)(_)_(_)(_) (_)(_)   (__)__ (_) (_)( )_(_)
+(_)   (_)(_______)    (____)  (___) (_) (_)(_)    (____)(_) (_) (____)
+                                                               (_)_(_)
+                                                                (___) 
+---end---
+
+---start---
+msg index: 132
+font name: taag_font_Pebbles
+line range: 1746,1755
+max line width: 70
+msg content:
+o      O ooOoOOo         OooOoo               .oOo                    
+O      o    O                O                O                       
+o      O    o                o                o                       
+OoOooOOo    O                O                OoO                     
+o      O    o                o  O   o  'OoOo. o    .oOo. 'OoOo. .oOoO 
+O      o    O                O  o   O   o   O O    OooO'  o   O o   O 
+o      o    O          O     o  O   o   O   o o    O      O   o O   o 
+o      O ooOOoOo       `OooOO'  `OoO'o  o   O O'   `OoO'  o   O `OoOo 
+                                                                    O 
+                                                                 OoO' 
+---end---
+
+---start---
+msg index: 133
+font name: taag_font_Speed
+line range: 1764,1769
+max line width: 70
+msg content:
+______  _________   _________             ________                    
+___  / / /___  _/   ______  /___  ___________  __/__________________ _
+__  /_/ / __  /     ___ _  /_  / / /_  __ \_  /_ _  _ \_  __ \_  __ `/
+_  __  / __/ /      / /_/ / / /_/ /_  / / /  __/ /  __/  / / /  /_/ / 
+/_/ /_/  /___/      \____/  \__,_/ /_/ /_//_/    \___//_/ /_/_\__, /  
+                                                             /____/   
+---end---
+
+---start---
+msg index: 134
+font name: taag_font_FunFaces
+line range: 1778,1784
+max line width: 71
+msg content:
+   \\  // wW  Ww        _  wWw  wWw\\\  ///  wWw  wWw \\\  ///   \/    
+   (o)(o) (O)(O)      _||\ (O)  (O)((O)(O))  (O)_ (O)_((O)(O))  (OO)   
+   ||  ||  (..)      (_'\  / )  ( \ | \ ||   / __)/ __)| \ || ,'.--.)  
+   |(__)|   ||        (  |/ /    \ \||\\||  / (  / (   ||\\||/ /|_|_\  
+   /.--.\  _||_        \ || \____/ ||| \ | (  _)(  _)  || \ || \_.--.  
+  -'    `-(_/\_)    (\__)|'. `--' .`||  || / /   \ \_  ||  ||'.   \) \ 
+                     `--.)  `-..-' (_/  \_))/     \__)(_/  \_) `-.(_.' 
+---end---
+
+---start---
+msg index: 135
+font name: taag_font_Cyberlarge
+line range: 1793,1796
+max line width: 71
+msg content:
+ _     _ _____      _____ _     _ __   _ _______ _______ __   _  ______
+ |_____|   |          |   |     | | \  | |______ |______ | \  | |  ____
+ |     | __|__      __|   |_____| |  \_| |       |______ |  \_| |_____|
+                                                                       
+---end---
+
+---start---
+msg index: 136
+font name: taag_font_Trek
+line range: 1805,1810
+max line width: 71
+msg content:
+     dBP dBP dBP       dBP dBP dBP dBBBBb  dBBBBP dBBBP  dBBBBb  dBBBBb
+                                      dBP                   dBP        
+   dBBBBBP dBP       dBP dBP dBP dBP dBP dBBBP  dBBP   dBP dBP dBBBB   
+  dBP dBP dBP    dB'dBP dBP_dBP dBP dBP dBP    dBP    dBP dBP dB' BB   
+ dBP dBP dBP    dBBBBP dBBBBBP dBP dBP dBP    dBBBBP dBP dBP dBBBBBB   
+                                                                       
+---end---
+
+---start---
+msg index: 137
+font name: taag_font_Tsalagi
+line range: 1819,1823
+max line width: 71
+msg content:
+ __          _        _____           __   _ _  _  ___     __     ___  
+/  '     () / '        |  \   ,  |~, `  \  | |  |   |     `  \     |_-_
+\_      /~\            |__/  @|  |       | | |  |   |_,       | `\/\   
+/  _   |   |           | \    |  /  |)  /  \ \  /   | '  |)  /   |  |  
+\__,    \_/           _|  \_   \/    \_/    \/\/   _|_    \_/     \/   
+---end---
+
+---start---
+msg index: 138
+font name: taag_font_FunFace
+line range: 1832,1838
+max line width: 72
+msg content:
+   \\  // wW  Ww        _  wWw  wWw\\\  ///            \\\  ///   \/    
+   (o)(o) (O)(O)      _||\ (O)  (O)((O)(O))  wWw   wWw ((O)(O))  (OO)   
+   ||  ||  (..)      (_'\  / )  ( \ | \ ||   (O)_  (O)_ | \ || ,'.--.)  
+   |(__)|   ||        (  |/ /    \ \||\\||  .' __).' __)||\\||/ /|_|_\  
+   /.--.\  _||_     (\_) || \____/ ||| \ | (  _) (  _)  || \ || \_.--.  
+  -'    `-(_/\_)     `-`.)'. `--' .`||  ||  )/    `.__) ||  ||'.   \) \ 
+                        (   `-..-' (_/  \_)(           (_/  \_) `-.(_.' 
+---end---
+
+---start---
+msg index: 139
+font name: taag_font_Soft
+line range: 1847,1853
+max line width: 72
+msg content:
+                                                                        
+,--.  ,--.,--.         ,--.                 ,---.                       
+|  '--'  ||  |         |  |,--.,--.,--,--, /  .-' ,---. ,--,--,  ,---.  
+|  .--.  ||  |    ,--. |  ||  ||  ||      \|  `-,| .-. :|      \| .-. | 
+|  |  |  ||  |    |  '-'  /'  ''  '|  ||  ||  .-'\   --.|  ||  |' '-' ' 
+`--'  `--'`--'     `-----'  `----' `--''--'`--'   `----'`--''--'.`-  /  
+                                                                `---'   
+---end---
+
+---start---
+msg index: 140
+font name: taag_font_Rozzo
+line range: 1862,1868
+max line width: 72
+msg content:
+888 888 888       888                    dP,e,                          
+888 888 888       888 8888 8888 888 8e   8b "   ,e e,  888 8e   e88 888 
+8888888 888       888 8888 8888 888 88b 888888 d88 88b 888 88b d888 888 
+888 888 888    e  88P Y888 888P 888 888  888   888   , 888 888 Y888 888 
+888 888 888   "8",P'   "88 88"  888 888  888    "YeeP" 888 888  "88 888 
+                                                                 ,  88P 
+                                                                "8",P"  
+---end---
+
+---start---
+msg index: 141
+font name: taag_font_AMCTubes
+line range: 1877,1884
+max line width: 73
+msg content:
+d    d d              d d       b d s  b d sss  d sss   d s  b   sSSSs   
+S    S S              S S       S S  S S S      S       S  S S  S     S  
+S    S S              S S       S S   SS S      S       S   SS S         
+S sSSS S              S S       S S    S S sSSs S sSSs  S    S S         
+S    S S      d       P S       S S    S S      S       S    S S    ssSb 
+S    S S       S     S   S     S  S    S S      S       S    S  S     S  
+P    P P        "sss"     "sss"   P    P P      P sSSss P    P   "sss"   
+                                                                         
+---end---
+
+---start---
+msg index: 142
+font name: taag_font_DietCola
+line range: 1893,1898
+max line width: 73
+msg content:
+    .     /        .----.        .----.             .-.                 
+   _ \   / (         /   `         /               / -'                 
+  (   ) (   )       /             /)  ( .  .-.   -/--.-..  .-.    .-.   
+   `./___\.'       /       ..-.   /(    ) )/   )  / ./.-'_)/   )  (   )  
+ .  /     \       /        `.   /  `--':'/   (`.'  (__.''/   (    `-/-' 
+(_.'       `..---------'     `-'              `-              `--._/    
+---end---
+
+---start---
+msg index: 143
+font name: taag_font_OS2
+line range: 1907,1913
+max line width: 73
+msg content:
+oo____oo_oooo_________ooo___________________oooo_________________________
+oo____oo__oo___________oo_oo____o_oo_ooo___oo_____ooooo__oo_ooo___oooo___
+oo____oo__oo___________oo_oo____o_ooo___o_ooooo__oo____o_ooo___o_oo__oo__
+oooooooo__oo_____oo____oo_oo____o_oo____o_oo_____ooooooo_oo____o_oo___o__
+oo____oo__oo_____oo____oo_ooo___o_oo____o_oo_____oo______oo____o__oooooo_
+oo____oo_oooo_____ooooo___oo_ooo__oo____o_oo______ooooo__oo____o_o____oo_
+__________________________________________________________________ooooo__
+---end---
+
+---start---
+msg index: 144
+font name: taag_font_Gradient
+line range: 1922,1930
+max line width: 74
+msg content:
+eee..eee.eee....eeeeeee.eee..eee.eeeeeee..eeeeee.eeeeee.eeeeeee...eeeeee..
+@@@::@@@:@@@::::@@@@@@@:@@@::@@@:@@@@@@@@:@@@@@@:@@@@@@:@@@@@@@@:@@@@@@@@:
+%%%--%%%-%%%--------%%%-%%%--%%%-%%%--%%%-%%%----%%%----%%%--%%%-%%%------
+&&&&&&&&+&&&++++++++&&&+&&&++&&&+&&&++&&&+&&&&&++&&&&&++&&&++&&&+&&&++++++
+||||||||*|||********|||*|||**|||*|||**|||*|||||**|||||**|||**|||*|||*||||*
+!!!==!!!=!!!====!!==!!!=!!!==!!!=!!!==!!!=!!!====!!!====!!!==!!!=!!!==!!!=
+:::##:::#:::####:::::::#::::::::#:::##:::#:::####::::::#:::##:::#::::::::#
+...@@...@...@@@@@.....@@@......@@...@@...@...@@@@......@...@@...@@......@@
+                                                                          
+---end---
+
+---start---
+msg index: 145
+font name: taag_font_Reverse
+line range: 1939,1949
+max line width: 75
+msg content:
+===========================================================================
+=  ====  ==    ===========    ==================    =======================
+=  ====  ===  =============  ==================  ==  ======================
+=  ====  ===  =============  ==================  ==========================
+=  ====  ===  =============  ===  =  ==  = ===    ======   ===  = ====   ==
+=        ===  =============  ===  =  ==     ===  ======  =  ==     ==  =  =
+=  ====  ===  =============  ===  =  ==  =  ===  ======     ==  =  ===    =
+=  ====  ===  ========  ===  ===  =  ==  =  ===  ======  =====  =  =====  =
+=  ====  ===  ========  ===  ===  =  ==  =  ===  ======  =  ==  =  ==  =  =
+=  ====  ==    ========     =====    ==  =  ===  =======   ===  =  ===   ==
+===========================================================================
+---end---
+
+---start---
+msg index: 146
+font name: taag_font_Tanja
+line range: 1958,1965
+max line width: 75
+msg content:
+H)    hh I)iiii    J)jjjjjj                  f)FFF                         
+H)    hh   I)          J)                   f)                             
+H)hhhhhh   I)          J)   u)   UU n)NNNN  f)FFF  e)EEEEE n)NNNN   g)GGG  
+H)    hh   I)      J)  jj   u)   UU n)   NN f)     e)EEEE  n)   NN g)   GG 
+H)    hh   I)      J)  jj   u)   UU n)   NN f)     e)      n)   NN g)   GG 
+H)    hh I)iiii     J)jj     u)UUU  n)   NN f)      e)EEEE n)   NN  g)GGGG 
+                                                                        GG 
+                                                                   g)GGGG  
+---end---
+
+---start---
+msg index: 147
+font name: taag_font_Varsity
+line range: 1974,1980
+max line width: 76
+msg content:
+ ____  ____  _____      _____                    ___                        
+|_   ||   _||_   _|    |_   _|                 .' ..]                       
+  | |__| |    | |        | | __   _   _ .--.  _| |_  .---.  _ .--.   .--./) 
+  |  __  |    | |    _   | |[  | | | [ `.-. |'-| |-'/ /__\\[ `.-. | / /'`\; 
+ _| |  | |_  _| |_  | |__' | | \_/ |, | | | |  | |  | \__., | | | | \ \._// 
+|____||____||_____| `.____.' '.__.'_/[___||__][___]  '.__.'[___||__].',__`  
+                                                                   ( ( __)) 
+---end---
+
+---start---
+msg index: 148
+font name: taag_font_Cards
+line range: 1989,1994
+max line width: 77
+msg content:
+.------..------.     .------..------..------..------..------..------..------.
+|H.--. ||I.--. |.-.  |J.--. ||U.--. ||N.--. ||F.--. ||E.--. ||N.--. ||G.--. |
+| :/\: || (\/) ((5)) | :(): || (\/) || :(): || :(): || (\/) || :(): || :/\: |
+| (__) || :\/: |'-.-.| ()() || :\/: || ()() || ()() || :\/: || ()() || :\/: |
+| '--'H|| '--'I| ((1)) '--'J|| '--'U|| '--'N|| '--'F|| '--'E|| '--'N|| '--'G|
+`------'`------'  '-'`------'`------'`------'`------'`------'`------'`------'
+---end---
+
+---start---
+msg index: 149
+font name: taag_font_ANSIRegular
+line range: 2003,2009
+max line width: 77
+msg content:
+██   ██ ██          ██ ██    ██ ███    ██ ███████ ███████ ███    ██  ██████  
+██   ██ ██          ██ ██    ██ ████   ██ ██      ██      ████   ██ ██       
+███████ ██          ██ ██    ██ ██ ██  ██ █████   █████   ██ ██  ██ ██   ███ 
+██   ██ ██     ██   ██ ██    ██ ██  ██ ██ ██      ██      ██  ██ ██ ██    ██ 
+██   ██ ██      █████   ██████  ██   ████ ██      ███████ ██   ████  ██████  
+                                                                             
+                                                                             
+---end---
+
+---start---
+msg index: 150
+font name: taag_font_3D
+line range: 2018,2025
+max line width: 77
+msg content:
+ **      ** **            **                    ****                         
+/**     /**/**           /**                   /**/                    ***** 
+/**     /**/**           /** **   ** *******  ******  *****  *******  **///**
+/**********/**           /**/**  /**//**///**///**/  **///**//**///**/**  /**
+/**//////**/**           /**/**  /** /**  /**  /**  /******* /**  /**//******
+/**     /**/**       **  /**/**  /** /**  /**  /**  /**////  /**  /** /////**
+/**     /**/**      //***** //****** ***  /**  /**  //****** ***  /**  ***** 
+//      // //        /////   ////// ///   //   //    ////// ///   //  /////  
+---end---
+
+---start---
+msg index: 151
+font name: taag_font_AMC3Liv1
+line range: 2034,2037
+max line width: 77
+msg content:
+.:;S;:.              .:;.;:. .:;S;:. .:;S;:.                 .:;S;:. .:  ;:. 
+   S    .:;s;:'            S       S  /      S  S    S  S  S  /      S   ' S 
+`:;S;:'                   :' `:;S;:' `:;S;:' `:;S;:' `:;S;:' `:;S;:' `:;S;:' 
+                                                                             
+---end---
+
+---start---
+msg index: 152
+font name: taag_font_Cola
+line range: 2046,2051
+max line width: 77
+msg content:
+     `;   .'       .;;;;.           .;;;                 .-.                 
+    _ `; ; (      ' .;'  `           .;'                ; -'                 
+   (  ;' ;  )      .;'              .;',  :   . ,';.  -;--.-.  . ,';.  ,:.,' 
+    `.;__;.'      .;'      .-.     .;';   ;   ;;  ;;  . .;.-'  ;;  ;; :   ;  
+ .  .:'  `:.     .;'       `.     .;.'`..:;._';  ;;`.'   `:::'';  ;;   `-:'  
+(_.'       `:.;;;;;;;;;'     `;;;;;;'        ;    `.          ;    `.-._:'   
+---end---
+
+---start---
+msg index: 153
+font name: taag_font_Fender
+line range: 2060,2066
+max line width: 77
+msg content:
+'||  ||` |''||''|    |''||''|                    .|';                        
+ ||  ||     ||          ||                       ||                          
+ ||''||     ||          ||    '||  ||` `||''|,  '||'  .|''|, `||''|,  .|''|, 
+ ||  ||     ||          ||     ||  ||   ||  ||   ||   ||..||  ||  ||  ||  || 
+.||  ||. |..||..|    '..|'     `|..'|. .||  ||. .||.  `|...  .||  ||. `|..|| 
+                                                                          || 
+                                                                       `..|' 
+---end---
+
+---start---
+msg index: 154
+font name: taag_font_Kban
+line range: 2075,2081
+max line width: 77
+msg content:
+'||'  '||' '||'       '||'                     .'|.                          
+ ||    ||   ||         ||  ... ...  .. ...   .||.     ....  .. ...     ... . 
+ ||''''||   ||         ||   ||  ||   ||  ||   ||    .|...||  ||  ||   || ||  
+ ||    ||   ||         ||   ||  ||   ||  ||   ||    ||       ||  ||    |''   
+.||.  .||. .||.    || .|'   '|..'|. .||. ||. .||.    '|...' .||. ||.  '||||. 
+                    '''                                              .|....' 
+                                                                             
+---end---
+
+---start---
+msg index: 155
+font name: taag_font_Keyboard
+line range: 2090,2098
+max line width: 77
+msg content:
+                                                                             
+ _______ _______     _______ _______ _______ _______ _______ _______ _______ 
+|\     /|\     /|   |\     /|\     /|\     /|\     /|\     /|\     /|\     /|
+| +---+ | +---+ |   | +---+ | +---+ | +---+ | +---+ | +---+ | +---+ | +---+ |
+| |   | | |   | |   | |   | | |   | | |   | | |   | | |   | | |   | | |   | |
+| |H  | | |I  | |   | |J  | | |u  | | |n  | | |f  | | |e  | | |n  | | |g  | |
+| +---+ | +---+ |   | +---+ | +---+ | +---+ | +---+ | +---+ | +---+ | +---+ |
+|/_____\|/_____\|   |/_____\|/_____\|/_____\|/_____\|/_____\|/_____\|/_____\|
+                                                                             
+---end---
+
+---start---
+msg index: 156
+font name: taag_font_Larry3D
+line range: 2107,2115
+max line width: 77
+msg content:
+ __  __  ______       _____                     ___                          
+/\ \/\ \/\__  _\     /\___ \                  /'___\                         
+\ \ \_\ \/_/\ \/     \/__/\ \  __  __    ___ /\ \__/   __    ___      __     
+ \ \  _  \ \ \ \        _\ \ \/\ \/\ \ /' _ `\ \ ,__\/'__`\/' _ `\  /'_ `\   
+  \ \ \ \ \ \_\ \__    /\ \_\ \ \ \_\ \/\ \/\ \ \ \_/\  __//\ \/\ \/\ \L\ \  
+   \ \_\ \_\/\_____\   \ \____/\ \____/\ \_\ \_\ \_\\ \____\ \_\ \_\ \____ \ 
+    \/_/\/_/\/_____/    \/___/  \/___/  \/_/\/_/\/_/ \/____/\/_/\/_/\/___L\ \
+                                                                      /\____/
+                                                                      \_/__/ 
+---end---
+
+---start---
+msg index: 157
+font name: taag_font_Bolger
+line range: 2124,2130
+max line width: 78
+msg content:
+888   | 888           888                     88~\                          / 
+888___| 888           888 888  888 888-~88e _888__  e88~~8e  888-~88e e88~88e 
+888   | 888           888 888  888 888  888  888   d888  88b 888  888 888 888 
+888   | 888           888 888  888 888  888  888   8888__888 888  888 "88_88" 
+888   | 888       |   88P 888  888 888  888  888   Y888    , 888  888  /      
+888   | 888        \__8"  "88_-888 888  888  888    "88___/  888  888 Cb      
+                                                                       Y8""8D 
+---end---
+
+---start---
+msg index: 158
+font name: taag_font_LineBlocks
+line range: 2139,2143
+max line width: 78
+msg content:
+ _    _  _____         _   _    _   ______   ______  ______  ______   ______  
+| |  | |  | |         | | | |  | | | |  \ \ | |     | |     | |  \ \ | | ____ 
+| |--| |  | |     _   | | | |  | | | |  | | | |---- | |---- | |  | | | |  | | 
+|_|  |_| _|_|_   |_|__|_| \_|__|_| |_|  |_| |_|     |_|____ |_|  |_| |_|__|_| 
+                                                                              
+---end---
+
+---start---
+msg index: 159
+font name: taag_font_Barbwire
+line range: 2152,2159
+max line width: 79
+msg content:
+><<     ><<><<          ><<                     ><<                            
+><<     ><<><<          ><<                   ><                               
+><<     ><<><<          ><<><<  ><<><< ><<  ><>< ><   ><<    ><< ><<     ><<   
+><<<<<< ><<><<          ><<><<  ><< ><<  ><<  ><<   ><   ><<  ><<  ><< ><<  ><<
+><<     ><<><<          ><<><<  ><< ><<  ><<  ><<  ><<<<< ><< ><<  ><<><<   ><<
+><<     ><<><<     ><   ><<><<  ><< ><<  ><<  ><<  ><         ><<  ><< ><<  ><<
+><<     ><<><<      ><<<<    ><<><<><<<  ><<  ><<    ><<<<   ><<<  ><<     ><< 
+                                                                        ><<    
+---end---
+
+---start---
+msg index: 160
+font name: taag_font_Georgi16
+line range: 2168,2183
+max line width: 79
+msg content:
+                                                                               
+                                                                               
+____    _______           ____                      __                         
+`MM'    `MM`MM'           `MM'                     69MM                        
+ MM      MM MM             MM                     6M' `                        
+ MM      MM MM             MM ___   ___ ___  __  _MM______  ___  __     __     
+ MM      MM MM             MM `MM    MM `MM 6MMb MMMM6MMMMb `MM 6MMb   6MMbMMM 
+ MMMMMMMMMM MM             MM  MM    MM  MMM9 `Mb MM6M'  `Mb MMM9 `Mb 6M'`Mb   
+ MM      MM MM             MM  MM    MM  MM'   MM MMMM    MM MM'   MM MM  MM   
+ MM      MM MM             MM  MM    MM  MM    MM MMMMMMMMMM MM    MM YM.,M9   
+ MM      MM MM       (8)   MM  MM    MM  MM    MM MMMM       MM    MM  YMM9    
+ MM      MM MM       ((   ,M9  YM.   MM  MM    MM MMYM    d9 MM    MM (M       
+_MM_    _MM_MM_       YMMMM9    YMMM9MM__MM_  _MM_MM_YMMMM9 _MM_  _MM_ YMMMMb. 
+                                                                      6M    Yb 
+                                                                      YM.   d9 
+                                                                       YMMMM9  
+---end---
+
+---start---
+msg index: 161
+font name: taag_font_Marquee
+line range: 2192,2199
+max line width: 79
+msg content:
+.::     .::.::          .::                     .::                            
+.::     .::.::          .::                   .:                               
+.::     .::.::          .::.::  .::.:: .::  .:.: .:   .::    .:: .::     .::   
+.:::::: .::.::          .::.::  .:: .::  .::  .::   .:   .::  .::  .:: .::  .::
+.::     .::.::          .::.::  .:: .::  .::  .::  .::::: .:: .::  .::.::   .::
+.::     .::.::     .:   .::.::  .:: .::  .::  .::  .:         .::  .:: .::  .::
+.::     .::.::      .::::    .::.::.:::  .::  .::    .::::   .:::  .::     .:: 
+                                                                        .::    
+---end---
+
+---start---
+msg index: 162
+font name: taag_font_NancyjUnderlined
+line range: 2208,2215
+max line width: 79
+msg content:
+dP     dP  dP           dP                   .8888b                            
+88     88  88           88                   88   "                            
+88aaaaa88a 88           88 dP    dP 88d888b. 88aaa  .d8888b. 88d888b. .d8888b. 
+88     88  88           88 88    88 88'  `88 88     88ooood8 88'  `88 88'  `88 
+88     88  88    88.  .d8P 88.  .88 88    88 88     88.  ... 88    88 88.  .88 
+dP     dP  dP     `Y8888'  `88888P' dP    dP dP     `88888P' dP    dP `8888P88 
+ooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo~~~~.88~
+                                                                       d8888P  
+---end---
+
+---start---
+msg index: 163
+font name: taag_font_Nancyj
+line range: 2224,2231
+max line width: 79
+msg content:
+dP     dP  dP           dP                   .8888b                            
+88     88  88           88                   88   "                            
+88aaaaa88a 88           88 dP    dP 88d888b. 88aaa  .d8888b. 88d888b. .d8888b. 
+88     88  88           88 88    88 88'  `88 88     88ooood8 88'  `88 88'  `88 
+88     88  88    88.  .d8P 88.  .88 88    88 88     88.  ... 88    88 88.  .88 
+dP     dP  dP     `Y8888'  `88888P' dP    dP dP     `88888P' dP    dP `8888P88 
+                                                                           .88 
+                                                                       d8888P  
+---end---
+
+---start---
+msg index: 164
+font name: taag_font_Nipples
+line range: 2240,2247
+max line width: 79
+msg content:
+{__     {__{__          {__                     {__                            
+{__     {__{__          {__                   {_                               
+{__     {__{__          {__{__  {__{__ {__  {_{_ {_   {__    {__ {__     {__   
+{______ {__{__          {__{__  {__ {__  {__  {__   {_   {__  {__  {__ {__  {__
+{__     {__{__          {__{__  {__ {__  {__  {__  {_____ {__ {__  {__{__   {__
+{__     {__{__     {_   {__{__  {__ {__  {__  {__  {_         {__  {__ {__  {__
+{__     {__{__      {____    {__{__{___  {__  {__    {____   {___  {__     {__ 
+                                                                        {__    
+---end---
+
+---start---
+msg index: 165
+font name: taag_font_Peaks
+line range: 2256,2263
+max line width: 79
+msg content:
+/^^     /^^/^^          /^^                     /^^                            
+/^^     /^^/^^          /^^                   /^                               
+/^^     /^^/^^          /^^/^^  /^^/^^ /^^  /^/^ /^   /^^    /^^ /^^     /^^   
+/^^^^^^ /^^/^^          /^^/^^  /^^ /^^  /^^  /^^   /^   /^^  /^^  /^^ /^^  /^^
+/^^     /^^/^^          /^^/^^  /^^ /^^  /^^  /^^  /^^^^^ /^^ /^^  /^^/^^   /^^
+/^^     /^^/^^     /^   /^^/^^  /^^ /^^  /^^  /^^  /^         /^^  /^^ /^^  /^^
+/^^     /^^/^^      /^^^^    /^^/^^/^^^  /^^  /^^    /^^^^   /^^^  /^^     /^^ 
+                                                                        /^^    
+---end---
+
+---start---
+msg index: 166
+font name: taag_font_RowanCap
+line range: 2272,2277
+max line width: 79
+msg content:
+    dMP dMP dMP        dMMMMMP dMP dMP dMMMMb  dMMMMMP dMMMMMP dMMMMb  .aMMMMP 
+   dMP dMP amr            dMP dMP dMP dMP dMP dMP     dMP     dMP dMP dMP"     
+  dMMMMMP dMP            dMP dMP dMP dMP dMP dMMMP   dMMMP   dMP dMP dMP MMP"  
+ dMP dMP dMP        dK .dMP dMP.aMP dMP dMP dMP     dMP     dMP dMP dMP.dMP    
+dMP dMP dMP         VMMMP"  VMMMP" dMP dMP dMP     dMMMMMP dMP dMP  VMMMP"     
+                                                                               
+---end---
+
+---start---
+msg index: 167
+font name: taag_font_SmallPoison
+line range: 2286,2292
+max line width: 79
+msg content:
+                                                                               
+@@@  @@@ @@@        @@@ @@@  @@@ @@@  @@@ @@@@@@@@ @@@@@@@@ @@@  @@@  @@@@@@@  
+@@!  @@@ @@!        @@! @@!  @@@ @@!@!@@@ @@!      @@!      @@!@!@@@ !@@       
+@!@!@!@! !!@        !!@ @!@  !@! @!@@!!@! @!!!:!   @!!!:!   @!@@!!@! !@! @!@!@ 
+!!:  !!! !!:    .  .!!  !!:  !!! !!:  !!! !!:      !!:      !!:  !!! :!!   !!: 
+ :   : : :      ::.::    :.:: :  ::    :   :       : :: ::  ::    :   :: :: :  
+                                                                               
+---end---
+
+---start---
+msg index: 168
+font name: taag_font_Stellar
+line range: 2301,2308
+max line width: 79
+msg content:
+`..     `..`..          `..                     `..                            
+`..     `..`..          `..                   `.                               
+`..     `..`..          `..`..  `..`.. `..  `.`. `.   `..    `.. `..     `..   
+`...... `..`..          `..`..  `.. `..  `..  `..   `.   `..  `..  `.. `..  `..
+`..     `..`..          `..`..  `.. `..  `..  `..  `..... `.. `..  `..`..   `..
+`..     `..`..     `.   `..`..  `.. `..  `..  `..  `.         `..  `.. `..  `..
+`..     `..`..      `....    `..`..`...  `..  `..    `....   `...  `..     `.. 
+                                                                        `..    
+---end---
+
+---start---
+msg index: 169
+font name: taag_font_Tiles
+line range: 2317,2324
+max line width: 79
+msg content:
+[..     [..[..          [..                     [..                            
+[..     [..[..          [..                   [.                               
+[..     [..[..          [..[..  [..[.. [..  [.[. [.   [..    [.. [..     [..   
+[...... [..[..          [..[..  [.. [..  [..  [..   [.   [..  [..  [.. [..  [..
+[..     [..[..          [..[..  [.. [..  [..  [..  [..... [.. [..  [..[..   [..
+[..     [..[..     [.   [..[..  [.. [..  [..  [..  [.         [..  [.. [..  [..
+[..     [..[..      [....    [..[..[...  [..  [..    [....   [...  [..     [.. 
+                                                                        [..    
+---end---
+
+---start---
+msg index: 170
+font name: taag_font_Tubular
+line range: 2333,2340
+max line width: 79
+msg content:
+O~~     O~~O~~          O~~                     O~~                            
+O~~     O~~O~~          O~~                   O~                               
+O~~     O~~O~~          O~~O~~  O~~O~~ O~~  O~O~ O~   O~~    O~~ O~~     O~~   
+O~~~~~~ O~~O~~          O~~O~~  O~~ O~~  O~~  O~~   O~   O~~  O~~  O~~ O~~  O~~
+O~~     O~~O~~          O~~O~~  O~~ O~~  O~~  O~~  O~~~~~ O~~ O~~  O~~O~~   O~~
+O~~     O~~O~~     O~   O~~O~~  O~~ O~~  O~~  O~~  O~         O~~  O~~ O~~  O~~
+O~~     O~~O~~      O~~~~    O~~O~~O~~~  O~~  O~~    O~~~~   O~~~  O~~     O~~ 
+                                                                        O~~    
+---end---
+
+---start---
+msg index: 171
+font name: taag_font_Modular
+line range: 2349,2355
+max line width: 80
+msg content:
+ __   __  ___         ___  __   __  __    _  _______  _______  __    _  _______ 
+|  | |  ||   |       |   ||  | |  ||  |  | ||       ||       ||  |  | ||       |
+|  |_|  ||   |       |   ||  | |  ||   |_| ||    ___||    ___||   |_| ||    ___|
+|       ||   |       |   ||  |_|  ||       ||   |___ |   |___ |       ||   | __ 
+|       ||   |    ___|   ||       ||  _    ||    ___||    ___||  _    ||   ||  |
+|   _   ||   |   |       ||       || | |   ||   |    |   |___ | | |   ||   |_| |
+|__| |__||___|   |_______||_______||_|  |__||___|    |_______||_|  |__||_______|
+---end---
+
+---start---
+msg index: 172
+font name: taag_font_Bright
+line range: 2364,2369
+max line width: 80
+msg content:
+.##..##..######..........######..##..##..##..##..######..######..##..##...####..
+.##..##....##................##..##..##..###.##..##......##......###.##..##.....
+.######....##................##..##..##..##.###..####....####....##.###..##.###.
+.##..##....##............##..##..##..##..##..##..##......##......##..##..##..##.
+.##..##..######...........####....####...##..##..##......######..##..##...####..
+................................................................................
+---end---
+
+---start---
+msg index: 173
+font name: taag_font_Catwalk
+line range: 2378,2385
+max line width: 80
+msg content:
+_//     _//_//           _//                     _//                            
+_//     _//_//           _//                   _/                               
+_//     _//_//           _//_//  _//_// _//  _/_/ _/   _//    _// _//     _//   
+_////// _//_//           _//_//  _// _//  _//  _//   _/   _//  _//  _// _//  _//
+_//     _//_//           _//_//  _// _//  _//  _//  _///// _// _//  _//_//   _//
+_//     _//_//      _/   _//_//  _// _//  _//  _//  _/         _//  _// _//  _//
+_//     _//_//       _////    _//_//_///  _//  _//    _////   _///  _//     _// 
+                                                                         _//    
+---end---
+
+---start---
+msg index: 174
+font name: taag_font_Contrast
+line range: 2394,2399
+max line width: 80
+msg content:
+.%%..%%..%%%%%%..........%%%%%%..%%..%%..%%..%%..%%%%%%..%%%%%%..%%..%%...%%%%..
+.%%..%%....%%................%%..%%..%%..%%%.%%..%%......%%......%%%.%%..%%.....
+.%%%%%%....%%................%%..%%..%%..%%.%%%..%%%%....%%%%....%%.%%%..%%.%%%.
+.%%..%%....%%............%%..%%..%%..%%..%%..%%..%%......%%......%%..%%..%%..%%.
+.%%..%%..%%%%%%...........%%%%....%%%%...%%..%%..%%......%%%%%%..%%..%%...%%%%..
+................................................................................
+---end---
+
+---start---
+msg index: 175
+font name: taag_font_Diamond
+line range: 2408,2415
+max line width: 80
+msg content:
+/\\     /\\/\\           /\\                     /\\                            
+/\\     /\\/\\           /\\                   /\                               
+/\\     /\\/\\           /\\/\\  /\\/\\ /\\  /\/\ /\   /\\    /\\ /\\     /\\   
+/\\\\\\ /\\/\\           /\\/\\  /\\ /\\  /\\  /\\   /\   /\\  /\\  /\\ /\\  /\\
+/\\     /\\/\\           /\\/\\  /\\ /\\  /\\  /\\  /\\\\\ /\\ /\\  /\\/\\   /\\
+/\\     /\\/\\      /\   /\\/\\  /\\ /\\  /\\  /\\  /\         /\\  /\\ /\\  /\\
+/\\     /\\/\\       /\\\\    /\\/\\/\\\  /\\  /\\    /\\\\   /\\\  /\\     /\\ 
+                                                                         /\\    
+---end---
+
+---start---
+msg index: 176
+font name: taag_font_Basic
+line range: 2424,2431
+max line width: 81
+msg content:
+db   db d888888b         d88b db    db d8b   db d88888b d88888b d8b   db  d888b  
+88   88   `88'           `8P' 88    88 888o  88 88'     88'     888o  88 88' Y8b 
+88ooo88    88             88  88    88 88V8o 88 88ooo   88ooooo 88V8o 88 88      
+88~~~88    88             88  88    88 88 V8o88 88~~~   88~~~~~ 88 V8o88 88  ooo 
+88   88   .88.        db. 88  88b  d88 88  V888 88      88.     88  V888 88. ~8~ 
+YP   YP Y888888P      Y8888P  ~Y8888P' VP   V8P YP      Y88888P VP   V8P  Y888P  
+                                                                                 
+                                                                                 
+---end---
+
+---start---
+msg index: 177
+font name: taag_font_Coinstak
+line range: 2440,2447
+max line width: 81
+msg content:
+O))     O))O))            O))                     O))                            
+O))     O))O))            O))                   O)                               
+O))     O))O))            O))O))  O))O)) O))  O)O) O)   O))    O)) O))     O))   
+O)))))) O))O))            O))O))  O)) O))  O))  O))   O)   O))  O))  O)) O))  O))
+O))     O))O))            O))O))  O)) O))  O))  O))  O))))) O)) O))  O))O))   O))
+O))     O))O))       O)   O))O))  O)) O))  O))  O))  O)         O))  O)) O))  O))
+O))     O))O))        O))))    O))O))O)))  O))  O))    O))))   O)))  O))     O)) 
+                                                                          O))    
+---end---
+
+---start---
+msg index: 178
+font name: taag_font_SBlood
+line range: 2456,2461
+max line width: 81
+msg content:
+ @@@  @@@ @@@          @@@ @@@  @@@ @@@  @@@ @@@@@@@@ @@@@@@@@ @@@  @@@  @@@@@@@ 
+ @@!  @@@ @@!          @@! @@!  @@@ @@!@!@@@ @@!      @@!      @@!@!@@@ !@@      
+ @!@!@!@! !!@          !!@ @!@  !@! @!@@!!@! @!!!:!   @!!!:!   @!@@!!@! !@! @!@!@
+ !!:  !!! !!:      .  .!!  !!:  !!! !!:  !!! !!:      !!:      !!:  !!! :!!   !!:
+  :   : : :        ::.::    :.:: :  ::    :   :       : :: ::: ::    :   :: :: : 
+                                                                                 
+---end---
+
+---start---
+msg index: 179
+font name: taag_font_USAFlag
+line range: 2470,2475
+max line width: 81
+msg content:
+ :::  === :::          ::: :::  === :::= === :::===== :::===== :::= === :::===== 
+ :::  === :::          ::: :::  === :::===== :::      :::      :::===== :::      
+ ======== ===          === ===  === ======== ======   ======   ======== === =====
+ ===  === ===      ==  === ===  === === ==== ===      ===      === ==== ===   ===
+ ===  === ===      ======   ======  ===  === ===      ======== ===  ===  ======= 
+                                                                                 
+---end---
+
+---start---
+msg index: 180
+font name: taag_font_Train
+line range: 2484,2489
+max line width: 82
+msg content:
+  _  _     ___                 _                      __                    __ _  
+ | || |   |_ _|     o O O   _ | |  _  _    _ _       / _|   ___    _ _     / _` | 
+ | __ |    | |     o       | || | | +| |  | ' \     |  _|  / -_)  | ' \    \__, | 
+ |_||_|   |___|   TS__[O]  _\__/   \_,_|  |_||_|   _|_|_   \___|  |_||_|   |___/  
+_|"""""|_|"""""| {======|_|"""""|_|"""""|_|"""""|_|"""""|_|"""""|_|"""""|_|"""""| 
+"`-0-0-'"`-0-0-'./o--000'"`-0-0-'"`-0-0-'"`-0-0-'"`-0-0-'"`-0-0-'"`-0-0-'"`-0-0-' 
+---end---
+
+---start---
+msg index: 181
+font name: taag_font_Binary
+line range: 2498,2498
+max line width: 82
+msg content:
+01001000 01001001  01001010 01110101 01101110 01100110 01100101 01101110 01100111 
+---end---
+
+---start---
+msg index: 182
+font name: taag_font_Whimsy
+line range: 2507,2516
+max line width: 82
+msg content:
+ d8b        d8,       d8,                       ,d8888b                           
+ ?88       `8P       `8P                        88P'                              
+  88b                                        d888888P                             
+  888888b   88b      d88  ?88   d8P  88bd88b   ?88'     d8888b  88bd88b  d888b8b  
+  88P `?8b  88P      ?88  d88   88   88P' ?8b  88P     d8b_,dP  88P' ?8bd8P' ?88  
+ d88   88P d88        88b ?8(  d88  d88   88P d88      88b     d88   88P88b  ,88b 
+d88'   88bd88'        `88b`?88P'?8bd88'   88bd88'      `?888P'd88'   88b`?88P'`88b
+                       )88                                                     )88
+                      ,88P                                                    ,88P
+                   `?888P                                                 `?8888P 
+---end---
+
+---start---
+msg index: 183
+font name: taag_font_Epic
+line range: 2525,2533
+max line width: 83
+msg content:
+         _________  _________          _        _______  _______  _        _______ 
+|\     /|\__   __/  \__    _/|\     /|( (    /|(  ____ \(  ____ \( (    /|(  ____ \
+| )   ( |   ) (        )  (  | )   ( ||  \  ( || (    \/| (    \/|  \  ( || (    \/
+| (___) |   | |        |  |  | |   | ||   \ | || (__    | (__    |   \ | || |      
+|  ___  |   | |        |  |  | |   | || (\ \) ||  __)   |  __)   | (\ \) || | ____ 
+| (   ) |   | |        |  |  | |   | || | \   || (      | (      | | \   || | \_  )
+| )   ( |___) (___  |\_)  )  | (___) || )  \  || )      | (____/\| )  \  || (___) |
+|/     \|\_______/  (____/   (_______)|/    )_)|/       (_______/|/    )_)(_______)
+                                                                                   
+---end---
+
+---start---
+msg index: 184
+font name: taag_font_Banner3
+line range: 2542,2548
+max line width: 83
+msg content:
+##     ## ####          ## ##     ## ##    ## ######## ######## ##    ##  ######   
+##     ##  ##           ## ##     ## ###   ## ##       ##       ###   ## ##    ##  
+##     ##  ##           ## ##     ## ####  ## ##       ##       ####  ## ##        
+#########  ##           ## ##     ## ## ## ## ######   ######   ## ## ## ##   #### 
+##     ##  ##     ##    ## ##     ## ##  #### ##       ##       ##  #### ##    ##  
+##     ##  ##     ##    ## ##     ## ##   ### ##       ##       ##   ### ##    ##  
+##     ## ####     ######   #######  ##    ## ##       ######## ##    ##  ######   
+---end---
+
+---start---
+msg index: 185
+font name: taag_font_Banner4
+line range: 2557,2563
+max line width: 83
+msg content:
+.##.....##.####..........##.##.....##.##....##.########.########.##....##..######..
+.##.....##..##...........##.##.....##.###...##.##.......##.......###...##.##....##.
+.##.....##..##...........##.##.....##.####..##.##.......##.......####..##.##.......
+.#########..##...........##.##.....##.##.##.##.######...######...##.##.##.##...####
+.##.....##..##.....##....##.##.....##.##..####.##.......##.......##..####.##....##.
+.##.....##..##.....##....##.##.....##.##...###.##.......##.......##...###.##....##.
+.##.....##.####.....######...#######..##....##.##.......########.##....##..######..
+---end---
+
+---start---
+msg index: 186
+font name: taag_font_AMCUntitled
+line range: 2572,2579
+max line width: 84
+msg content:
+,'',   ,'', ,'',         ,'',                                                       
+;  ;   ;  ; ;  ;         ;  ;                                                       
+;  ;,',;  ; ;  ;         ;  ; ,',  ,', ,'',,'', ,'',,'', ,'',,'', ,'',,'', ,'',,'', 
+;  ;',';  ; ;  ;         ;  ; ; ;  ; ; ;  ;', ; ;  ;',,' ;  ;',,' ;  ;', ; ;  ; ''  
+;  ;   ;  ; ;  ;         ;  ; ; ;  ; ; ;  ; ; ; ;  ;',,' ;  ;',,' ;  ; ; ; ;  ;,'', 
+;  ;   ;  ; ;  ;     ,'',;  ; ; ',,' ; ;  ; ; ; ;  ;     ;  ; ,,  ;  ; ; ; ;  ;,' ; 
+',,'   ',,' ',,'     ',,'',,' ',,'',,' ',,' ',' ',,'     ',,'',,' ',,' ',' ',,'',,' 
+                                                                                    
+---end---
+
+---start---
+msg index: 187
+font name: taag_font_Colossal
+line range: 2588,2598
+max line width: 84
+msg content:
+888    888 8888888        888888                    .d888                           
+888    888   888            "88b                   d88P"                            
+888    888   888             888                   888                              
+8888888888   888             888 888  888 88888b.  888888 .d88b.  88888b.   .d88b.  
+888    888   888             888 888  888 888 "88b 888   d8P  Y8b 888 "88b d88P"88b 
+888    888   888             888 888  888 888  888 888   88888888 888  888 888  888 
+888    888   888             88P Y88b 888 888  888 888   Y8b.     888  888 Y88b 888 
+888    888 8888888           888  "Y88888 888  888 888    "Y8888  888  888  "Y88888 
+                           .d88P                                                888 
+                         .d88P"                                            Y8b d88P 
+                        888P"                                               "Y88P"  
+---end---
+
+---start---
+msg index: 188
+font name: taag_font_Henry3D
+line range: 2607,2614
+max line width: 84
+msg content:
+    _  _     __          _                         ____                             
+   FJ  L]    FJ          L]   _    _    _ ___     / ___J ____     _ ___      ___ _  
+  J |__| L  J  L         | L J |  | L  J '__ J   J |_--'F __ J   J '__ J    F __` L 
+  |  __  |  |  |         | | | |  | |  | |__| |  |  _| | _____J  | |__| |  | |--| | 
+  F L__J J  F  J    .--__J J F L__J J  F L  J J  F |_J F L___--. F L  J J  F L__J J 
+ J__L  J__LJ____L   J\_____/J\____,__LJ__L  J__LJ__F  J\______/FJ__L  J__L )-____  L
+ |__L  J__||____|    J_____/ J____,__F|__L  J__||__|   J______F |__L  J__|J\______/F
+                                                                           J______F 
+---end---
+
+---start---
+msg index: 189
+font name: taag_font_AMCThin
+line range: 2623,2629
+max line width: 85
+msg content:
+.-.   .-. .-.         .-. .-.   .-. .-..-.  .-. .-..--. .-..--. .-..-.  .-. .-..--.  
+| | _ | | | |         | | | |   | | | | ~.-.| | | | ~~  | | ~~  | | ~.-.| | | | ~~   
+| |`-'| | | |         | | | |   | | | |   ~ | | | | _   | | _   | |   ~ | | | |  __  
+| |   | | | |         | | | |   | | | |     | | | |`-'  | |`-'  | |     | | | | `. | 
+| |   | | | |      __ | | | | _ | | | |     | | | |     | | __  | |     | | | | _| | 
+`-'   `-' `-'     `--'`-' `-'`-'`-' `-'     `-' `-'     `-'`--' `-'     `-' `-'`---' 
+                                                                                     
+---end---
+
+---start---
+msg index: 190
+font name: taag_font_Filter
+line range: 2638,2642
+max line width: 85
+msg content:
+888  888    8888        d8p 888  888 888  ,d8   o8boooo   ,d8PPPP 888  ,d8 888PPP8b  
+88888888    8888        88p 888  888 888_dPY8   88booop   d88ooo  888_dPY8 d88    `  
+88P  888    8888        88P 888  888 8888' 88   88b     ,88'      8888' 88 d8b PPY8  
+88P  888    8888     88888' 888PP888 Y8P   Y8   88P     88bdPPP   Y8P   Y8 Y8PPPPPP  
+                                                                                     
+---end---
+
+---start---
+msg index: 191
+font name: taag_font_NancyjFancy
+line range: 2651,2658
+max line width: 85
+msg content:
+M""MMMMM""MM M""M    MMMMMMMM""M                   .8888b                            
+M  MMMMM  MM M  M    MMMMMMMM  M                   88   "                            
+M         `M M  M    MMMMMMMM  M dP    dP 88d888b. 88aaa  .d8888b. 88d888b. .d8888b. 
+M  MMMMM  MM M  M    MMMMMMMM  M 88    88 88'  `88 88     88ooood8 88'  `88 88'  `88 
+M  MMMMM  MM M  M    M. `MMM' .M 88.  .88 88    88 88     88.  ... 88    88 88.  .88 
+M  MMMMM  MM M  M    MM.     .MM `88888P' dP    dP dP     `88888P' dP    dP `8888P88 
+MMMMMMMMMMMM MMMM    MMMMMMMMMMM                                                 .88 
+                                                                             d8888P  
+---end---
+
+---start---
+msg index: 192
+font name: taag_font_5LineOblique
+line range: 2667,2672
+max line width: 87
+msg content:
+             ___   ___                                                                 
+    //    / /   / /                / /                   //  ) )                       
+   //___ / /   / /                / /            __   __//__  ___       __      ___    
+  / ___   /   / /                / / //   / / //   ) ) //   //___) ) //   ) ) //   ) ) 
+ //    / /   / /                / / //   / / //   / / //   //       //   / / ((___/ /  
+//    / / __/ /___        ((___/ / ((___( ( //   / / //   ((____   //   / /   //__     
+---end---
+
+---start---
+msg index: 193
+font name: taag_font_AMCSlash
+line range: 2681,2690
+max line width: 87
+msg content:
+.s    s.  s.            s.                                                             
+      SS. SS.           SS. .s    s.  .s    s.  .s5SSSs. .s5SSSs.  .s    s.  .s5SSSs.  
+sS    S%S S%S           S%S       SS.       SS.                SS.       SS.       SS. 
+SS    S%S S%S           S%S sS    S%S sSs.  S%S sS       sS    `:; sSs.  S%S sS    `:; 
+SSSs. S%S S%S           S%S SS    S%S SS `S.S%S SSSs.    SSSs.     SS `S.S%S SS        
+SS    S%S S%S           S%S SS    S%S SS  `sS%S SS       SS        SS  `sS%S SS        
+SS    `:; `:;           `:; SS    `:; SS    `:; SS       SS        SS    `:; SS   ``:; 
+SS    ;,. ;,.     .,;   ;,. SS    ;,. SS    ;,. SS       SS    ;,. SS    ;,. SS    ;,. 
+:;    ;:' ;:'     `:;;;;;:' `:;;;;;:' :;    ;:' :;       `:;;;;;:' :;    ;:' `:;;;;;:' 
+                                                                                       
+---end---
+
+---start---
+msg index: 194
+font name: taag_font_Arrows
+line range: 2699,2706
+max line width: 87
+msg content:
+>=>    >=> >=>            >=>                        >=>                               
+>=>    >=> >=>            >=>                      >>                                  
+>=>    >=> >=>            >=> >=>  >=> >==>>==>  >=>> >>   >==>    >==>>==>     >=>    
+>=====>>=> >=>            >=> >=>  >=>  >=>  >=>   >=>   >>   >=>   >=>  >=>  >=>  >=> 
+>=>    >=> >=>            >=> >=>  >=>  >=>  >=>   >=>   >>===>>=>  >=>  >=> >=>   >=> 
+>=>    >=> >=>       >>   >=> >=>  >=>  >=>  >=>   >=>   >>         >=>  >=>  >=>  >=> 
+>=>    >=> >=>        >===>     >==>=> >==>  >=>   >=>    >====>   >==>  >=>      >=>  
+                                                                               >=>     
+---end---
+
+---start---
+msg index: 195
+font name: taag_font_Hollywood
+line range: 2715,2724
+max line width: 87
+msg content:
+           _           _  _      _______                                               
+          ' )     )   ' /' `    (,     /'                                              
+          /'    /'    /'             /'                    /')                         
+       ,/'    /'    /'             /'         ,____      /' /' ____     ,____     ____ 
+      /`---,/'    /'     _       /'/'    /   /'    )  -/'--' /'    )   /'    )  /'    )
+    /'    /'    /'     /' `    /'/'    /'  /'    /'  /'    /(___,/'  /'    /' /'    /' 
+(,/'     (_,(,/(_,    (_____,/' (___,/(__/'    /(__/(_____(________/'    /(__(___,/(__ 
+                                                 /'                             /'     
+                                               /'                       /     /'       
+                                             /'                        (___,/'         
+---end---
+
+---start---
+msg index: 196
+font name: taag_font_DancingFont
+line range: 2733,2739
+max line width: 88
+msg content:
+  _   _                       _      _   _   _   _     _____ U _____ u _   _     ____   
+ |'| |'|     ___           U |"| uU |"|u| | | \ |"|   |" ___|\| ___"|/| \ |"| U /"___|u 
+/| |_| |\   |_"_|         _ \| |/  \| |\| |<|  \| |> U| |_  u |  _|" <|  \| |>\| |  _ / 
+U|  _  |u    | |         | |_| |_,-.| |_| |U| |\  |u \|  _|/  | |___ U| |\  |u | |_| |  
+ |_| |_|   U/| |\u        \___/-(_/<<\___/  |_| \_|   |_|     |_____| |_| \_|   \____|  
+ //   \\.-,_|___|_,-.      _//    (__) )(   ||   \\,-.)(\\,-  <<   >> ||   \\,-._)(|_   
+(_") ("_)\_)-' '-(_/      (__)        (__)  (_")  (_/(__)(_/ (__) (__)(_")  (_/(__)__)  
+---end---
+
+---start---
+msg index: 197
+font name: taag_font_Twisted
+line range: 2748,2755
+max line width: 88
+msg content:
+  __   __    __        __    __    __   __   __    _____    _____  __   __    ______    
+ /\_\ /_/\  /\_\      /_/\  /\_\  /_/\ /_/\ /\_\ /\_____\ /\_____\/_/\ /\_\  /_/\___\   
+( ( (_) ) ) \/_/      ) ) )( ( (  ) ) )) ) \ ( (( (  ___/( (_____/) ) \ ( (  ) ) ___/   
+ \ \___/ /   /\_\  _ /_/ /  \ \ \/ / //_/   \ \_\\ \ \_   \ \__\ /_/   \ \_\/_/ /  ___  
+ / / _ \ \  / / / /_/\ \ \   \ \  / / \ \ \   / // / /_\  / /__/_\ \ \   / /\ \ \_/\__\ 
+( (_( )_) )( (_(  )_) ) ) )  ( (__) )  )_) \ (_(/ /____/ ( (_____\)_) \ (_(  )_)  \/ _/ 
+ \/_/ \_\/  \/_/  \_\___\/    \/__\/   \_\/ \/_/\/_/      \/_____/\_\/ \/_/  \_\____/   
+                                                                                        
+---end---
+
+---start---
+msg index: 198
+font name: taag_font_AMCRazor2
+line range: 2764,2772
+max line width: 88
+msg content:
+   . .    .            .       . .       . .       . .       . .       . .       . .    
+.+'| |`+. |`+.         |`+. .+'| |`+. .+'|=|`+. .+'|=|`+. .+'|=|`+. .+'|=|`+. .+'|=|`+. 
+|  | |  | |  |         |  | |  | |  | |  | `+ | |  | `+.| |  | `+.| |  | `+ | |  | `+.| 
+|  |=|  | |  |         |  | |  | |  | |  |  | | |  |=|`.  |  |=|`.  |  |  | | |  | .    
+|  | |  | |  |         |  | |  | |  | |  |  | | |  | `.|  |  | `.|  |  |  | | |  | |`+. 
+|  | |  | |  |    .    |  | |  | |  | |  |  | | |  |      |  |    . |  |  | | |  | `. | 
+|  | |  | |  |    |`+. |  | |  | |  | |  |  | | |  |      |  | .+'| |  |  | | |  | .+ | 
+`+.| |..| |.+'    `+.|=|.+' `+.|=|.+' `+.|  |.| `+.|      `+.|=|.+' `+.|  |.| `+.|=|.+' 
+                                                                                        
+---end---
+
+---start---
+msg index: 199
+font name: taag_font_Ghoulish
+line range: 2781,2787
+max line width: 88
+msg content:
+     .'(  .'(         .-,.-.,-.     .-.   )\  )\  )`-.--.  )\.---.   )\  )\     )\.-.   
+ ,') \  ) \  )        ).-, ,-.( ,'  /  ) (  \, /  ) ,-._( (   ,-._( (  \, /   ,' ,-,_)  
+(  '-' (  ) (             ))   (  ) | (   ) \ (   \ `-._   \  '-,    ) \ (   (  .   __  
+ ) .-.  ) \  )       .-._((     ) '._\ ) ( ( \ \   ) ,_(    ) ,-`   ( ( \ \   ) '._\ _) 
+(  ,  ) \  ) \      (      )   (  ,   (   `.)/  ) (  \     (  ``-.   `.)/  ) (  ,   (   
+ )/    )/   )/       '._.\(     )/ ._.'      '.(   ).'      )..-.(      '.(   )/'._.'   
+                                                                                        
+---end---
+
+---start---
+msg index: 200
+font name: taag_font_StarWars
+line range: 2796,2802
+max line width: 89
+msg content:
+ __    __   __            __   __    __  .__   __.  _______  _______ .__   __.   _______ 
+|  |  |  | |  |          |  | |  |  |  | |  \ |  | |   ____||   ____||  \ |  |  /  _____|
+|  |__|  | |  |          |  | |  |  |  | |   \|  | |  |__   |  |__   |   \|  | |  |  __  
+|   __   | |  |    .--.  |  | |  |  |  | |  . `  | |   __|  |   __|  |  . `  | |  | |_ | 
+|  |  |  | |  |    |  `--'  | |  `--'  | |  |\   | |  |     |  |____ |  |\   | |  |__| | 
+|__|  |__| |__|     \______/   \______/  |__| \__| |__|     |_______||__| \__|  \______| 
+                                                                                         
+---end---
+
+---start---
+msg index: 201
+font name: taag_font_Poison
+line range: 2811,2822
+max line width: 89
+msg content:
+                                                                                         
+@@@  @@@  @@@          @@@  @@@  @@@  @@@  @@@  @@@@@@@@  @@@@@@@@  @@@  @@@   @@@@@@@@  
+@@@  @@@  @@@          @@@  @@@  @@@  @@@@ @@@  @@@@@@@@  @@@@@@@@  @@@@ @@@  @@@@@@@@@  
+@@!  @@@  @@!          @@!  @@!  @@@  @@!@!@@@  @@!       @@!       @@!@!@@@  !@@        
+!@!  @!@  !@!          !@!  !@!  @!@  !@!!@!@!  !@!       !@!       !@!!@!@!  !@!        
+@!@!@!@!  !!@          !!@  @!@  !@!  @!@ !!@!  @!!!:!    @!!!:!    @!@ !!@!  !@! @!@!@  
+!!!@!!!!  !!!          !!!  !@!  !!!  !@!  !!!  !!!!!:    !!!!!:    !@!  !!!  !!! !!@!!  
+!!:  !!!  !!:          !!:  !!:  !!!  !!:  !!!  !!:       !!:       !!:  !!!  :!!   !!:  
+:!:  !:!  :!:     !!:  :!:  :!:  !:!  :!:  !:!  :!:       :!:       :!:  !:!  :!:   !::  
+::   :::   ::     ::: : ::  ::::: ::   ::   ::   ::        :: ::::   ::   ::   ::: ::::  
+ :   : :  :        : :::     : :  :   ::    :    :        : :: ::   ::    :    :: :: :   
+                                                                                         
+---end---
+
+---start---
+msg index: 202
+font name: taag_font_Sweet
+line range: 2831,2843
+max line width: 90
+msg content:
+ ___                                                 .-.                                  
+(   )       .-.                                     /    \                                
+ | | .-.   ( __)        .-.   ___  ___   ___ .-.    | .`. ;    .--.    ___ .-.     .--.   
+ | |/   \  (''")       ( __) (   )(   ) (   )   \   | |(___)  /    \  (   )   \   /    \  
+ |  .-. .   | |        (''")  | |  | |   |  .-. .   | |_     |  .-. ;  |  .-. .  ;  ,-. ' 
+ | |  | |   | |         | |   | |  | |   | |  | |  (   __)   |  | | |  | |  | |  | |  | | 
+ | |  | |   | |         | |   | |  | |   | |  | |   | |      |  |/  |  | |  | |  | |  | | 
+ | |  | |   | |         | |   | |  | |   | |  | |   | |      |  ' _.'  | |  | |  | |  | | 
+ | |  | |   | |         | |   | |  ; '   | |  | |   | |      |  .'.-.  | |  | |  | '  | | 
+ | |  | |   | |     ___ | |   ' `-'  /   | |  | |   | |      '  `-' /  | |  | |  '  `-' | 
+(___)(___) (___)   (   )' |    '.__.'   (___)(___) (___)      `.__.'  (___)(___)  `.__. | 
+                    ; `-' '                                                       ( `-' ; 
+                     .__.'                                                         `.__.  
+---end---
+
+---start---
+msg index: 203
+font name: taag_font_Georgia11
+line range: 2852,2862
+max line width: 90
+msg content:
+                                                                                          
+                                                            ,...                          
+`7MMF'  `7MMF'`7MMF'       `7MMF'                         .d' ""                          
+  MM      MM    MM           MM                           dM`                             
+  MM      MM    MM           MM `7MM  `7MM  `7MMpMMMb.   mMMmm.gP"Ya `7MMpMMMb.  .P"Ybmmm 
+  MMmmmmmmMM    MM           MM   MM    MM    MM    MM    MM ,M'   Yb  MM    MM :MI  I8   
+  MM      MM    MM           MM   MM    MM    MM    MM    MM 8M""""""  MM    MM  WmmmP"   
+  MM      MM    MM      (O)  MM   MM    MM    MM    MM    MM YM.    ,  MM    MM 8M        
+.JMML.  .JMML..JMML.     Ymmm9    `Mbod"YML..JMML  JMML..JMML.`Mbmmd'.JMML  JMML.YMMMMMb  
+                                                                                6'     dP 
+                                                                                Ybmmmd'   
+---end---
+
+---start---
+msg index: 204
+font name: taag_font_Merlin2
+line range: 2871,2879
+max line width: 91
+msg content:
+   _          _           _          _      _          _         _        _          _     
+ _/\\___    _/\\_      __/\\__  ___ /\\   _/\\___   __/\\___  __/\\___  _/\\___   __/\\__  
+(_ __ __)) (____))    (_    _))/  //\ \\ (_      ))(_  ____))(_  ____))(_      ))(_  ___)) 
+ /  |_| \\  /  \\       \  \\  \:.\\_\ \\ /  :   \\ / ||__    /  ._))   /  :   \\ / || _   
+/:.  _   \\/:.  \\    /\/ .:\\  \  :.  ///:. |   ///:. ._))  /:. ||___ /:. |   ///:. \/ \\ 
+\___| |  //\__  //    \__  _// (_   ___))\___|  // \  _))    \  _____))\___|  // \  ____// 
+       \//    \//        \//     \//          \//   \//       \//           \//   \//      
+                                                                                           
+                                                                                           
+---end---
+
+---start---
+msg index: 205
+font name: taag_font_Puzzle
+line range: 2888,2892
+max line width: 91
+msg content:
+     _        _        _        _        _        _        _        _        _        _    
+   _( )__   _( )__   _( )__   _( )__   _( )__   _( )__   _( )__   _( )__   _( )__   _( )__ 
+ _|     _|_|     _|_|     _|_|     _|_|     _|_|     _|_|     _|_|     _|_|     _|_|     _|
+(_ H _ (_(_ I _ (_(_   _ (_(_ J _ (_(_ U _ (_(_ N _ (_(_ F _ (_(_ E _ (_(_ N _ (_(_ G _ (_ 
+  |_( )__| |_( )__| |_( )__| |_( )__| |_( )__| |_( )__| |_( )__| |_( )__| |_( )__| |_( )__|
+---end---
+
+---start---
+msg index: 206
+font name: taag_font_BigMoneyne
+line range: 2901,2911
+max line width: 92
+msg content:
+ /$$   /$$ /$$$$$$          /$$$$$                      /$$$$$$                             
+| $$  | $$|_  $$_/         |__  $$                     /$$__  $$                            
+| $$  | $$  | $$              | $$ /$$   /$$ /$$$$$$$ | $$  \__//$$$$$$  /$$$$$$$   /$$$$$$ 
+| $$$$$$$$  | $$              | $$| $$  | $$| $$__  $$| $$$$   /$$__  $$| $$__  $$ /$$__  $$
+| $$__  $$  | $$         /$$  | $$| $$  | $$| $$  \ $$| $$_/  | $$$$$$$$| $$  \ $$| $$  \ $$
+| $$  | $$  | $$        | $$  | $$| $$  | $$| $$  | $$| $$    | $$_____/| $$  | $$| $$  | $$
+| $$  | $$ /$$$$$$      |  $$$$$$/|  $$$$$$/| $$  | $$| $$    |  $$$$$$$| $$  | $$|  $$$$$$$
+|__/  |__/|______/       \______/  \______/ |__/  |__/|__/     \_______/|__/  |__/ \____  $$
+                                                                                   /$$  \ $$
+                                                                                  |  $$$$$$/
+                                                                                   \______/ 
+---end---
+
+---start---
+msg index: 207
+font name: taag_font_BigMoneysw
+line range: 2920,2931
+max line width: 92
+msg content:
+ __    __  ______           _____                       ______                              
+/  |  /  |/      |         /     |                     /      \                             
+$$ |  $$ |$$$$$$/          $$$$$ | __    __  _______  /$$$$$$  |______   _______    ______  
+$$ |__$$ |  $$ |              $$ |/  |  /  |/       \ $$ |_ $$//      \ /       \  /      \ 
+$$    $$ |  $$ |         __   $$ |$$ |  $$ |$$$$$$$  |$$   |  /$$$$$$  |$$$$$$$  |/$$$$$$  |
+$$$$$$$$ |  $$ |        /  |  $$ |$$ |  $$ |$$ |  $$ |$$$$/   $$    $$ |$$ |  $$ |$$ |  $$ |
+$$ |  $$ | _$$ |_       $$ \__$$ |$$ \__$$ |$$ |  $$ |$$ |    $$$$$$$$/ $$ |  $$ |$$ \__$$ |
+$$ |  $$ |/ $$   |      $$    $$/ $$    $$/ $$ |  $$ |$$ |    $$       |$$ |  $$ |$$    $$ |
+$$/   $$/ $$$$$$/        $$$$$$/   $$$$$$/  $$/   $$/ $$/      $$$$$$$/ $$/   $$/  $$$$$$$ |
+                                                                                  /  \__$$ |
+                                                                                  $$    $$/ 
+                                                                                   $$$$$$/  
+---end---
+
+---start---
+msg index: 208
+font name: taag_font_Banner3D
+line range: 2940,2947
+max line width: 92
+msg content:
+'##::::'##:'####::::::::::'##:'##::::'##:'##::: ##:'########:'########:'##::: ##::'######:::
+ ##:::: ##:. ##::::::::::: ##: ##:::: ##: ###:: ##: ##.....:: ##.....:: ###:: ##:'##... ##::
+ ##:::: ##:: ##::::::::::: ##: ##:::: ##: ####: ##: ##::::::: ##::::::: ####: ##: ##:::..:::
+ #########:: ##::::::::::: ##: ##:::: ##: ## ## ##: ######::: ######::: ## ## ##: ##::'####:
+ ##.... ##:: ##:::::'##::: ##: ##:::: ##: ##. ####: ##...:::: ##...:::: ##. ####: ##::: ##::
+ ##:::: ##:: ##::::: ##::: ##: ##:::: ##: ##:. ###: ##::::::: ##::::::: ##:. ###: ##::: ##::
+ ##:::: ##:'####::::. ######::. #######:: ##::. ##: ##::::::: ########: ##::. ##:. ######:::
+..:::::..::....::::::......::::.......:::..::::..::..::::::::........::..::::..:::......::::
+---end---
+
+---start---
+msg index: 209
+font name: taag_font_HorizontalLeft
+line range: 2956,2961
+max line width: 92
+msg content:
+ _______   _     _     _    __   ______    _______   _______   _______   _______   _______  
+\__   __\ | |___| |   | /___\ \ /_____ `. `._   __| |  _ ___| | ._ _. | `._   __| / .---. \ 
+ __| |__  |  ___  |   | ______/  _____\ |  _`. `._  | ||_\    | \ v / |  _`. `._  | \ .-`_/ 
+\_______\ |_|   |_|   |_\       \______.` |_______| |_/       |_/   \_| |_______| \_/ |.`   
+                                                                                            
+                                                                                            
+---end---
+
+---start---
+msg index: 210
+font name: taag_font_HorizontalRight
+line range: 2970,2975
+max line width: 92
+msg content:
+ _______   _     _     __    _    ______   _______   _______   _______   _______   _______  
+\__   __\ | |___| |   / /___\ | .' _____\ |__   _.' |___ _  | | ._ _. | |__   _.' / .---. \ 
+ __| |__  |  ___  |   \______ | | /_____   _.' .'_     /_|| | | \ v / |  _.' .'_  \_'-. / | 
+\_______\ |_|   |_|         /_| '.______/ |_______|       \_| |_/   \_| |_______|   '.| \_/ 
+                                                                                            
+                                                                                            
+---end---
+
+---start---
+msg index: 211
+font name: taag_font_BigMoneynw
+line range: 2984,2994
+max line width: 93
+msg content:
+$$\   $$\ $$$$$$\          $$$$$\                      $$$$$$\                               
+$$ |  $$ |\_$$  _|         \__$$ |                    $$  __$$\                              
+$$ |  $$ |  $$ |              $$ |$$\   $$\ $$$$$$$\  $$ /  \__|$$$$$$\  $$$$$$$\   $$$$$$\  
+$$$$$$$$ |  $$ |              $$ |$$ |  $$ |$$  __$$\ $$$$\    $$  __$$\ $$  __$$\ $$  __$$\ 
+$$  __$$ |  $$ |        $$\   $$ |$$ |  $$ |$$ |  $$ |$$  _|   $$$$$$$$ |$$ |  $$ |$$ /  $$ |
+$$ |  $$ |  $$ |        $$ |  $$ |$$ |  $$ |$$ |  $$ |$$ |     $$   ____|$$ |  $$ |$$ |  $$ |
+$$ |  $$ |$$$$$$\       \$$$$$$  |\$$$$$$  |$$ |  $$ |$$ |     \$$$$$$$\ $$ |  $$ |\$$$$$$$ |
+\__|  \__|\______|       \______/  \______/ \__|  \__|\__|      \_______|\__|  \__| \____$$ |
+                                                                                   $$\   $$ |
+                                                                                   \$$$$$$  |
+                                                                                    \______/ 
+---end---
+
+---start---
+msg index: 212
+font name: taag_font_BigMoneyse
+line range: 3003,3014
+max line width: 93
+msg content:
+ __    __  ______           _____                       ______                               
+|  \  |  \|      \         |     \                     /      \                              
+| $$  | $$ \$$$$$$          \$$$$$ __    __  _______  |  $$$$$$\ ______   _______    ______  
+| $$__| $$  | $$              | $$|  \  |  \|       \ | $$_  \$$/      \ |       \  /      \ 
+| $$    $$  | $$         __   | $$| $$  | $$| $$$$$$$\| $$ \   |  $$$$$$\| $$$$$$$\|  $$$$$$\
+| $$$$$$$$  | $$        |  \  | $$| $$  | $$| $$  | $$| $$$$   | $$    $$| $$  | $$| $$  | $$
+| $$  | $$ _| $$_       | $$__| $$| $$__/ $$| $$  | $$| $$     | $$$$$$$$| $$  | $$| $$__| $$
+| $$  | $$|   $$ \       \$$    $$ \$$    $$| $$  | $$| $$      \$$     \| $$  | $$ \$$    $$
+ \$$   \$$ \$$$$$$        \$$$$$$   \$$$$$$  \$$   \$$ \$$       \$$$$$$$ \$$   \$$ _\$$$$$$$
+                                                                                   |  \__| $$
+                                                                                    \$$    $$
+                                                                                     \$$$$$$ 
+---end---
+
+---start---
+msg index: 213
+font name: taag_font_LilDevil
+line range: 3023,3030
+max line width: 93
+msg content:
+ (`-').->  _                             <-. (`-')_            (`-')  _<-. (`-')_            
+ (OO )__  (_)                      .->      \( OO) )  <-.      ( OO).-/   \( OO) )    .->    
+,--. ,'-' ,-(`-')       <-.--.,--.(,--.  ,--./ ,--/(`-')-----.(,------.,--./ ,--/  ,---(`-') 
+|  | |  | | ( OO)     (`-'| ,||  | |(`-')|   \ |  |(OO|(_\---' |  .---'|   \ |  | '  .-(OO ) 
+|  `-'  | |  |  )     (OO |(_||  | |(OO )|  . '|  |)/ |  '--. (|  '--. |  . '|  |)|  | .-, \ 
+|  .-.  |(|  |_/     ,--. |  ||  | | |  \|  |\    | \_)  .--'  |  .--' |  |\    | |  | '.(_/ 
+|  | |  | |  |'->    |  '-'  /\  '-'(_ .'|  | \   |  `|  |_)   |  `---.|  | \   | |  '-'  |  
+`--' `--' `--'        `-----'  `-----'   `--'  `--'   `--'     `------'`--'  `--'  `-----'   
+---end---
+
+---start---
+msg index: 214
+font name: taag_font_Block
+line range: 3039,3046
+max line width: 93
+msg content:
+                                                                                             
+ _|    _|  _|_|_|            _|                          _|_|                                
+ _|    _|    _|              _|  _|    _|  _|_|_|      _|        _|_|    _|_|_|      _|_|_|  
+ _|_|_|_|    _|              _|  _|    _|  _|    _|  _|_|_|_|  _|_|_|_|  _|    _|  _|    _|  
+ _|    _|    _|        _|    _|  _|    _|  _|    _|    _|      _|        _|    _|  _|    _|  
+ _|    _|  _|_|_|        _|_|      _|_|_|  _|    _|    _|        _|_|_|  _|    _|    _|_|_|  
+                                                                                         _|  
+                                                                                     _|_|    
+---end---
+
+---start---
+msg index: 215
+font name: taag_font_Test1
+line range: 3055,3058
+max line width: 93
+msg content:
+ ____ _____________ _______________ ________    __ __________ __________ ___    __ __________
+/   /_\   \__/ \__/ \____/ \__|   / \   /   \  |  /   /_____//   /_____/|   \  |  /   /_____/
+\___\%/___/`%\_/%'_ _`%%%\_/%'/___\_/___\____\_|__\___\%%%%%'\___\%%%%%'|____\_|__\___\%%%%.]
+ `BB' `BB'`BBBBBBB' `BBBBB'   `BBBBBBBBB'`BBBBBBB' `BB'       `BBBBBBBB' `BBBBBBB' `BBBBBBBB'
+---end---
+
+---start---
+msg index: 216
+font name: taag_font_SmallIsometric1
+line range: 3067,3073
+max line width: 95
+msg content:
+    ___       ___            ___       ___       ___       ___       ___       ___       ___   
+   /\__\     /\  \          /\  \     /\__\     /\__\     /\  \     /\  \     /\__\     /\  \  
+  /:/__/_   _\:\  \        _\:\  \   /:/ _/_   /:| _|_   /::\  \   /::\  \   /:| _|_   /::\  \ 
+ /::\/\__\ /\/::\__\      /\/::\__\ /:/_/\__\ /::|/\__\ /::\:\__\ /::\:\__\ /::|/\__\ /:/\:\__\
+ \/\::/  / \::/\/__/      \::/\/__/ \:\/:/  / \/|::/  / \/\:\/__/ \:\:\/  / \/|::/  / \:\:\/__/
+   /:/  /   \:\__\         \/__/     \::/  /    |:/  /     \/__/   \:\/  /    |:/  /   \::/  / 
+   \/__/     \/__/                    \/__/     \/__/               \/__/     \/__/     \/__/  
+---end---
+
+---start---
+msg index: 217
+font name: taag_font_Cosmike
+line range: 3082,3087
+max line width: 95
+msg content:
+  ::   .:  :::        ....::::::...    ::::::.    :::..-:::::'.,:::::::::.    :::.  .,-:::::/  
+ ,;;   ;;, ;;;     ;;;;;;;;;````;;     ;;;`;;;;,  `;;;;;;'''' ;;;;''''`;;;;,  `;;;,;;-'````'   
+,[[[,,,[[[ [[[     ''`  `[[.   [['     [[[  [[[[[. '[[[[[,,==  [[cccc   [[[[[. '[[[[[   [[[[[[/
+"$$$"""$$$ $$$    ,,,    `$$   $$      $$$  $$$ "Y$c$$`$$$"``  $$""""   $$$ "Y$c$$"$$c.    "$$ 
+ 888   "88o888    888boood88   88    .d888  888    Y88 888     888oo,__ 888    Y88 `Y8bo,,,o88o
+ MMM    YMMMMM    "MMMMMMMM"    "YmmMMMM""  MMM     YM "MM,    """"YUMMMMMM     YM   `'YMUP"YMM
+---end---
+
+---start---
+msg index: 218
+font name: taag_font_babyfacelame
+line range: 3096,3100
+max line width: 96
+msg content:
+   _______    ________       ______  ________  ________  ________  ________  ________  ________ 
+  /    /  \\ /        \     /      \/    /   \/    /   \/        \/        \/    /   \/        \
+ /        //_/       /     /       /         /         /       __/         /         /       __/
+/         //         /   _/      //         /         /        _/        _/         /       / / 
+\___/____/ \\_______/    \______//\________/\__/_____/\_______/ \________/\__/_____/\________/  
+---end---
+
+---start---
+msg index: 219
+font name: taag_font_babyfaceleet
+line range: 3109,3113
+max line width: 96
+msg content:
+   _______    ________       ______  ________  ________  ________  ________  ________  ________ 
+  ╱    ╱  ╲╲ ╱        ╲     ╱      ╲╱    ╱   ╲╱    ╱   ╲╱        ╲╱        ╲╱    ╱   ╲╱        ╲
+ ╱        ╱╱_╱       ╱     ╱       ╱         ╱         ╱       __╱         ╱         ╱       __╱
+╱         ╱╱         ╱   _╱      ╱╱         ╱         ╱        _╱        _╱         ╱       ╱ ╱ 
+╲___╱____╱ ╲╲_______╱    ╲______╱╱╲________╱╲__╱_____╱╲_______╱ ╲________╱╲__╱_____╱╲________╱  
+---end---
+
+---start---
+msg index: 220
+font name: taag_font_ShadedBlocky
+line range: 3122,3127
+max line width: 96
+msg content:
+░  ░░░░  ░░        ░░░░░░░░        ░░  ░░░░  ░░   ░░░  ░░        ░░        ░░   ░░░  ░░░      ░░
+▒  ▒▒▒▒  ▒▒▒▒▒  ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒  ▒▒  ▒▒▒▒  ▒▒    ▒▒  ▒▒  ▒▒▒▒▒▒▒▒  ▒▒▒▒▒▒▒▒    ▒▒  ▒▒  ▒▒▒▒▒▒▒
+▓        ▓▓▓▓▓  ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓  ▓▓  ▓▓▓▓  ▓▓  ▓  ▓  ▓▓      ▓▓▓▓      ▓▓▓▓  ▓  ▓  ▓▓  ▓▓▓   ▓
+█  ████  █████  ███████████  ████  ██  ████  ██  ██    ██  ████████  ████████  ██    ██  ████  █
+█  ████  ██        █████████      ████      ███  ███   ██  ████████        ██  ███   ███      ██
+                                                                                                
+---end---
+
+---start---
+msg index: 221
+font name: taag_font_SubZero
+line range: 3136,3141
+max line width: 96
+msg content:
+ __  __     __          __     __  __     __   __     ______   ______     __   __     ______    
+/\ \_\ \   /\ \        /\ \   /\ \/\ \   /\ "-.\ \   /\  ___\ /\  ___\   /\ "-.\ \   /\  ___\   
+\ \  __ \  \ \ \      _\_\ \  \ \ \_\ \  \ \ \-.  \  \ \  __\ \ \  __\   \ \ \-.  \  \ \ \__ \  
+ \ \_\ \_\  \ \_\    /\_____\  \ \_____\  \ \_\\"\_\  \ \_\    \ \_____\  \ \_\\"\_\  \ \_____\ 
+  \/_/\/_/   \/_/    \/_____/   \/_____/   \/_/ \/_/   \/_/     \/_____/   \/_/ \/_/   \/_____/ 
+                                                                                                
+---end---
+
+---start---
+msg index: 222
+font name: taag_font_AMCAAA01
+line range: 3150,3164
+max line width: 96
+msg content:
+ .S    S.    .S            .S   .S       S.    .S_sSSs      sSSs    sSSs   .S_sSSs      sSSSSs  
+.SS    SS.  .SS           .SS  .SS       SS.  .SS~YS%%b    d%%SP   d%%SP  .SS~YS%%b    d%%%%SP  
+S%S    S%S  S%S           S%S  S%S       S%S  S%S   `S%b  d%S'    d%S'    S%S   `S%b  d%S'      
+S%S    S%S  S%S           S%S  S%S       S%S  S%S    S%S  S%S     S%S     S%S    S%S  S%S       
+S%S SSSS%S  S&S           S&S  S&S       S&S  S%S    S&S  S&S     S&S     S%S    S&S  S&S       
+S&S  SSS&S  S&S           S&S  S&S       S&S  S&S    S&S  S&S_Ss  S&S_Ss  S&S    S&S  S&S       
+S&S    S&S  S&S           S&S  S&S       S&S  S&S    S&S  S&S~SP  S&S~SP  S&S    S&S  S&S       
+S&S    S&S  S&S           S&S  S&S       S&S  S&S    S&S  S&S     S&S     S&S    S&S  S&S sSSs  
+S*S    S*S  S*S           d*S  S*b       d*S  S*S    S*S  S*b     S*b     S*S    S*S  S*b `S%%  
+S*S    S*S  S*S          .S*S  S*S.     .S*S  S*S    S*S  S*S     S*S.    S*S    S*S  S*S   S%  
+S*S    S*S  S*S        sdSSS    SSSbs_sdSSS   S*S    S*S  S*S      SSSbs  S*S    S*S   SS_sSSS  
+SSS    S*S  S*S        YSSY      YSSP~YSSY    S*S    SSS  S*S       YSSP  S*S    SSS    Y~YSSY  
+       SP   SP                                SP          SP              SP                    
+       Y    Y                                 Y           Y               Y                     
+                                                                                                
+---end---
+
+---start---
+msg index: 223
+font name: taag_font_Lean
+line range: 3173,3180
+max line width: 96
+msg content:
+                                                                                                
+    _/    _/  _/_/_/            _/                          _/_/                                
+   _/    _/    _/              _/  _/    _/  _/_/_/      _/        _/_/    _/_/_/      _/_/_/   
+  _/_/_/_/    _/              _/  _/    _/  _/    _/  _/_/_/_/  _/_/_/_/  _/    _/  _/    _/    
+ _/    _/    _/        _/    _/  _/    _/  _/    _/    _/      _/        _/    _/  _/    _/     
+_/    _/  _/_/_/        _/_/      _/_/_/  _/    _/    _/        _/_/_/  _/    _/    _/_/_/      
+                                                                                       _/       
+                                                                                  _/_/          
+---end---
+
+---start---
+msg index: 224
+font name: taag_font_O8
+line range: 3189,3194
+max line width: 96
+msg content:
+ooooo ooooo ooooo        ooooo                          o888o                                   
+ 888   888   888          888 oooo  oooo  oo oooooo   o888oo ooooooooo8 oo oooooo     oooooooo8 
+ 888ooo888   888          888  888   888   888   888   888  888oooooo8   888   888  888    88o  
+ 888   888   888          888  888   888   888   888   888  888          888   888   888oo888o  
+o888o o888o o888o         888   888o88 8o o888o o888o o888o   88oooo888 o888o o888o 888     888 
+                       8o888                                                         888ooo888  
+---end---
+
+---start---
+msg index: 225
+font name: taag_font_Rammstein
+line range: 3203,3209
+max line width: 96
+msg content:
+     _____        _____           _____                                                         
+  __|  _  |__  __|_    |__     __|_    |__  __   _  ____   _  ______  ______  ____   _  ______  
+ |  |_| |    ||    |      |   |    |      ||  | | ||    \ | ||   ___||   ___||    \ | ||   ___| 
+ |   _  |    ||    |      |  _|    |      ||  |_| ||     \| ||   ___||   ___||     \| ||   |  | 
+ |__| |_|  __||____|    __| |______|    __||______||__/\____||___|   |______||__/\____||______| 
+    |_____|      |_____|         |_____|                                                        
+                                                                                                
+---end---
+
+---start---
+msg index: 226
+font name: taag_font_Katakana
+line range: 3218,3225
+max line width: 98
+msg content:
+   #          #                     ##########   ######   ####                ######        #     
+  ########   ########    ##########          #                ## ##########                #      
+ #       #  #    #                #         #  ########## ###            #  ##########    #       
+#      ##  #    #                 # ########   #        #    ###        #   #        #   #        
+     ##        #                  #     ##            ##             # #           ##   #     #   
+   ##         #                   #   ##            ##    ###         #          ##    #########  
+ ##          #           #########  ##            ##         ###       #       ##               # 
+                                                                                                  
+---end---
+
+---start---
+msg index: 227
+font name: taag_font_Relief
+line range: 3234,3240
+max line width: 98
+msg content:
+__________________________________________________________________________________________________
+/~~\__/~~\_/~~~~\________/~~~~\_/~~\__/~~\_/~~\__/~~\_/~~~~~~~~\_/~~~~~~~~\_/~~\__/~~\__/~~~~~~\__
+/~~\__/~~\__/~~\__________/~~\__/~~\__/~~\_/~~~~\/~~\_/~~\_______/~~\_______/~~~~\/~~\_/~~\__/~~\_
+/~~~~~~~~\__/~~\__________/~~\__/~~\__/~~\_/~~~~~~~~\_/~~~~~~\___/~~~~~~\___/~~~~~~~~\_/~~\_______
+/~~\__/~~\__/~~\__________/~~\__/~~\__/~~\_/~~\/~~~~\_/~~\_______/~~\_______/~~\/~~~~\_/~~\__/~~\_
+/~~\__/~~\_/~~~~\______/~~~~\____/~~~~~~\__/~~\__/~~\_/~~\_______/~~~~~~~~\_/~~\__/~~\__/~~~~~~~\_
+_____________________________________________________________________________________________/~~\_
+---end---
+
+---start---
+msg index: 228
+font name: taag_font_Relief2
+line range: 3249,3255
+max line width: 98
+msg content:
+\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+/// \\/// \///// \\\\\\\\///// \/// \\/// \/// \\/// \///////// \///////// \/// \\/// \\/////// \\
+/// \\/// \\/// \\\\\\\\\\/// \\/// \\/// \///// /// \/// \\\\\\\/// \\\\\\\///// /// \/// \\/// \
+///////// \\/// \\\\\\\\\\/// \\/// \\/// \///////// \/////// \\\/////// \\\///////// \/// \\\\\\\
+/// \\/// \\/// \\\\\\\\\\/// \\/// \\/// \/// ///// \/// \\\\\\\/// \\\\\\\/// ///// \/// \\/// \
+/// \\/// \///// \\\\\\///// \\\\/////// \\/// \\/// \/// \\\\\\\///////// \/// \\/// \\//////// \
+\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\/// \
+---end---
+
+---start---
+msg index: 229
+font name: taag_font_Roman
+line range: 3264,3273
+max line width: 98
+msg content:
+ooooo   ooooo ooooo         oooo                          .o88o.                                  
+`888'   `888' `888'         `888                          888 `"                                  
+ 888     888   888           888 oooo  oooo  ooo. .oo.   o888oo   .ooooo.  ooo. .oo.    .oooooooo 
+ 888ooooo888   888           888 `888  `888  `888P"Y88b   888    d88' `88b `888P"Y88b  888' `88b  
+ 888     888   888           888  888   888   888   888   888    888ooo888  888   888  888   888  
+ 888     888   888           888  888   888   888   888   888    888    .o  888   888  `88bod8P'  
+o888o   o888o o888o      .o. 88P  `V88V"V8P' o888o o888o o888o   `Y8bod8P' o888o o888o `8oooooo.  
+                         `Y888P                                                        d"     YD  
+                                                                                       "Y88888P'  
+                                                                                                  
+---end---
+
+---start---
+msg index: 230
+font name: taag_font_Knob
+line range: 3282,3285
+max line width: 101
+msg content:
+ _________  _______ _    ___        _________  _________  _________  _________  _________  _________ 
+(___   ___)(_______(_)  (  _)      (  _______)(______  _)(___   _  )(  _   _  )(______  _)(  _____  )
+ ___| |___              | |_______ | |_______  _____/ /_     | | | || | | | | | _____/ /_ | |_    | |
+(_________)             (_________)(_________)(_________)    (_) (_)(_) (_) (_)(_________)(___)   (_)
+---end---
+
+---start---
+msg index: 231
+font name: taag_font_Ghost
+line range: 3294,3302
+max line width: 102
+msg content:
+ ('-. .-.                                          .-') _               ('-.       .-') _             
+( OO )  /                                         ( OO ) )            _(  OO)     ( OO ) )            
+,--. ,--.  ,-.-')            ,--. ,--. ,--.   ,--./ ,--,'    ,------.(,------.,--./ ,--,'  ,----.     
+|  | |  |  |  |OO)       .-')| ,| |  | |  |   |   \ |  |\ ('-| _.---' |  .---'|   \ |  |\ '  .-./-')  
+|   .|  |  |  |  \      ( OO |(_| |  | | .-') |    \|  | )(OO|(_\     |  |    |    \|  | )|  |_( O- ) 
+|       |  |  |(_/      | `-'|  | |  |_|( OO )|  .     |/ /  |  '--. (|  '--. |  .     |/ |  | .--, \ 
+|  .-.  | ,|  |_.'      ,--. |  | |  | | `-' /|  |\    |  \_)|  .--'  |  .--' |  |\    | (|  | '. (_/ 
+|  | |  |(_|  |         |  '-'  /('  '-'(_.-' |  | \   |    \|  |_)   |  `---.|  | \   |  |  '--'  |  
+`--' `--'  `--'          `-----'   `-----'    `--'  `--'     `--'     `------'`--'  `--'   `------'   
+---end---
+
+---start---
+msg index: 232
+font name: taag_font_SwampLand
+line range: 3311,3318
+max line width: 102
+msg content:
+ ___   ___    ________      _________  __  __   ___   __    ______   ______   ___   __    _______     
+/__/\ /__/\  /_______/\    /________/\/_/\/_/\ /__/\ /__/\ /_____/\ /_____/\ /__/\ /__/\ /______/\    
+\::\ \\  \ \ \__.::._\/    \__.::.__\/\:\ \:\ \\::\_\\  \ \\::::_\/_\::::_\/_\::\_\\  \ \\::::__\/__  
+ \::\/_\ .\ \   \::\ \       /_\::\ \  \:\ \:\ \\:. `-\  \ \\:\/___/\\:\/___/\\:. `-\  \ \\:\ /____/\ 
+  \:: ___::\ \  _\::\ \__    \:.\::\ \  \:\ \:\ \\:. _    \ \\:::._\/ \::___\/_\:. _    \ \\:\\_  _\/ 
+   \: \ \\::\ \/__\::\__/\    \: \  \ \  \:\_\:\ \\. \`-\  \ \\:\ \    \:\____/\\. \`-\  \ \\:\_\ \ \ 
+    \__\/ \::\/\________\/     \_____\/   \_____\/ \__\/ \__\/ \_\/     \_____\/ \__\/ \__\/ \_____\/ 
+                                                                                                      
+---end---
+
+---start---
+msg index: 233
+font name: taag_font_AMCRazor
+line range: 3327,3333
+max line width: 102
+msg content:
+                                 ___               ___         ___        ___        ___         ___  
+  .'| |`.     .'|           .'| |   | |`.     .'| |   |   .'|=|_.'   .'|=|_.'   .'| |   |   .'|=|_.'  
+.'  | |  `. .'  |         .'  | |   | |  `. .'  |\|   | .'  |  ___ .'  |  ___ .'  |\|   | .'  |___    
+|   |=|   | |   |         |   | |   | |   | |   | |   | |   |=|_.' |   |=|_.' |   | |   | |   |`._|=. 
+|   | |   | |   |    ___  |   | `.  | |   | |   | |  .' |   |      |   |  ___ |   | |  .' `.  |  __|| 
+|___| |___| |___|    `._|=|__.'   `.|=|___| |___| |.'   |___|      |___|=|_.' |___| |.'     `.|=|_.'' 
+                                                                                                      
+---end---
+
+---start---
+msg index: 234
+font name: taag_font_Merlin1
+line range: 3342,3349
+max line width: 103
+msg content:
+  __    __   __              ___  ____  ____  _____  ___    _______   _______  _____  ___    _______   
+ /" |  | "\ |" \            |"  |("  _||_ " |(\"   \|"  \  /"     "| /"     "|(\"   \|"  \  /" _   "|  
+(:  (__)  :)||  |           ||  ||   (  ) : ||.\\   \    |(: ______)(: ______)|.\\   \    |(: ( \___)  
+ \/      \/ |:  |           |:  |(:  |  | . )|: \.   \\  | \/    |   \/    |  |: \.   \\  | \/ \       
+ //  __  \\ |.  |        ___|  /  \\ \__/ // |.  \    \. | // ___)   // ___)_ |.  \    \. | //  \ ___  
+(:  (  )  :)/\  |\      /  :|_/ ) /\\ __ //\ |    \    \ |(:  (     (:      "||    \    \ |(:   _(  _| 
+ \__|  |__/(__\_|_)    (_______/ (__________) \___|\____\) \__/      \_______) \___|\____\) \_______)  
+                                                                                                       
+---end---
+
+---start---
+msg index: 235
+font name: taag_font_DefLeppard
+line range: 3358,3373
+max line width: 103
+msg content:
+                                                          ,                                            
+                                                          Et                                           
+                                 :      L.                E#t              ,;L.                        
+  .    .      t         ittttttttEf     EW:        ,ft    E##t           f#i EW:        ,ft         .Gt
+  Di   Dt     Ej        fDDK##DDiE#t    E##;       t#E    E#W#t        .E#t  E##;       t#E        j#W:
+  E#i  E#i    E#,          t#E   E#t    E###t      t#E    E#tfL.      i#W,   E###t      t#E      ;K#f  
+  E#t  E#t    E#t          t#E   E#t    E#fE#f     t#E    E#t        L#D.    E#fE#f     t#E    .G#D.   
+  E#t  E#t    E#t          t#E   E#t fi E#t D#G    t#E ,ffW#Dffj.  :K#Wfff;  E#t D#G    t#E   j#K;     
+  E########f. E#t          t#E   E#t L#jE#t  f#E.  t#E  ;LW#ELLLf. i##WLLLLt E#t  f#E.  t#E ,K#f   ,GD;
+  E#j..K#j... E#t          t#E   E#t L#LE#t   t#K: t#E    E#t       .E#L     E#t   t#K: t#E  j#Wi   E#t
+  E#t  E#t    E#t        jfL#E   E#tf#E:E#t    ;#W,t#E    E#t         f#E:   E#t    ;#W,t#E   .G#D: E#t
+  E#t  E#t    E#t        :K##E   E###f  E#t     :K#D#E    E#t          ,WW;  E#t     :K#D#E     ,K#fK#t
+  f#t  f#t    E#t          G#E   E#K,   E#t      .E##E    E#t           .D#; E#t      .E##E       j###t
+   ii   ii    E#t           tE   EL     ..         G#E    E#t             tt ..         G#E        .G#t
+              ,;.            .   :                  fE    ;#t                            fE          ;;
+                                                     ,     :;                             ,            
+---end---
+
+---start---
+msg index: 236
+font name: taag_font_Goofy
+line range: 3382,3387
+max line width: 103
+msg content:
+    ___    __      ________     _    ___    _     ___    _        __        __     ___    ___       ___
+\  |   |  / (_    _)      (_   | |  |   |  | |    \  |  | \    ___) \    ___) |    \  |  |   )  ____)  
+ |  \_/  |    |  |          |  | |  |   |  | |  |\ \ |  |  |  (__    |  (__   |  |\ \ |  |  /  /  __   
+ |   _   |    |  |       _  |  | |  |   |  | |  | \ \|  |  |   __)   |   __)  |  | \ \|  | (  (  (  \  
+ |  / \  |   _|  |_     ( |_|  | |   \_/   | |  |  \    |  |  (      |  (___  |  |  \    |  \  \__)  ) 
+/  |___|  \_(      )_____\    /___\       /__|  |___\   |_/    \____/       )_|  |___\   |___)      (__
+---end---
+
+---start---
+msg index: 237
+font name: taag_font_Univers
+line range: 3396,3406
+max line width: 104
+msg content:
+                                                                                                        
+88        88  88             88                              ad88                                       
+88        88  88             88                             d8"                                         
+88        88  88             88                             88                                          
+88aaaaaaaa88  88             88  88       88  8b,dPPYba,  MM88MMM  ,adPPYba,  8b,dPPYba,    ,adPPYb,d8  
+88""""""""88  88             88  88       88  88P'   `"8a   88    a8P_____88  88P'   `"8a  a8"    `Y88  
+88        88  88             88  88       88  88       88   88    8PP"""""""  88       88  8b       88  
+88        88  88     88,   ,d88  "8a,   ,a88  88       88   88    "8b,   ,aa  88       88  "8a,   ,d88  
+88        88  88      "Y8888P"    `"YbbdP'Y8  88       88   88     `"Ybbd8"'  88       88   `"YbbdP"Y8  
+                                                                                            aa,    ,88  
+                                                                                             "Y8bbdP"   
+---end---
+
+---start---
+msg index: 238
+font name: taag_font_Crazy
+line range: 3415,3427
+max line width: 108
+msg content:
+                              .---.                                                                         
+                              |   |                                                                         
+   .        .--.              '---'              _..._                  __.....__        _..._              
+ .'|        |__|              .---.            .'     '.      _.._  .-''         '.    .'     '.   .--./)   
+<  |        .--.              |   |           .   .-.   .   .' .._|/     .-''"'-.  `. .   .-.   . /.''\\    
+ | |        |  |              |   |           |  '   '  |   | '   /     /________\   \|  '   '  || |  | |   
+ | | .'''-. |  |              |   |   _    _  |  |   |  | __| |__ |                  ||  |   |  | \`-' /    
+ | |/.'''. \|  |              |   |  | '  / | |  |   |  ||__   __|\    .-------------'|  |   |  | /("'`     
+ |  /    | ||  |              |   | .' | .' | |  |   |  |   | |    \    '-.____...---.|  |   |  | \ '---.   
+ | |     | ||__|              |   | /  | /  | |  |   |  |   | |     `.             .' |  |   |  |  /'""'.\  
+ | |     | |               __.'   '|   `'.  | |  |   |  |   | |       `''-...... -'   |  |   |  | ||     || 
+ | '.    | '.             |      ' '   .'|  '/|  |   |  |   | |                       |  |   |  | \'. __//  
+ '---'   '---'            |____.'   `-'  `--' '--'   '--'   |_|                       '--'   '--'  `'---'   
+---end---
+
+---start---
+msg index: 239
+font name: taag_font_Alligator2
+line range: 3436,3442
+max line width: 108
+msg content:
+:::    ::: :::::::::::      ::::::::::: :::    ::: ::::    ::: :::::::::: :::::::::: ::::    :::  ::::::::  
+:+:    :+:     :+:              :+:     :+:    :+: :+:+:   :+: :+:        :+:        :+:+:   :+: :+:    :+: 
++:+    +:+     +:+              +:+     +:+    +:+ :+:+:+  +:+ +:+        +:+        :+:+:+  +:+ +:+        
++#++:++#++     +#+              +#+     +#+    +:+ +#+ +:+ +#+ :#::+::#   +#++:++#   +#+ +:+ +#+ :#:        
++#+    +#+     +#+              +#+     +#+    +#+ +#+  +#+#+# +#+        +#+        +#+  +#+#+# +#+   +#+# 
+#+#    #+#     #+#          #+# #+#     #+#    #+# #+#   #+#+# #+#        #+#        #+#   #+#+# #+#    #+# 
+###    ### ###########       #####       ########  ###    #### ###        ########## ###    ####  ########  
+---end---
+
+---start---
+msg index: 240
+font name: taag_font_Jacky
+line range: 3451,3458
+max line width: 109
+msg content:
+ __    __    _____       ________   __    __      __      _   _________    _____      __      _      _____   
+(  \  /  )  (_   _)     (___  ___)  ) )  ( (     /  \    / ) (_   _____)  / ___/     /  \    / )    / ___ \  
+ \ (__) /     | |           ) )    ( (    ) )   / /\ \  / /    ) (___    ( (__      / /\ \  / /    / /   \_) 
+  ) __ (      | |          ( (      ) )  ( (    ) ) ) ) ) )   (   ___)    ) __)     ) ) ) ) ) )   ( (  ____  
+ ( (  ) )     | |       __  ) )    ( (    ) )  ( ( ( ( ( (     ) (       ( (       ( ( ( ( ( (    ( ( (__  ) 
+  ) )( (     _| |__    ( (_/ /      ) \__/ (   / /  \ \/ /    (   )       \ \___   / /  \ \/ /     \ \__/ /  
+ /_/  \_\   /_____(     \___/       \______/  (_/    \__/      \_/         \____\ (_/    \__/       \____/   
+                                                                                                             
+---end---
+
+---start---
+msg index: 241
+font name: taag_font_NVScript
+line range: 3467,3482
+max line width: 110
+msg content:
+ ,ggg,        gg       ,a8a,       gg                                                                         
+dP""Y8b       88      ,8" "8,     dP8,                               ,dPYb,                                   
+Yb, `88       88      d8   8b    dP Yb                               IP'`Yb                                   
+ `"  88       88      88   88   ,8  `8,                              I8  8I                                   
+     88aaaaaaa88      88   88   I8   Yb                              I8  8'                                   
+     88"""""""88      Y8   8P   `8b, `8,   gg      gg   ,ggg,,ggg,   I8 dP   ,ggg,    ,ggg,,ggg,     ,gggg,gg 
+     88       88      `8, ,8'    `"Y88888  I8      8I  ,8" "8P" "8,  I8dP   i8" "8i  ,8" "8P" "8,   dP"  "Y8I 
+     88       88 8888  "8,8"         "Y8   I8,    ,8I  I8   8I   8I  I8P    I8, ,8I  I8   8I   8I  i8'    ,8I 
+     88       Y8,`8b,  ,d8b,          ,88,,d8b,  ,d8b,,dP   8I   Yb,,d8b,_  `YbadP' ,dP   8I   Yb,,d8,   ,d8I 
+     88       `Y8  "Y88P" "Y8     ,ad888888P'"Y88P"`Y88P'   8I   `Y8PI8"888888P"Y8888P'   8I   `Y8P"Y8888P"888
+                                ,dP"'   Yb                           I8 `8,                              ,d8I'
+                               ,8'      I8                           I8  `8,                           ,dP'8I 
+                              ,8'       I8                           I8   8I                          ,8"  8I 
+                              I8,      ,8'                           I8   8I                          I8   8I 
+                              `Y8,___,d8'                            I8, ,8'                          `8, ,8I 
+                                "Y888P"                               "Y8P'                            `Y8P"  
+---end---
+
+---start---
+msg index: 242
+font name: taag_font_3DDiagonal
+line range: 3491,3506
+max line width: 111
+msg content:
+                                                                                                               
+        ,--,                         ,---._                                                                    
+      ,--.'|   ,---,               .-- -.' \                                                                   
+   ,--,  | :,`--.' |               |    |   :                           .--.,                                  
+,---.'|  : '|   :  :               :    ;   |         ,--,      ,---, ,--.'  \               ,---,             
+|   | : _' |:   |  '               :        |       ,'_ /|  ,-+-. /  ||  | /\/           ,-+-. /  |  ,----._,. 
+:   : |.'  ||   :  |               |    :   :  .--. |  | : ,--.'|'   |:  : :     ,---.  ,--.'|'   | /   /  ' / 
+|   ' '  ; :'   '  ;               :         ,'_ /| :  . ||   |  ,"' |:  | |-,  /     \|   |  ,"' ||   :     | 
+'   |  .'. ||   |  |               |    ;   ||  ' | |  . .|   | /  | ||  : :/| /    /  |   | /  | ||   | .\  . 
+|   | :  | ''   :  ;           ___ l         |  | ' |  | ||   | |  | ||  |  .'.    ' / |   | |  | |.   ; ';  | 
+'   : |  : ;|   |  '         /    /\    J   ::  | : ;  ; ||   | |  |/ '  : '  '   ;   /|   | |  |/ '   .   . | 
+|   | '  ,/ '   :  |        /  ../  `..-    ,'  :  `--'   \   | |--'  |  | |  '   |  / |   | |--'   `---`-'| | 
+;   : ;--'  ;   |.'         \    \         ; :  ,      .-./   |/      |  : \  |   :    |   |/       .'__/\_: | 
+|   ,/      '---'            \    \      ,'   `--`----'   '---'       |  |,'   \   \  /'---'        |   :    : 
+'---'                         "---....--'                             `--'      `----'               \   \  /  
+                                                                                                      `--`-'   
+---end---
+
+---start---
+msg index: 243
+font name: taag_font_Acrobatic
+line range: 3515,3526
+max line width: 111
+msg content:
+  o         o   __o__              __o__                            o__ __o                                    
+ <|>       <|>    |                  |                             /v     v\                                   
+ < >       < >   / \                / \                           />       <\                                  
+  |         |    \o/                \o/    o       o   \o__ __o   \o          o__  __o   \o__ __o     o__ __o/ 
+  o__/_ _\__o     |                  |    <|>     <|>   |     |>   |>_       /v      |>   |     |>   /v     |  
+  |         |    < >                < >   < >     < >  / \   / \   |        />      //   / \   / \  />     / \ 
+ <o>       <o>    |         \        |     |       |   \o/   \o/  <o>       \o    o/     \o/   \o/  \      \o/ 
+  |         |     o          o       o     o       o    |     |    |         v\  /v __o   |     |    o      |  
+ / \       / \  __|>_        <\__ __/>     <\__ __/>   / \   / \  / \         <\/> __/>  / \   / \   <\__  < > 
+                                                                                                            |  
+                                                                                                    o__     o  
+                                                                                                    <\__ __/>  
+---end---
+
+---start---
+msg index: 244
+font name: taag_font_Chiseled
+line range: 3535,3543
+max line width: 111
+msg content:
+ ,--.-,,-,--, .=-.-.             ,--.-,             .-._           _,---.     ,----.  .-._            _,---.   
+/==/  /|=|  |/==/_ /            |==' -|.--.-. .-.-./==/ \  .-._ .-`.' ,  \ ,-.--` , \/==/ \  .-._ _.='.'-,  \  
+|==|_ ||=|, |==|, |             |==|- /==/ -|/=/  ||==|, \/ /, /==/_  _.-'|==|-  _.-`|==|, \/ /, /==.'-     /  
+|==| ,|/=| _|==|  |           __|==|, |==| ,||=| -||==|-  \|  /==/-  '..-.|==|   `.-.|==|-  \|  /==/ -   .-'   
+|==|- `-' _ |==|- |        ,--.-'\=|- |==|- | =/  ||==| ,  | -|==|_ ,    /==/_ ,    /|==| ,  | -|==|_   /_,-.  
+|==|  _     |==| ,|        |==|- |=/ ,|==|,  \/ - ||==| -   _ |==|   .--'|==|    .-' |==| -   _ |==|  , \_.' ) 
+|==|   .-. ,\==|- |        |==|. /=| -|==|-   ,   /|==|  /\ , |==|-  |   |==|_  ,`-._|==|  /\ , \==\-  ,    (  
+/==/, //=/  /==/. /        \==\, `-' //==/ , _  .' /==/, | |- /==/   \   /==/ ,     //==/, | |- |/==/ _  ,  /  
+`--`-' `-`--`--`-`          `--`----' `--`..---'   `--`./  `--`--`---'   `--`-----`` `--`./  `--``--`------'   
+---end---
+
+---start---
+msg index: 245
+font name: taag_font_FlowerPower
+line range: 3552,3561
+max line width: 111
+msg content:
+.---.  .---..-./`)              .-./`)    ___    _ ,---.   .--. ________     .-''-.  ,---.   .--.  .-_'''-.    
+|   |  |_ _|\ .-.')             \ '_ .').'   |  | ||    \  |  ||        |  .'_ _   \ |    \  |  | '_( )_   \   
+|   |  ( ' )/ `-' \            (_ (_) _)|   .'  | ||  ,  \ |  ||   .----' / ( ` )   '|  ,  \ |  ||(_ o _)|  '  
+|   '-(_{;}_)`-'`"`              / .  \ .'  '_  | ||  |\_ \|  ||  _|____ . (_ o _)  ||  |\_ \|  |. (_,_)/___|  
+|      (_,_) .---.          ___  |-'`|  '   ( \.-.||  _( )_\  ||_( )_   ||  (_,_)___||  _( )_\  ||  |  .-----. 
+| _ _--.   | |   |         |   | |   '  ' (`. _` /|| (_ o _)  |(_ o._)__|'  \   .---.| (_ o _)  |'  \  '-   .' 
+|( ' ) |   | |   |         |   `-'  /   | (_ (_) _)|  (_,_)\  ||(_,_)     \  `-'    /|  (_,_)\  | \  `-'`   |  
+(_{;}_)|   | |   |          \      /     \ /  . \ /|  |    |  ||   |       \       / |  |    |  |  \        /  
+'(_,_) '---' '---'           `-..-'       ``-'`-'' '--'    '--''---'        `'-..-'  '--'    '--'   `'-...-'   
+                                                                                                               
+---end---
+
+---start---
+msg index: 246
+font name: taag_font_Caligraphy2
+line range: 3570,3589
+max line width: 111
+msg content:
+                                                                                                               
+     #####    ##         #####  #            ##### ##                         /##                              
+  ######  /  #### /   ######  /           ######  /### /                    #/ ###                             
+ /#   /  /   ####/   /#   /  /           /#   /  / ###/                    ##   ###                            
+/    /  /    # #    /    /  /           /    /  /   ##                     ##                                  
+    /  /     #          /  /                /  /                           ##                                  
+   ## ##     #         ## ##               ## ## ##   ####    ###  /###    ###### /##  ###  /###     /###      
+   ## ##     #         ## ##               ## ##  ##    ###  / ###/ #### / ##### / ###  ###/ #### / /  ###  /  
+   ## ########       /### ##             /### ##  ##     ###/   ##   ###/  ##   /   ###  ##   ###/ /    ###/   
+   ## ##     #      / ### ##            / ### ##  ##      ##    ##    ##   ##  ##    ### ##    ## ##     ##    
+   ## ##     ##        ## ##               ## ##  ##      ##    ##    ##   ##  ########  ##    ## ##     ##    
+   #  ##     ##   ##   ## ##               ## ##  ##      ##    ##    ##   ##  #######   ##    ## ##     ##    
+      /       ## ###   #  /                ## ##  ##      ##    ##    ##   ##  ##        ##    ## ##     ##    
+  /##/        ##  ###    /                 ## ##  ##      /#    ##    ##   ##  ####    / ##    ## ##     ##    
+ /  #####      ##  #####/                  #  #    ######/ ##   ###   ###  ##   ######/  ###   ### ########    
+/     ##             ###               ##     /     #####   ##   ###   ###  ##   #####    ###   ###  ### ###   
+#                                     ####   /                                                            ###  
+ ##                                   /  # #/                                                       ####   ### 
+                                     /    ##                                                      /######  /#  
+                                          #                                                      /     ###/    
+---end---
+
+---start---
+msg index: 247
+font name: taag_font_Tengwar
+line range: 3598,3607
+max line width: 111
+msg content:
+`Yb.                                dP"Yb.                  `Yb            .dP'                                
+  `Yb         db                    `b   'Yb                 88          dP'                                   
+    Yb                                                       88                                "Ybaaaaaaaaad8' 
+     Yb      'Yb     .dP' .dP'  dP'    'Yb   `Yb d88b d88b   88.d88b.     'Yb   `Yb d88b d88b   .dP'  dP'  88  
+    dPYb      88     88   88    88      88    88P   8Y   8b  88P'   Y8     88    88P   8Y   8b  88   88    88  
+  ,dP  Yb     88     Y8   Y8   .88      88    88    8P   88  88     8P     88    88    8P   88  Y8   Y8   .88  
+.dP'    `Yb. .8P     `Y88P`Y88P'88     .8P   .8P  bdP  bdP   88   ,dP     .8P   .8P  bdP  bdP   `Y88P`Y88P'88  
+                                88                          .888888888b.                                   88  
+                                88                                                                         88  
+                                Y8.                                                                        Y8. 
+---end---
+
+---start---
+msg index: 248
+font name: taag_font_Ticks
+line range: 3616,3621
+max line width: 112
+msg content:
+_/\/\____/\/\__/\/\/\/\______________/\/\____________________________/\/\/\_____________________________________
+_/\/\____/\/\____/\/\________________/\/\__/\/\__/\/\__/\/\/\/\____/\/\________/\/\/\____/\/\/\/\______/\/\/\/\_
+_/\/\/\/\/\/\____/\/\________________/\/\__/\/\__/\/\__/\/\__/\/\__/\/\/\____/\/\/\/\/\__/\/\__/\/\__/\/\__/\/\_
+_/\/\____/\/\____/\/\________/\/\____/\/\__/\/\__/\/\__/\/\__/\/\__/\/\______/\/\________/\/\__/\/\____/\/\/\/\_
+_/\/\____/\/\__/\/\/\/\________/\/\/\/\______/\/\/\/\__/\/\__/\/\__/\/\________/\/\/\/\__/\/\__/\/\________/\/\_
+_____________________________________________________________________________________________________/\/\/\/\___
+---end---
+
+---start---
+msg index: 249
+font name: taag_font_AMCNeko
+line range: 3630,3639
+max line width: 113
+msg content:
+.sSSS SSSSS SSSSS            SSSSS                                                                               
+SSSSS SSSSS SSSSS            SSSSS .sSSS s.    .sSSSs.  SSSSS .sSSSSs.    .sSSSSs.    .sSSSs.  SSSSS .sSSSSs.    
+S SSS SSSSS S SSS            S SSS S SSS SSSs. S SSS SS SSSSS S SSSSSSSs. S SSSSSSSs. S SSS SS SSSSS S SSSSSSSs. 
+S  SS SSSSS S  SS            S  SS S  SS SSSSS S  SS  `sSSSSS S  SS SSSS' S  SS SSSS' S  SS  `sSSSSS S  SS SSSS' 
+S..SSsSSSSS S..SS            S..SS S..SS SSSSS S..SS    SSSSS S..SS       S..SS       S..SS    SSSSS S..SS       
+S:::S SSSSS S:::S            S:::S S:::S SSSSS S:::S    SSSSS S:::SSSS    S:::SSSS    S:::S    SSSSS S:::S`sSSs. 
+S;;;S SSSSS S;;;S            S;;;S S;;;S SSSSS S;;;S    SSSSS S;;;S       S;;;S       S;;;S    SSSSS S;;;S SSSSS 
+S%%%S SSSSS S%%%S      SSSSS S%%%S S%%%S SSSSS S%%%S    SSSSS S%%%S       S%%%S SSSSS S%%%S    SSSSS S%%%S SSSSS 
+SSSSS SSSSS SSSSS      `:;SSsSSSSS SSSSSsSSSSS SSSSS    SSSSS SSSSS       SSSSSsSS;:' SSSSS    SSSSS SSSSSsSSSSS 
+                                                                                                                 
+---end---
+
+---start---
+msg index: 250
+font name: taag_font_AMCSlider
+line range: 3648,3653
+max line width: 113
+msg content:
+                                                            ___________  ____                           _____    
+|         | |                 | |         | |..          | |            |            |..          |  .-~     ~.  
+|_________| |                 | |         | |  ``..      | |______      |______      |  ``..      | :            
+|         | |        .        | |         | |      ``..  | |            |            |      ``..  | :     _____  
+|         | |        `..____..' `._______.' |          ``| |            |___________ |          ``|  `-._____.'| 
+                                                                                                                 
+---end---
+
+---start---
+msg index: 251
+font name: taag_font_NScript
+line range: 3662,3677
+max line width: 114
+msg content:
+ ,ggg,        gg       ,a8a,          gg                                                                          
+dP""Y8b       88      ,8" "8,        dP8,                               ,dPYb,                                    
+Yb, `88       88      d8   8b       dP Yb                               IP'`Yb                                    
+ `"  88       88      88   88      ,8  `8,                              I8  8I                                    
+     88aaaaaaa88      88   88      I8   Yb                              I8  8'                                    
+     88"""""""88      Y8   8P      `8b, `8,   gg      gg   ,ggg,,ggg,   I8 dP    ,ggg,    ,ggg,,ggg,     ,gggg,gg 
+     88       88      `8, ,8'       `"Y88888  I8      8I  ,8" "8P" "8,  I8dP    i8" "8i  ,8" "8P" "8,   dP"  "Y8I 
+     88       88 8888  "8,8"            "Y8   I8,    ,8I  I8   8I   8I  I8P     I8, ,8I  I8   8I   8I  i8'    ,8I 
+     88       Y8,`8b,  ,d8b,             ,88,,d8b,  ,d8b,,dP   8I   Yb,,d8b,_   `YbadP' ,dP   8I   Yb,,d8,   ,d8I 
+     88       `Y8  "Y88P" "Y8        ,ad888888P'"Y88P"`Y88P'   8I   `Y8PI8"8888888P"Y8888P'   8I   `Y8P"Y8888P"888
+                                   ,dP"'   Yb                           I8 `8,                               ,d8I'
+                                  ,8'      I8                           I8  `8,                            ,dP'8I 
+                                 ,8'       I8                           I8   8I                           ,8"  8I 
+                                 I8,      ,8'                           I8   8I                           I8   8I 
+                                 `Y8,___,d8'                            I8, ,8'                           `8, ,8I 
+                                   "Y888P"                               "Y8P'                             `Y8P"  
+---end---
+
+---start---
+msg index: 252
+font name: taag_font_Alligator
+line range: 3686,3692
+max line width: 116
+msg content:
+      :::    ::: :::::::::::         ::::::::::: :::    ::: ::::    ::: :::::::::: :::::::::: ::::    :::  :::::::: 
+     :+:    :+:     :+:                 :+:     :+:    :+: :+:+:   :+: :+:        :+:        :+:+:   :+: :+:    :+: 
+    +:+    +:+     +:+                 +:+     +:+    +:+ :+:+:+  +:+ +:+        +:+        :+:+:+  +:+ +:+         
+   +#++:++#++     +#+                 +#+     +#+    +:+ +#+ +:+ +#+ :#::+::#   +#++:++#   +#+ +:+ +#+ :#:          
+  +#+    +#+     +#+                 +#+     +#+    +#+ +#+  +#+#+# +#+        +#+        +#+  +#+#+# +#+   +#+#    
+ #+#    #+#     #+#             #+# #+#     #+#    #+# #+#   #+#+# #+#        #+#        #+#   #+#+# #+#    #+#     
+###    ### ###########          #####       ########  ###    #### ###        ########## ###    ####  ########       
+---end---
+
+---start---
+msg index: 253
+font name: taag_font_PeaksSlant
+line range: 3701,3706
+max line width: 117
+msg content:
+     _/\/\____/\/\__/\/\/\/\______________/\/\____________________________/\/\/\_____________________________________
+    _/\/\____/\/\____/\/\________________/\/\__/\/\__/\/\__/\/\/\/\____/\/\________/\/\/\____/\/\/\/\______/\/\/\/\_ 
+   _/\/\/\/\/\/\____/\/\________________/\/\__/\/\__/\/\__/\/\__/\/\__/\/\/\____/\/\/\/\/\__/\/\__/\/\__/\/\__/\/\_  
+  _/\/\____/\/\____/\/\________/\/\____/\/\__/\/\__/\/\__/\/\__/\/\__/\/\______/\/\________/\/\__/\/\____/\/\/\/\_   
+ _/\/\____/\/\__/\/\/\/\________/\/\/\/\______/\/\/\/\__/\/\__/\/\__/\/\________/\/\/\/\__/\/\__/\/\________/\/\_    
+_____________________________________________________________________________________________________/\/\/\/\___     
+---end---
+
+---start---
+msg index: 254
+font name: taag_font_TicksSlant
+line range: 3715,3720
+max line width: 117
+msg content:
+     _/\/\____/\/\__/\/\/\/\______________/\/\____________________________/\/\/\_____________________________________
+    _/\/\____/\/\____/\/\________________/\/\__/\/\__/\/\__/\/\/\/\____/\/\________/\/\/\____/\/\/\/\______/\/\/\/\_ 
+   _/\/\/\/\/\/\____/\/\________________/\/\__/\/\__/\/\__/\/\__/\/\__/\/\/\____/\/\/\/\/\__/\/\__/\/\__/\/\__/\/\_  
+  _/\/\____/\/\____/\/\________/\/\____/\/\__/\/\__/\/\__/\/\__/\/\__/\/\______/\/\________/\/\__/\/\____/\/\/\/\_   
+ _/\/\____/\/\__/\/\/\/\________/\/\/\/\______/\/\/\/\__/\/\__/\/\__/\/\________/\/\/\/\__/\/\__/\/\________/\/\_    
+_____________________________________________________________________________________________________/\/\/\/\___     
+---end---
+
+---start---
+msg index: 255
+font name: taag_font_Bear
+line range: 3729,3737
+max line width: 118
+msg content:
+   _     _      _     _       _     _      _     _      _     _      _     _      _     _      _     _      _     _   
+  (c).-.(c)    (c).-.(c)     (c).-.(c)    (c).-.(c)    (c).-.(c)    (c).-.(c)    (c).-.(c)    (c).-.(c)    (c).-.(c)  
+   / ._. \      / ._. \       / ._. \      / ._. \      / ._. \      / ._. \      / ._. \      / ._. \      / ._. \   
+ __\( Y )/__  __\( Y )/__   __\( Y )/__  __\( Y )/__  __\( Y )/__  __\( Y )/__  __\( Y )/__  __\( Y )/__  __\( Y )/__ 
+(_.-/'-'\-._)(_.-/'-'\-._) (_.-/'-'\-._)(_.-/'-'\-._)(_.-/'-'\-._)(_.-/'-'\-._)(_.-/'-'\-._)(_.-/'-'\-._)(_.-/'-'\-._)
+   || H ||      || I ||       || J ||      || U ||      || N ||      || F ||      || E ||      || N ||      || G ||   
+ _.' `-' '._  _.' `-' '._   _.' `-' '._  _.' `-' '._  _.' `-' '._  _.' `-' '._  _.' `-' '._  _.' `-' '._  _.' `-' '._ 
+(.-./`-'\.-.)(.-./`-'\.-.) (.-./`-'\.-.)(.-./`-'\.-.)(.-./`-'\.-.)(.-./`-'\.-.)(.-./`-'\.-.)(.-./`-'\.-.)(.-./`-'\.-.)
+ `-'     `-'  `-'     `-'   `-'     `-'  `-'     `-'  `-'     `-'  `-'     `-'  `-'     `-'  `-'     `-'  `-'     `-' 
+---end---
+
+---start---
+msg index: 256
+font name: taag_font_StarStrips
+line range: 3746,3754
+max line width: 118
+msg content:
+----    ---- --------       --------    ----    ---- ----    ---- ------------ ------------ ----    ---- ------------ 
+****    **** ********       ********    ****    **** *****   **** ************ ************ *****   **** ************ 
+----    ----   ----           ---       ----    ---- ------  ---- ----         ----         ------  ---- ----         
+************   ****           ***       ****    **** ************ ************ ************ ************ ****  ****** 
+------------   ----           ---       ----    ---- ------------ ------------ ------------ ------------ ----  ------ 
+****    ****   ****           ***   **  ************ ****  ****** ****         ****         ****  ****** ****    **** 
+----    ---- --------         --------  ------------ ----   ----- ----         ------------ ----   ----- ------------ 
+****    **** ********         ********  ************ ****    **** ****         ************ ****    **** ************ 
+                                                                                                                      
+---end---
+
+---start---
+msg index: 257
+font name: taag_font_BlurVisionASCII
+line range: 3763,3771
+max line width: 119
+msg content:
+░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░             ░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓███████▓▒░░▒▓████████▓▒░▒▓████████▓▒░▒▓███████▓▒░ ░▒▓██████▓▒░  
+░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░             ░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░ 
+░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░             ░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░        
+░▒▓████████▓▒░▒▓█▓▒░             ░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓██████▓▒░ ░▒▓██████▓▒░ ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒▒▓███▓▒░ 
+░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░ 
+░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░ 
+░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░       ░▒▓██████▓▒░ ░▒▓██████▓▒░░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓████████▓▒░▒▓█▓▒░░▒▓█▓▒░░▒▓██████▓▒░  
+                                                                                                                       
+                                                                                                                       
+---end---
+
+---start---
+msg index: 258
+font name: taag_font_PatorjksCheese
+line range: 3780,3793
+max line width: 127
+msg content:
+                                                                                                                               
+ ____   ____  ____               ____  ____   ____  _____   ______         _____       ______  _____   ______         _____    
+|    | |    ||    |             |    ||    | |    ||\    \ |\     \   ____|\    \  ___|\     \|\    \ |\     \    ___|\    \   
+|    | |    ||    |             |    ||    | |    | \\    \| \     \ |    | \    \|     \     \\\    \| \     \  /    /\    \  
+|    |_|    ||    |             |    ||    | |    |  \|    \  \     ||    |______/|     ,_____/|\|    \  \     ||    |  |____| 
+|    .-.    ||    |       ____  |    ||    | |    |   |     \  |    ||    |----'\ |     \--'\_|/ |     \  |    ||    |    ____ 
+|    | |    ||    |      |    | |    ||    | |    |   |      \ |    ||    |_____/ |     /___/|   |      \ |    ||    |   |    |
+|    | |    ||    |      |    | |    ||    | |    |   |    |\ \|    ||    |       |     \____|\  |    |\ \|    ||    |   |_,  |
+|____| |____||____|      |\____\|____||\___\_|____|   |____||\_____/||____|       |____ '     /| |____||\_____/||\ ___\___/  /|
+|    | |    ||    |      | |    |    || |    |    |   |    |/ \|   |||    |       |    /_____/ | |    |/ \|   ||| |   /____ / |
+|____| |____||____|       \|____|____| \|____|____|   |____|   |___|/|____|       |____|     | / |____|   |___|/ \|___|    | / 
+  \(     )/    \(            \(   )/      \(   )/       \(       )/    )/           \( |_____|/    \(       )/     \( |____|/  
+   '     '      '             '   '        '   '         '       '     '             '    )/        '       '       '   )/     
+                                                                                          '                             '      
+---end---
+
+---start---
+msg index: 259
+font name: taag_font_Isometric3
+line range: 3802,3812
+max line width: 128
+msg content:
+      ___                              ___          ___           ___           ___         ___           ___           ___     
+     /__/\        ___                 /  /\        /__/\         /__/\         /  /\       /  /\         /__/\         /  /\    
+     \  \:\      /  /\               /  /:/        \  \:\        \  \:\       /  /:/_     /  /:/_        \  \:\       /  /:/_   
+      \__\:\    /  /:/              /__/::\         \  \:\        \  \:\     /  /:/ /\   /  /:/ /\        \  \:\     /  /:/ /\  
+  ___ /  /::\  /__/::\              \__\/\:\    ___  \  \:\   _____\__\:\   /  /:/ /:/  /  /:/ /:/_   _____\__\:\   /  /:/_/::\ 
+ /__/\  /:/\:\ \__\/\:\__              \  \:\  /__/\  \__\:\ /__/::::::::\ /__/:/ /:/  /__/:/ /:/ /\ /__/::::::::\ /__/:/__\/\:\
+ \  \:\/:/__\/    \  \:\/\              \__\:\ \  \:\ /  /:/ \  \:\~~\~~\/ \  \:\/:/   \  \:\/:/ /:/ \  \:\~~\~~\/ \  \:\ /~~/:/
+  \  \::/          \__\::/              /  /:/  \  \:\  /:/   \  \:\  ~~~   \  \::/     \  \::/ /:/   \  \:\  ~~~   \  \:\  /:/ 
+   \  \:\          /__/:/              /__/:/    \  \:\/:/     \  \:\        \  \:\      \  \:\/:/     \  \:\        \  \:\/:/  
+    \  \:\         \__\/               \__\/      \  \::/       \  \:\        \  \:\      \  \::/       \  \:\        \  \::/   
+     \__\/                                         \__\/         \__\/         \__\/       \__\/         \__\/         \__\/    
+---end---
+
+---start---
+msg index: 260
+font name: taag_font_EftiWall
+line range: 3821,3824
+max line width: 129
+msg content:
+                                                   o           _   _           _            |"|          _   _                   
+     ***           |||             -`^'-        ` /_\ '       '\\-//`        _|_|_         _|_|_        '\\-//`       __MMM__    
+    (o o)         (o o)            (o o)       - (o o) -       (o o)         (o o)         (o o)         (o o)         (o o)     
+ooO--(_)--Ooo-ooO--(_)--Ooo----ooO--(_)--Ooo-ooO--(_)--Ooo-ooO--(_)--Ooo-ooO--(_)--Ooo-ooO--(_)--Ooo-ooO--(_)--Ooo-ooO--(_)--Ooo-
+---end---
+
+---start---
+msg index: 261
+font name: taag_font_Impossible
+line range: 3833,3844
+max line width: 129
+msg content:
+         _       _     _                  _      _                  _             _          _            _             _        
+        / /\    / /\  /\ \               /\ \   /\_\               /\ \     _    /\ \       /\ \         /\ \     _    /\ \      
+       / / /   / / /  \ \ \              \ \ \ / / /         _    /  \ \   /\_\ /  \ \     /  \ \       /  \ \   /\_\ /  \ \     
+      / /_/   / / /   /\ \_\             /\ \_\\ \ \__      /\_\ / /\ \ \_/ / // /\ \ \   / /\ \ \     / /\ \ \_/ / // /\ \_\    
+     / /\ \__/ / /   / /\/_/            / /\/_/ \ \___\    / / // / /\ \___/ // / /\ \_\ / / /\ \_\   / / /\ \___/ // / /\/_/    
+    / /\ \___\/ /   / / /      _       / / /     \__  /   / / // / /  \/____// /_/_ \/_// /_/_ \/_/  / / /  \/____// / / ______  
+   / / /\/___/ /   / / /      /\ \    / / /      / / /   / / // / /    / / // /____/\  / /____/\    / / /    / / // / / /\_____\ 
+  / / /   / / /   / / /       \ \_\  / / /      / / /   / / // / /    / / // /\____\/ / /\____\/   / / /    / / // / /  \/____ / 
+ / / /   / / /___/ / /__      / / /_/ / /      / / /___/ / // / /    / / // / /      / / /______  / / /    / / // / /_____/ / /  
+/ / /   / / //\__\/_/___\    / / /__\/ /      / / /____\/ // / /    / / // / /      / / /_______\/ / /    / / // / /______\/ /   
+\/_/    \/_/ \/_________/    \/_______/       \/_________/ \/_/     \/_/ \/_/       \/__________/\/_/     \/_/ \/___________/    
+                                                                                                                                 
+---end---
+
+---start---
+msg index: 262
+font name: taag_font_DotMatrix
+line range: 3853,3862
+max line width: 129
+msg content:
+    _           _  _  _  _                _  _  _                                _  _                                            
+   (_)         (_)(_)(_)(_)              (_)(_)(_)                             _(_)(_)                                           
+   (_)         (_)   (_)                    (_) _         _    _  _  _  _   _ (_) _  _  _  _  _    _  _  _  _      _  _  _  _    
+   (_) _  _  _ (_)   (_)                    (_)(_)       (_)  (_)(_)(_)(_)_(_)(_)(_)(_)(_)(_)(_)_ (_)(_)(_)(_)_  _(_)(_)(_)(_)   
+   (_)(_)(_)(_)(_)   (_)                    (_)(_)       (_)  (_)        (_)  (_)  (_) _  _  _ (_)(_)        (_)(_)        (_)   
+   (_)         (_)   (_)             _      (_)(_)       (_)  (_)        (_)  (_)  (_)(_)(_)(_)(_)(_)        (_)(_)        (_)   
+   (_)         (_) _ (_) _          (_)  _  (_)(_)_  _  _(_)_ (_)        (_)  (_)  (_)_  _  _  _  (_)        (_)(_)_  _  _ (_)   
+   (_)         (_)(_)(_)(_)          (_)(_)(_)   (_)(_)(_) (_)(_)        (_)  (_)    (_)(_)(_)(_) (_)        (_)  (_)(_)(_)(_)   
+                                                                                                                   _  _  _ (_)   
+                                                                                                                  (_)(_)(_)      
+---end---
+
+---start---
+msg index: 263
+font name: taag_font_Isometric2
+line range: 3871,3881
+max line width: 130
+msg content:
+      ___                                           ___           ___           ___           ___           ___           ___     
+     /\  \                             ___         /\  \         /\  \         /\__\         /\__\         /\  \         /\__\    
+     \:\  \       ___                 /\__\        \:\  \        \:\  \       /:/ _/_       /:/ _/_        \:\  \       /:/ _/_   
+      \:\  \     /\__\               /:/__/         \:\  \        \:\  \     /:/ /\__\     /:/ /\__\        \:\  \     /:/ /\  \  
+  ___ /::\  \   /:/__/              /::\  \     ___  \:\  \   _____\:\  \   /:/ /:/  /    /:/ /:/ _/_   _____\:\  \   /:/ /::\  \ 
+ /\  /:/\:\__\ /::\  \              \/\:\  \   /\  \  \:\__\ /::::::::\__\ /:/_/:/  /    /:/_/:/ /\__\ /::::::::\__\ /:/__\/\:\__\
+ \:\/:/  \/__/ \/\:\  \__            ~~\:\  \  \:\  \ /:/  / \:\~~\~~\/__/ \:\/:/  /     \:\/:/ /:/  / \:\~~\~~\/__/ \:\  \ /:/  /
+  \::/__/       ~~\:\/\__\              \:\__\  \:\  /:/  /   \:\  \        \::/__/       \::/_/:/  /   \:\  \        \:\  /:/  / 
+   \:\  \          \::/  /              /:/  /   \:\/:/  /     \:\  \        \:\  \        \:\/:/  /     \:\  \        \:\/:/  /  
+    \:\__\         /:/  /              /:/  /     \::/  /       \:\__\        \:\__\        \::/  /       \:\__\        \::/  /   
+     \/__/         \/__/               \/__/       \/__/         \/__/         \/__/         \/__/         \/__/         \/__/    
+---end---
+
+---start---
+msg index: 264
+font name: taag_font_Isometric1
+line range: 3890,3900
+max line width: 132
+msg content:
+      ___                                 ___         ___           ___           ___           ___           ___           ___     
+     /\__\          ___                  /\  \       /\__\         /\__\         /\  \         /\  \         /\__\         /\  \    
+    /:/  /         /\  \                 \:\  \     /:/  /        /::|  |       /::\  \       /::\  \       /::|  |       /::\  \   
+   /:/__/          \:\  \            ___ /::\__\   /:/  /        /:|:|  |      /:/\:\  \     /:/\:\  \     /:|:|  |      /:/\:\  \  
+  /::\  \ ___      /::\__\          /\  /:/\/__/  /:/  /  ___   /:/|:|  |__   /::\~\:\  \   /::\~\:\  \   /:/|:|  |__   /:/  \:\  \ 
+ /:/\:\  /\__\  __/:/\/__/          \:\/:/  /    /:/__/  /\__\ /:/ |:| /\__\ /:/\:\ \:\__\ /:/\:\ \:\__\ /:/ |:| /\__\ /:/__/_\:\__\
+ \/__\:\/:/  / /\/:/  /              \::/  /     \:\  \ /:/  / \/__|:|/:/  / \/__\:\ \/__/ \:\~\:\ \/__/ \/__|:|/:/  / \:\  /\ \/__/
+      \::/  /  \::/__/                \/__/       \:\  /:/  /      |:/:/  /       \:\__\    \:\ \:\__\       |:/:/  /   \:\ \:\__\  
+      /:/  /    \:\__\                             \:\/:/  /       |::/  /         \/__/     \:\ \/__/       |::/  /     \:\/:/  /  
+     /:/  /      \/__/                              \::/  /        /:/  /                     \:\__\         /:/  /       \::/  /   
+     \/__/                                           \/__/         \/__/                       \/__/         \/__/         \/__/    
+---end---
+
+---start---
+msg index: 265
+font name: taag_font_Isometric4
+line range: 3909,3919
+max line width: 133
+msg content:
+      ___                                              ___           ___                         ___           ___           ___     
+     /  /\           ___                   ___        /  /\         /  /\          ___          /  /\         /  /\         /  /\    
+    /  /:/          /__/\                 /__/\      /  /:/        /  /::|        /  /\        /  /::\       /  /::|       /  /::\   
+   /  /:/           \__\:\                \__\:\    /  /:/        /  /:|:|       /  /::\      /  /:/\:\     /  /:|:|      /  /:/\:\  
+  /  /::\ ___       /  /::\           ___ /  /::\  /  /:/        /  /:/|:|__    /  /:/\:\    /  /::\ \:\   /  /:/|:|__   /  /:/  \:\ 
+ /__/:/\:\  /\   __/  /:/\/          /__/\  /:/\/ /__/:/     /\ /__/:/ |:| /\  /  /::\ \:\  /__/:/\:\ \:\ /__/:/ |:| /\ /__/:/_\_ \:\
+ \__\/  \:\/:/  /__/\/:/~~           \  \:\/:/~~  \  \:\    /:/ \__\/  |:|/:/ /__/:/\:\ \:\ \  \:\ \:\_\/ \__\/  |:|/:/ \  \:\__/\_\/
+      \__\::/   \  \::/               \  \::/      \  \:\  /:/      |  |:/:/  \__\/  \:\_\/  \  \:\ \:\       |  |:/:/   \  \:\ \:\  
+      /  /:/     \  \:\                \__\/        \  \:\/:/       |__|::/        \  \:\     \  \:\_\/       |__|::/     \  \:\/:/  
+     /__/:/       \__\/                              \  \::/        /__/:/          \__\/      \  \:\         /__/:/       \  \::/   
+     \__\/                                            \__\/         \__\/                       \__\/         \__\/         \__\/    
+---end---
+
+---start---
+msg index: 266
+font name: taag_font_Caligraphy
+line range: 3928,3948
+max line width: 133
+msg content:
+                                                                                                                                     
+     *****    **            *****  *            ***** **                                  ***                                        
+  ******  *  **** *      ******  *           ******  **** *                             ** ***                                       
+ **   *  *   *****      **   *  *           **   *  * ****                             **   ***                                      
+*    *  *    * *       *    *  *           *    *  *   **                              **                                            
+    *  *     *             *  *                *  *         **   ****                  **                                            
+   ** **     *            ** **               ** **          **    ***  * ***  ****    ******      ***    ***  ****        ****      
+   ** **     *            ** **               ** **          **     ****   **** **** * *****      * ***    **** **** *    *  ***  *  
+   ** ********          **** **             **** **          **      **     **   ****  **        *   ***    **   ****    *    ****   
+   ** **     *         * *** **            * *** **          **      **     **    **   **       **    ***   **    **    **     **    
+   ** **     **           ** **               ** **          **      **     **    **   **       ********    **    **    **     **    
+   *  **     **      **   ** **               ** **          **      **     **    **   **       *******     **    **    **     **    
+      *       **    ***   *  *                ** **          **      **     **    **   **       **          **    **    **     **    
+  ****        **     ***    *                 ** **           ******* **    **    **   **       ****    *   **    **    **     **    
+ *  *****      **     ******                  *  *             *****   **   ***   ***  **        *******    ***   ***    ********    
+*     **                ***               **     *                           ***   ***  **        *****      ***   ***     *** ***   
+*                                        ****   *                                                                               ***  
+ **                                      *  * **                                                                          ****   *** 
+                                        *    **                                                                         *******  **  
+                                             *                                                                         *     ****    
+                                                                                                                                     
+---end---
+
+---start---
+msg index: 267
+font name: taag_font_Fraktur
+line range: 3957,3971
+max line width: 136
+msg content:
+                          .....     .           .                                                                                       
+         .xHL           .d88888Neu. 'L      .x88888x.                                       oec :                                       
+      .-`8888hxxx~      F""""*8888888F     :8**888888X.  :>    x.    .        u.    u.     @88888                u.    u.               
+   .H8X  `%888*"       *      `"*88*"      f    `888888x./   .@88k  z88u    x@88k u@88c.   8"*88%       .u     x@88k u@88c.      uL     
+   888X     ..x..       -....    ue=:.    '       `*88888~  ~"8888 ^8888   ^"8888""8888"   8b.       ud8888.  ^"8888""8888"  .ue888Nc.. 
+  '8888k .x8888888x            :88N  `     \.    .  `?)X.     8888  888R     8888  888R   u888888> :888'8888.   8888  888R  d88E`"888E` 
+   ?8888X    "88888X           9888L        `~=-^   X88> ~    8888  888R     8888  888R    8888R   d888 '88%"   8888  888R  888E  888E  
+    ?8888X    '88888>   uzu.   `8888L              X8888  ~   8888  888R     8888  888R    8888P   8888.+"      8888  888R  888E  888E  
+ H8H %8888     `8888> ,""888i   ?8888              488888     8888 ,888B .   8888  888R    *888>   8888L        8888  888R  888E  888E  
+'888> 888"      8888  4  9888L   %888>     .xx.     88888X   "8888Y 8888"   "*88*" 8888"   4888    '8888c. .+  "*88*" 8888" 888& .888E  
+ "8` .8" ..     88*   '  '8888   '88%     '*8888.   '88888>   `Y"   'YP       ""   'Y"     '888     "88888%      ""   'Y"   *888" 888&  
+    `  x8888h. d*"         "*8Nu.z*"        88888    '8888>                                 88R       "YP'                   `"   "888E 
+      !""*888%~                             `8888>    `888                                  88>                             .dWi   `88E 
+      !   `"  .                              "8888     8%                                   48                              4888~  J8%  
+      '-....:~                                `"888x:-"                                     '8                               ^"===*"`   
+---end---
+
+---start---
+msg index: 268
+font name: taag_font_Broadway
+line range: 3980,3990
+max line width: 149
+msg content:
+                                                                                                                                                     
+8 8888        8  8 8888                      8 8888 8 8888      88 b.             8 8 8888888888   8 8888888888   b.             8     ,o888888o.    
+8 8888        8  8 8888                      8 8888 8 8888      88 888o.          8 8 8888         8 8888         888o.          8    8888     `88.  
+8 8888        8  8 8888                      8 8888 8 8888      88 Y88888o.       8 8 8888         8 8888         Y88888o.       8 ,8 8888       `8. 
+8 8888        8  8 8888                      8 8888 8 8888      88 .`Y888888o.    8 8 8888         8 8888         .`Y888888o.    8 88 8888           
+8 8888        8  8 8888                      8 8888 8 8888      88 8o. `Y888888o. 8 8 888888888888 8 888888888888 8o. `Y888888o. 8 88 8888           
+8 8888        8  8 8888                      8 8888 8 8888      88 8`Y8o. `Y88888o8 8 8888         8 8888         8`Y8o. `Y88888o8 88 8888           
+8 8888888888888  8 8888           88.        8 8888 8 8888      88 8   `Y8o. `Y8888 8 8888         8 8888         8   `Y8o. `Y8888 88 8888   8888888 
+8 8888        8  8 8888           `88.       8 888' ` 8888     ,8P 8      `Y8o. `Y8 8 8888         8 8888         8      `Y8o. `Y8 `8 8888       .8' 
+8 8888        8  8 8888             `88o.    8 88'    8888   ,d8P  8         `Y8o.` 8 8888         8 8888         8         `Y8o.`    8888     ,88'  
+8 8888        8  8 8888               `Y888888 '       `Y88888P'   8            `Yo 8 8888         8 888888888888 8            `Yo     `8888888P'    
+---end---
+
+---start---
+msg index: 269
+font name: taag_font_SlantRelief
+line range: 3999,4007
+max line width: 153
+msg content:
+__/\\\________/\\\__/\\\\\\\\\\\________________/\\\\\\\\\\\____________________________________/\\\\\___________________________________________        
+ _\/\\\_______\/\\\_\/////\\\///________________\/////\\\///___________________________________/\\\///____________________________________________       
+  _\/\\\_______\/\\\_____\/\\\_______________________\/\\\_____________________________________/\\\_____________________________________/\\\\\\\\__      
+   _\/\\\\\\\\\\\\\\\_____\/\\\_______________________\/\\\______/\\\____/\\\__/\\/\\\\\\____/\\\\\\\\\_______/\\\\\\\\___/\\/\\\\\\____/\\\////\\\_     
+    _\/\\\/////////\\\_____\/\\\_______________________\/\\\_____\/\\\___\/\\\_\/\\\////\\\__\////\\\//______/\\\/////\\\_\/\\\////\\\__\//\\\\\\\\\_    
+     _\/\\\_______\/\\\_____\/\\\_______________________\/\\\_____\/\\\___\/\\\_\/\\\__\//\\\____\/\\\_______/\\\\\\\\\\\__\/\\\__\//\\\__\///////\\\_   
+      _\/\\\_______\/\\\_____\/\\\________________/\\\___\/\\\_____\/\\\___\/\\\_\/\\\___\/\\\____\/\\\______\//\\///////___\/\\\___\/\\\__/\\_____\\\_  
+       _\/\\\_______\/\\\__/\\\\\\\\\\\___________\//\\\\\\\\\______\//\\\\\\\\\__\/\\\___\/\\\____\/\\\_______\//\\\\\\\\\\_\/\\\___\/\\\_\//\\\\\\\\__ 
+        _\///________\///__\///////////_____________\/////////________\/////////___\///____\///_____\///_________\//////////__\///____\///___\////////___
+---end---
+
+---start---
+msg index: 270
+font name: taag_font_Doh
+line range: 4016,4040
+max line width: 166
+msg content:
+                                                                                                                                                                      
+                                                                                                                                                                      
+HHHHHHHHH     HHHHHHHHHIIIIIIIIII               JJJJJJJJJJJ                                   ffffffffffffffff                                                        
+H:::::::H     H:::::::HI::::::::I               J:::::::::J                                  f::::::::::::::::f                                                       
+H:::::::H     H:::::::HI::::::::I               J:::::::::J                                 f::::::::::::::::::f                                                      
+HH::::::H     H::::::HHII::::::II               JJ:::::::JJ                                 f::::::fffffff:::::f                                                      
+  H:::::H     H:::::H    I::::I                   J:::::Juuuuuu    uuuuuunnnn  nnnnnnnn     f:::::f       ffffffeeeeeeeeeeee    nnnn  nnnnnnnn       ggggggggg   ggggg
+  H:::::H     H:::::H    I::::I                   J:::::Ju::::u    u::::un:::nn::::::::nn   f:::::f           ee::::::::::::ee  n:::nn::::::::nn    g:::::::::ggg::::g
+  H::::::HHHHH::::::H    I::::I                   J:::::Ju::::u    u::::un::::::::::::::nn f:::::::ffffff    e::::::eeeee:::::een::::::::::::::nn  g:::::::::::::::::g
+  H:::::::::::::::::H    I::::I                   J:::::ju::::u    u::::unn:::::::::::::::nf::::::::::::f   e::::::e     e:::::enn:::::::::::::::ng::::::ggggg::::::gg
+  H:::::::::::::::::H    I::::I                   J:::::Ju::::u    u::::u  n:::::nnnn:::::nf::::::::::::f   e:::::::eeeee::::::e  n:::::nnnn:::::ng:::::g     g:::::g 
+  H::::::HHHHH::::::H    I::::I       JJJJJJJ     J:::::Ju::::u    u::::u  n::::n    n::::nf:::::::ffffff   e:::::::::::::::::e   n::::n    n::::ng:::::g     g:::::g 
+  H:::::H     H:::::H    I::::I       J:::::J     J:::::Ju::::u    u::::u  n::::n    n::::n f:::::f         e::::::eeeeeeeeeee    n::::n    n::::ng:::::g     g:::::g 
+  H:::::H     H:::::H    I::::I       J::::::J   J::::::Ju:::::uuuu:::::u  n::::n    n::::n f:::::f         e:::::::e             n::::n    n::::ng::::::g    g:::::g 
+HH::::::H     H::::::HHII::::::II     J:::::::JJJ:::::::Ju:::::::::::::::uun::::n    n::::nf:::::::f        e::::::::e            n::::n    n::::ng:::::::ggggg:::::g 
+H:::::::H     H:::::::HI::::::::I      JJ:::::::::::::JJ  u:::::::::::::::un::::n    n::::nf:::::::f         e::::::::eeeeeeee    n::::n    n::::n g::::::::::::::::g 
+H:::::::H     H:::::::HI::::::::I        JJ:::::::::JJ     uu::::::::uu:::un::::n    n::::nf:::::::f          ee:::::::::::::e    n::::n    n::::n  gg::::::::::::::g 
+HHHHHHHHH     HHHHHHHHHIIIIIIIIII          JJJJJJJJJ         uuuuuuuu  uuuunnnnnn    nnnnnnfffffffff            eeeeeeeeeeeeee    nnnnnn    nnnnnn    gggggggg::::::g 
+                                                                                                                                                              g:::::g 
+                                                                                                                                                  gggggg      g:::::g 
+                                                                                                                                                  g:::::gg   gg:::::g 
+                                                                                                                                                   g::::::ggg:::::::g 
+                                                                                                                                                    gg:::::::::::::g  
+                                                                                                                                                      ggg::::::ggg    
+                                                                                                                                                         gggggg       
+---end---
+
+---start---
+msg index: 271
+font name: taag_font_PatorjkHeX
+line range: 4049,4060
+max line width: 168
+msg content:
+                                                                                                         _____           _____                                          
+       __     __         ____________                  _____  ______   _____    _____    _____     ____  \    \     _____\    \  _____    _____            _____        
+      /  \   /  \       /            \                |\    \_\     \  \    \  |\    \   \    \    \   \ /____/|   /    / |    ||\    \   \    \      _____\    \_      
+     /   /| |\   \     |\___/\  \\___/|               \ \     \\    |  |    |   \\    \   |    |    |  |/_____|/  /    /  /___/| \\    \   |    |    /     /|     |     
+    /   //   \\   \     \|____\  \___|/                \|      ||   |  |    |    \\    \  |    |    |  |    ___  |    |__ |___|/  \\    \  |    |   /     / /____/|     
+   /    \_____/    \          |  |                      |      ||    \_/   /|     \|    \ |    |    |   \__/   \ |       \         \|    \ |    |  |     | |_____|/     
+  /    /\_____/\    \    __  /   / __           ______  |      ||\         \|      |     \|    |   /      /\___/||     __/ __       |     \|    |  |     | |_________   
+ /    //\_____/\\    \  /  \/   /_/  |         /     / /      /|| \         \__   /     /\      \ /      /| | | ||\    \  /  \     /     /\      \ |\     \|\        \  
+/____/ |       | \____\|____________/|        |      |/______/ | \ \_____/\    \ /_____/ /______/||_____| /\|_|/ | \____\/    |   /_____/ /______/|| \_____\|    |\__/| 
+|    | |       | |    ||           | /        |\_____\      | /   \ |    |/___/||      | |     | ||     |/       | |    |____/|  |      | |     | || |     /____/| | || 
+|____|/         \|____||___________|/         | |     |_____|/     \|____|   | ||______|/|_____|/ |_____|         \|____|   | |  |______|/|_____|/  \|_____|     |\|_|/ 
+                                               \|_____|                  |___|/                                         |___|/                             |____/       
+---end---
+
+---start---
+msg index: 272
+font name: taag_font_Blocks
+line range: 4069,4079
+max line width: 181
+msg content:
+ .----------------.  .----------------.   .----------------.  .----------------.  .-----------------. .----------------.  .----------------.  .-----------------. .----------------. 
+| .--------------. || .--------------. | | .--------------. || .--------------. || .--------------. || .--------------. || .--------------. || .--------------. || .--------------. |
+| |  ____  ____  | || |     _____    | | | |     _____    | || | _____  _____ | || | ____  _____  | || |  _________   | || |  _________   | || | ____  _____  | || |    ______    | |
+| | |_   ||   _| | || |    |_   _|   | | | |    |_   _|   | || ||_   _||_   _|| || ||_   \|_   _| | || | |_   ___  |  | || | |_   ___  |  | || ||_   \|_   _| | || |  .' ___  |   | |
+| |   | |__| |   | || |      | |     | | | |      | |     | || |  | |    | |  | || |  |   \ | |   | || |   | |_  \_|  | || |   | |_  \_|  | || |  |   \ | |   | || | / .'   \_|   | |
+| |   |  __  |   | || |      | |     | | | |   _  | |     | || |  | '    ' |  | || |  | |\ \| |   | || |   |  _|      | || |   |  _|  _   | || |  | |\ \| |   | || | | |    ____  | |
+| |  _| |  | |_  | || |     _| |_    | | | |  | |_' |     | || |   \ `--' /   | || | _| |_\   |_  | || |  _| |_       | || |  _| |___/ |  | || | _| |_\   |_  | || | \ `.___]  _| | |
+| | |____||____| | || |    |_____|   | | | |  `.___.'     | || |    `.__.'    | || ||_____|\____| | || | |_____|      | || | |_________|  | || ||_____|\____| | || |  `._____.'   | |
+| |              | || |              | | | |              | || |              | || |              | || |              | || |              | || |              | || |              | |
+| '--------------' || '--------------' | | '--------------' || '--------------' || '--------------' || '--------------' || '--------------' || '--------------' || '--------------' |
+ '----------------'  '----------------'   '----------------'  '----------------'  '----------------'  '----------------'  '----------------'  '----------------'  '----------------' 
+---end---
+
+---start---
+msg index: 273
+font name: taag_font_Alpha
+line range: 4088,4109
+max line width: 233
+msg content:
+          _____                    _____                            _____                    _____                    _____                    _____                    _____                    _____                    _____          
+         /\    \                  /\    \                          /\    \                  /\    \                  /\    \                  /\    \                  /\    \                  /\    \                  /\    \         
+        /::\____\                /::\    \                        /::\    \                /::\____\                /::\____\                /::\    \                /::\    \                /::\____\                /::\    \        
+       /:::/    /                \:::\    \                       \:::\    \              /:::/    /               /::::|   |               /::::\    \              /::::\    \              /::::|   |               /::::\    \       
+      /:::/    /                  \:::\    \                       \:::\    \            /:::/    /               /:::::|   |              /::::::\    \            /::::::\    \            /:::::|   |              /::::::\    \      
+     /:::/    /                    \:::\    \                       \:::\    \          /:::/    /               /::::::|   |             /:::/\:::\    \          /:::/\:::\    \          /::::::|   |             /:::/\:::\    \     
+    /:::/____/                      \:::\    \                       \:::\    \        /:::/    /               /:::/|::|   |            /:::/__\:::\    \        /:::/__\:::\    \        /:::/|::|   |            /:::/  \:::\    \    
+   /::::\    \                      /::::\    \                      /::::\    \      /:::/    /               /:::/ |::|   |           /::::\   \:::\    \      /::::\   \:::\    \      /:::/ |::|   |           /:::/    \:::\    \   
+  /::::::\    \   _____    ____    /::::::\    \            _____   /::::::\    \    /:::/    /      _____    /:::/  |::|   | _____    /::::::\   \:::\    \    /::::::\   \:::\    \    /:::/  |::|   | _____    /:::/    / \:::\    \  
+ /:::/\:::\    \ /\    \  /\   \  /:::/\:::\    \          /\    \ /:::/\:::\    \  /:::/____/      /\    \  /:::/   |::|   |/\    \  /:::/\:::\   \:::\    \  /:::/\:::\   \:::\    \  /:::/   |::|   |/\    \  /:::/    /   \:::\ ___\ 
+/:::/  \:::\    /::\____\/::\   \/:::/  \:::\____\        /::\    /:::/  \:::\____\|:::|    /      /::\____\/:: /    |::|   /::\____\/:::/  \:::\   \:::\____\/:::/__\:::\   \:::\____\/:: /    |::|   /::\____\/:::/____/  ___\:::|    |
+\::/    \:::\  /:::/    /\:::\  /:::/    \::/    /        \:::\  /:::/    \::/    /|:::|____\     /:::/    /\::/    /|::|  /:::/    /\::/    \:::\   \::/    /\:::\   \:::\   \::/    /\::/    /|::|  /:::/    /\:::\    \ /\  /:::|____|
+ \/____/ \:::\/:::/    /  \:::\/:::/    / \/____/          \:::\/:::/    / \/____/  \:::\    \   /:::/    /  \/____/ |::| /:::/    /  \/____/ \:::\   \/____/  \:::\   \:::\   \/____/  \/____/ |::| /:::/    /  \:::\    /::\ \::/    / 
+          \::::::/    /    \::::::/    /                    \::::::/    /            \:::\    \ /:::/    /           |::|/:::/    /            \:::\    \       \:::\   \:::\    \              |::|/:::/    /    \:::\   \:::\ \/____/  
+           \::::/    /      \::::/____/                      \::::/    /              \:::\    /:::/    /            |::::::/    /              \:::\____\       \:::\   \:::\____\             |::::::/    /      \:::\   \:::\____\    
+           /:::/    /        \:::\    \                       \::/    /                \:::\__/:::/    /             |:::::/    /                \::/    /        \:::\   \::/    /             |:::::/    /        \:::\  /:::/    /    
+          /:::/    /          \:::\    \                       \/____/                  \::::::::/    /              |::::/    /                  \/____/          \:::\   \/____/              |::::/    /          \:::\/:::/    /     
+         /:::/    /            \:::\    \                                                \::::::/    /               /:::/    /                                     \:::\    \                  /:::/    /            \::::::/    /      
+        /:::/    /              \:::\____\                                                \::::/    /               /:::/    /                                       \:::\____\                /:::/    /              \::::/    /       
+        \::/    /                \::/    /                                                 \::/____/                \::/    /                                         \::/    /                \::/    /                \::/____/        
+         \/____/                  \/____/                                                   ~~                       \/____/                                           \/____/                  \/____/                                  
+                                                                                                                                                                                                                                         
+---end---
+
