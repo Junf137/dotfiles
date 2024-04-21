@@ -131,8 +131,14 @@ esac
 
 # print welcome msg
 echo ""
-echo ""
-shell_welcome
+# assemble output of shell_welcome and cowsay_fortune
+msg="$(shell_welcome)\n$(cowsay_fortune)"
+
+if command -v lolcat &> /dev/null; then
+  echo -e "$msg" | lolcat --animate --duration=1 --speed=120 --freq=0.05 --truecolor
+else
+  echo -e "$msg"
+fi
 
 
 

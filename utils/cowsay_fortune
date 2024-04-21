@@ -1,0 +1,49 @@
+#!/bin/bash
+
+##############################
+# fortune
+##############################
+format_code_fortune=""
+
+if ! command -v fortune &> /dev/null; then
+    echo "fortune is not available"
+    exit 1
+else
+    format_code_fortune="fortune -c -s -n 300"
+fi
+
+
+##############################
+# cowsay & cowthink
+##############################
+format_code_cowsay=""
+
+if command -v cowsay &> /dev/null; then
+    arr_main_cowsay+=(cowsay)
+fi
+
+if command -v cowthink &> /dev/null; then
+    arr_main_cowsay+=(cowthink)
+fi
+
+# if length of arr_main_cowsay is bigger than 0
+if [ ${#arr_main_cowsay[@]} -gt 0 ]; then
+    # 1. available mode: -b -d -g -p -s -t -w -y. this is fixed, may brings problem.
+    arr_mode_cowsay=(-b -d -g -p -s -t -w -y)
+    # 2. available cowfiles: cowsay -l or cowthink -l
+    arr_file_cowsay=($( ${arr_main_cowsay[0]} -l | awk 'NR>1{print}'))
+
+    format_code_cowsay+="${arr_main_cowsay[$RANDOM % ${#arr_main_cowsay[@]}]}"
+    format_code_cowsay+=" ${arr_mode_cowsay[$RANDOM % ${#arr_mode_cowsay[@]}]}"
+    format_code_cowsay+=" -f ${arr_file_cowsay[$RANDOM % ${#arr_file_cowsay[@]}]}"
+    format_code_cowsay+=" -W $(($(tput cols) - 8))"
+
+    # echo "fortune_code_fortune: $format_code_fortune"
+    # echo "fortune_code_cowsay: $format_code_cowsay"
+
+    # print final result
+    $format_code_fortune | $format_code_cowsay
+else
+    # print final result
+    $format_code_fortune
+fi
