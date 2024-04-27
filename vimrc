@@ -6,11 +6,14 @@ set nocompatible  " VI compatible mode is disabled so that VIm things work
 let mapleader=","
 
 
-" =============================================================================
-"   Plugins setting
-" =============================================================================
+""""""""""""""""""""""""""""""
+" Plugins setting
+""""""""""""""""""""""""""""""
 " ---* call plugins
-call plug#begin('~/.vim/plugged')
+"   - Vim (Linux/macOS): '~/.vim/plugged'
+"   - Vim (Windows): '~/vimfiles/plugged'
+"   - Neovim (Linux/macOS/Windows): stdpath('data') . '/plugged'
+call plug#begin()
     Plug 'preservim/nerdtree'                       " display directory
     Plug 'ryanoasis/vim-devicons'                   " add file icon in NERDTree
     Plug 'tiagofumo/vim-nerdtree-syntax-highlight'  " highlight file in NERDTree
@@ -81,9 +84,9 @@ let g:airline#extensions#ale#enabled            = 1 " enable ale integration
 let g:airline_theme                             = 'luna'  " bubblegum, violet
 
 
-" =============================================================================
-"   CUSTOM SHORTCUTS  (LEADER, FN, &c)
-" =============================================================================
+""""""""""""""""""""""""""""""
+" CUSTOM SHORTCUTS  (LEADER, FN, &c)
+""""""""""""""""""""""""""""""
 " ---* setting buffer keymappings
 " (avoid using new tab if you are not familier with buffer, window and tab in vim)
 " close current buffer
@@ -112,9 +115,9 @@ nnoremap <silent> <leader>[ :bprevious<CR>
 " nnoremap <silent> <Down> :res-2<CR>
 
 
-" =============================================================================
+""""""""""""""""""""""""""""""
 " VIM EDITOR SETTINGS
-" =============================================================================
+""""""""""""""""""""""""""""""
 " ---* Color Scheme
 syntax on	        " enable syntax processing
 set shortmess+=I    " Disable the default Vim startup message.

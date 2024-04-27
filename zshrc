@@ -115,7 +115,6 @@ fi
 # ============================================================
 # Initialization(set up env)
 # ============================================================
-export TRASH="$HOME/.local/share/Trash"
 export DOT_FILES="$HOME/Documents/dotfiles"
 export PATH="$HOME/.local/bin:$DOT_FILES/utils:$PATH"
 
@@ -222,11 +221,11 @@ alias cp="cp -i"
 alias mv="mv -i"
 
 # trash-cli
-alias tcd="cd $TRASH"
+alias trash="trash-put"
 alias tlist="trash-list"
 alias trestore="trash-restore"
-alias trm="trash-rm"
 alias tempty="trash-empty"
+alias trm="trash-rm"
 
 # short-command
 alias tls="tmux ls"
