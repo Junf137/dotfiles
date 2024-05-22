@@ -1,0 +1,23 @@
+session_name: regular
+
+start_directory: ~/Documents
+
+windows:
+  # Emptiness will simply open a blank pane, if no shell_command_before.
+  # All these are equivalent
+  - window_name: editor
+    focus: true
+    layout: even-horizontal
+    panes:
+      - focus: true
+        shell_command:
+        - tmux select-pane -m && neofetch
+  - window_name: other
+    focus: false
+    layout: even-horizontal
+    panes:
+      - focus: true
+        shell_command:
+        - clear
+      - shell_command:
+        - clear

@@ -257,8 +257,8 @@ alias gsl="git stash list"
 alias gsp="git stash pop"
 alias gsa="git stash apply"
 
-# tmuxinator
-alias mux="tmuxinator"
+# tmuxp: load session
+alias mux="tmuxp load"
 
 # ============================================================
 # keymapping
@@ -284,4 +284,5 @@ bindkey '\e[1;3C' forward-word
 bindkey '\e[1;3A' beginning-of-line
 bindkey '\e[1;3B' end-of-line
 
-bindkey '\ef' autosuggest-accept
+# conflect with wezterm finding shortcut
+# bindkey '\ef' autosuggest-accept
