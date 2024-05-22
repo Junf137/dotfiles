@@ -120,6 +120,7 @@ files=(
     "$DOT_FILES/bashrc:$HOME/.bashrc"
     "$DOT_FILES/zshrc:$HOME/.zshrc"
     "$DOT_FILES/vimrc:$HOME/.vimrc"
+    "$DOT_FILES/condarc:$HOME/.condarc"
     "$DOT_FILES/tmux.conf:$HOME/.tmux.conf"
     "$DOT_FILES/gitconfig:$HOME/.gitconfig"
 
