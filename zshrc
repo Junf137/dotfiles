@@ -236,11 +236,12 @@ alias condaa="conda activate"
 alias condad="conda deactivate"
 
 # configuration
-alias bashConfig="vim $HOME/.bashrc"
-alias zshConfig="vim $HOME/.zshrc"
-alias vimConfig="vim $HOME/.vimrc"
-alias tmuxConfig="vim $HOME/.tmux.conf"
-alias ohmyzshConfig="vim $HOME/.oh-my-zsh"
+alias bashConfig="nvim $HOME/.bashrc"
+alias zshConfig="nvim $HOME/.zshrc"
+alias vimConfig="nvim $HOME/.vimrc"
+alias nvimConfig="nvim $HOME/.config/nvim/init.lua"
+alias tmuxConfig="nvim $HOME/.tmux.conf"
+alias ohmyzshConfig="nvim $HOME/.oh-my-zsh"
 
 # Add an "alert" alias for long running commands.  Use like so:
 #   sleep 10; alert
@@ -272,11 +273,6 @@ bindkey '\eH' backward-word
 bindkey '\eL' forward-word
 bindkey '\eJ' beginning-of-line
 bindkey '\eK' end-of-line
-
-# bindkey -s '\ev' 'vim\n'
-# bindkey -s '\eu' 'cd ..\n'
-# bindkey -s '\ei' 'll \n'
-# bindkey -s '\eI' 'ls \n'
 
 # up, down, left, right
 bindkey '\e[1;3D' backward-word

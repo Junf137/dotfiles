@@ -125,7 +125,7 @@ set shortmess+=I    " Disable the default Vim startup message.
 
 " ---* UI Config
 set number		        " show line numbers
-set relativenumber		" show relative numbering
+" set relativenumber		" show relative numbering
 set laststatus=2		" Show the status line at the bottom
 
 
