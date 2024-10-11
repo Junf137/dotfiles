@@ -264,21 +264,28 @@ alias mux="tmuxp load"
 # ============================================================
 # keymapping
 # ============================================================
+# Use showkey -a to show keybindings
+
 # hjkl move
-bindkey '\eh' backward-char
-bindkey '\el' forward-char
-bindkey '\ej' down-line-or-history
-bindkey '\ek' up-line-or-history
-bindkey '\eH' backward-word
-bindkey '\eL' forward-word
-bindkey '\eJ' beginning-of-line
-bindkey '\eK' end-of-line
+bindkey '\eh' backward-word
+bindkey '\el' forward-word
+bindkey '\ej' beginning-of-line
+bindkey '\ek' end-of-line
+bindkey '\eH' backward-char
+bindkey '\eL' forward-char
+bindkey '\eJ' down-line-or-history
+bindkey '\eK' up-line-or-history
 
 # up, down, left, right
 bindkey '\e[1;3D' backward-word
 bindkey '\e[1;3C' forward-word
 bindkey '\e[1;3A' beginning-of-line
 bindkey '\e[1;3B' end-of-line
+
+# Alt + Backspace kill one word
+bindkey '^U' backward-kill-word
+# Alt + Shift + Backspace kill one line
+bindkey '^[^?' backward-kill-line
 
 # conflect with wezterm finding shortcut
 # bindkey '\ef' autosuggest-accept
