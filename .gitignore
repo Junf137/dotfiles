@@ -3,3 +3,6 @@
 
 # ignore temporary file created by vim
 *.swp
+
+# ignore all files in .vscode
+.vscode/
