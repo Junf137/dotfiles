@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# __auther__ == Junfeng Lei
+# __author__ == Junfeng Lei
 # --------------------------------
 # Description:
 #   Linking dot files to home directory
@@ -17,6 +17,27 @@ error_cnt=0
 export DOT_FILES="$HOME/Documents/dotfiles"
 export ZSH="$HOME/.local/share/oh-my-zsh"
 export ZSH_CUSTOM="$ZSH/custom"
+
+
+# Define an array of filenames to link
+# Format: "source_filename:destination_filename"
+files=(
+    # 1. links to home directory
+    "$DOT_FILES/bashrc:$HOME/.bashrc"
+    "$DOT_FILES/zshrc:$HOME/.zshrc"
+    "$DOT_FILES/vimrc:$HOME/.vimrc"
+    "$DOT_FILES/condarc:$HOME/.condarc"
+    "$DOT_FILES/tmux.conf:$HOME/.tmux.conf"
+    "$DOT_FILES/gitconfig:$HOME/.gitconfig"
+
+    # 2. links to oh-my-zsh themes
+    "$DOT_FILES/omz_themes/ys_customized.zsh-theme:$ZSH_CUSTOM/themes/ys_customized.zsh-theme"
+
+    # 3. links to tmuxp files
+    "$DOT_FILES/tmuxp:$HOME/.tmuxp"
+
+    # Append more files here...
+)
 
 
 # ---* Functions *---
@@ -112,25 +133,6 @@ log_print "------------------------------"
 log_print "time: $TIME_STAMP"
 log_print "------------------------------"
 log_print "[Process Start]"
-
-
-# Define an array of filenames to link
-files=(
-    # 1. links to home directory
-    "$DOT_FILES/bashrc:$HOME/.bashrc"
-    "$DOT_FILES/zshrc:$HOME/.zshrc"
-    "$DOT_FILES/vimrc:$HOME/.vimrc"
-    "$DOT_FILES/condarc:$HOME/.condarc"
-    "$DOT_FILES/tmux.conf:$HOME/.tmux.conf"
-    "$DOT_FILES/gitconfig:$HOME/.gitconfig"
-
-    # 2. links to oh-my-zsh themes
-    "$DOT_FILES/omz_themes/ys_customized.zsh-theme:$ZSH_CUSTOM/themes/ys_customized.zsh-theme"
-
-    # 3. links to tmuxp files
-    "$DOT_FILES/tmuxp:$HOME/.tmuxp"
-    # Add more files here as needed
-)
 
 
 for file in "${files[@]}"; do
