@@ -116,28 +116,39 @@ fi
 
 
 
-# ---* custom bashrc *---
 # ============================================================
 # Initialization(set up env)
 # ============================================================
-export PATH="$HOME/.local/bin:$PATH"
-export TRASH="$HOME/.local/share/Trash"
 export DOT_FILES="$HOME/Documents/dotfiles"
+export PATH="$DOT_FILES/utils:$PATH"
+
+# rust path setup
+export RUSTUP_HOME="$HOME/.local/share/rustup"
+export CARGO_HOME="$HOME/.local/share/cargo"
+
+# If not running interactively, don't do anything ???
+case $- in
+    *i*) ;;
+      *) return;;
+esac
 
 # print welcome msg
-cat "$DOT_FILES/msg/msg_welcome"
+echo ""
+# assemble output of shell_welcome and cowsay_fortune
+msg="$(shell_welcome)\n$(cowsay_fortune)"
+
+if command -v lolcat &> /dev/null; then
+  echo -e "$msg" | lolcat --animate --duration=1 --speed=120 --freq=0.05 --truecolor
+else
+  echo -e "$msg"
+fi
 
 
 
 # ============================================================
 # custom bash-script
 # ============================================================
-# source $DOT_FILES/utils/del.sh
-# source $DOT_FILES/utils/cdls.sh
-source $DOT_FILES/utils/update_auto.sh
-
-
-# correting mistake-typing
+# correcting mistake-typing
 alias ..="cd .."
 alias ll="ls -lath --color=auto"
 alias la="ll"
@@ -146,19 +157,19 @@ alias ls="ls --color=auto"
 alias sl="ls"
 alias l="ls"
 alias dc="cd"
+alias cl="clear"
 
-
-# secur-typing
+# secure-typing
 alias rm="rm -i"
 alias cp="cp -i"
 alias mv="mv -i"
 
 # trash-cli
-alias tcd="cd $TRASH"
+alias trash="trash-put"
 alias tlist="trash-list"
 alias trestore="trash-restore"
-alias trm="trash-rm"
 alias tempty="trash-empty"
+alias trm="trash-rm"
 
 # short-command
 alias tls="tmux ls"
@@ -168,12 +179,13 @@ alias tks="tmux kill-session -t"
 alias condaa="conda activate"
 alias condad="conda deactivate"
 
-# vim-configuration
-alias bashConfig="vim $HOME/.bashrc"
-alias zshConfig="vim $HOME/.zshrc"
-alias vimConfig="vim $HOME/.vimrc"
-alias ohmyzshConfig="vim $HOME/.oh-my-zsh"
-
+# configuration
+alias bashConfig="nvim $HOME/.bashrc"
+alias zshConfig="nvim $HOME/.zshrc"
+alias vimConfig="nvim $HOME/.vimrc"
+alias nvimConfig="nvim $HOME/.config/nvim/init.lua"
+alias tmuxConfig="nvim $HOME/.tmux.conf"
+alias ohmyzshConfig="nvim $HOME/.oh-my-zsh"
 
 # Add an "alert" alias for long running commands.  Use like so:
 #   sleep 10; alert
@@ -182,8 +194,16 @@ alias alert='notify-send --urgency=low -i "$([ $? = 0 ] && echo terminal || echo
 # git-short-command
 alias gs="git status"
 alias gc="git commit"
+alias gl="git log --decorate=auto --graph --oneline"
+alias gll="git log --decorate=auto --graph"
+alias gla="git log --decorate=auto --graph --all --oneline"
+alias glaa="git log --decorate=auto --graph --all"
+alias gsl="git stash list"
+alias gsp="git stash pop"
+alias gsa="git stash apply"
 
-
+# tmuxp: load session
+alias mux="tmuxp load"
 
 # ============================================================
 # keymapping
@@ -197,17 +217,16 @@ alias gc="git commit"
 # bindkey '\eL' forward-word
 # bindkey '\eJ' beginning-of-line
 # bindkey '\eK' end-of-line
-# 
+#
 # bindkey -s '\ev' 'vim\n'
 # bindkey -s '\eu' 'cd ..\n'
 # bindkey -s '\ei' 'll \n'
 # bindkey -s '\eI' 'ls \n'
-# 
+#
 # # up, down, left, right
 # bindkey '\e[1;3D' backward-word
 # bindkey '\e[1;3C' forward-word
 # bindkey '\e[1;3A' beginning-of-line
 # bindkey '\e[1;3B' end-of-line
-# 
+#
 # bindkey '\ef' autosuggest-accept
-
