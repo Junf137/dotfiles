@@ -2,11 +2,6 @@
 # see /usr/share/doc/bash/examples/startup-files (in the package bash-doc)
 # for examples
 
-if [ -x "$(command -v zsh)" ]; then
-    exec zsh
-    exit 0
-fi
-
 # If not running interactively, don't do anything
 case $- in
     *i*) ;;
