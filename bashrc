@@ -2,11 +2,6 @@
 # see /usr/share/doc/bash/examples/startup-files (in the package bash-doc)
 # for examples
 
-if [ -x "$(command -v zsh)" ]; then
-    exec zsh
-    exit 0
-fi
-
 # If not running interactively, don't do anything
 case $- in
     *i*) ;;
@@ -223,16 +218,17 @@ alias mux="tmuxp load"
 # bindkey '\eL' forward-word
 # bindkey '\eJ' beginning-of-line
 # bindkey '\eK' end-of-line
-#
+# 
 # bindkey -s '\ev' 'vim\n'
 # bindkey -s '\eu' 'cd ..\n'
 # bindkey -s '\ei' 'll \n'
 # bindkey -s '\eI' 'ls \n'
-#
+# 
 # # up, down, left, right
 # bindkey '\e[1;3D' backward-word
 # bindkey '\e[1;3C' forward-word
 # bindkey '\e[1;3A' beginning-of-line
 # bindkey '\e[1;3B' end-of-line
-#
+# 
 # bindkey '\ef' autosuggest-accept
+
