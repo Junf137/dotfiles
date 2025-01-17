@@ -126,6 +126,9 @@ export PATH="$DOT_FILES/utils:$PATH"
 export RUSTUP_HOME="$HOME/.local/share/rustup"
 export CARGO_HOME="$HOME/.local/share/cargo"
 
+# fixing color code output in man command
+export MANROFFOPT="-c"
+
 # If not running interactively, don't do anything ???
 case $- in
     *i*) ;;
