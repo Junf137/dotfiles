@@ -128,6 +128,9 @@ export CARGO_HOME="$HOME/.local/share/cargo"
 # fixing color code output in man command
 export MANROFFOPT="-c"
 
+# disable virtualenv prompt
+export VIRTUAL_ENV_DISABLE_PROMPT=1
+
 # If not running interactively, don't do anything ???
 case $- in
     *i*) ;;

@@ -54,14 +54,6 @@ ys_hg_prompt_info() {
 	fi
 }
 
-# Virtualenv
-local venv_info='$(virtenv_prompt)'
-YS_THEME_VIRTUALENV_PROMPT_PREFIX=" %{$fg[green]%}"
-YS_THEME_VIRTUALENV_PROMPT_SUFFIX=" %{$reset_color%}%"
-virtenv_prompt() {
-	[[ -n "${VIRTUAL_ENV:-}" ]] || return
-	echo "${YS_THEME_VIRTUALENV_PROMPT_PREFIX}${VIRTUAL_ENV:t}${YS_THEME_VIRTUALENV_PROMPT_SUFFIX}"
-}
 
 local exit_code="%(?,,C:%{$fg[red]%}%?%{$reset_color%})"
 
@@ -85,6 +77,17 @@ _conda_prompt_info() {
 # Call function conda_prompt_info before each prompt
 # precmd_functions is reserved functions that execute before prompt
 precmd_functions+=( _conda_prompt_info )
+
+# Virtualenv
+# Adding venv_info into prompt if and when a virtualenv environment is active
+_virtenv_prompt_info() {
+	if [[ -n "${VIRTUAL_ENV:-}" ]]; then
+		venv_info="(${VIRTUAL_ENV:t})"
+	else
+		venv_info=''
+	fi
+}
+precmd_functions+=( _virtenv_prompt_info )
 
 # Prompt format:
 #
@@ -114,6 +117,6 @@ $exit_code
 
 # $conda_info works only when using single quotes, ???
 RPROMPT='\
-%{$terminfo[bold]$fg[blue]%}$conda_info%{$reset_color%} \
+%{$terminfo[bold]$fg[blue]%}$conda_info$venv_info%{$reset_color%} \
 at \
 %{$terminfo[bold]$fg[blue]%}[%*]%{$reset_color%}'
