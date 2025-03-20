@@ -1,0 +1,20 @@
+#!/bin/bash
+# parse_sq.sh
+# This script parses the output of the 'sq' command and shows statistics for each job status.
+# It assumes that the first line is a header, and the job status is in the 5th whitespace-delimited column.
+
+# If input is piped to this script, use that; otherwise, run 'sq' command.
+if [ -t 0 ] && [ $# -eq 0 ]; then
+    # No piped input and no arguments: run sq command directly.
+    output=$(sq)
+else
+    output=$(cat)
+fi
+
+# Process the output:
+# - tail -n +2 removes the header.
+# - awk extracts the 5th column which is the job status.
+# - sort and uniq -c count each unique status.
+echo "$output" | tail -n +2 | awk '{print $5}' | sort | uniq -c | while read count status; do
+    echo "$status: $count"
+done
