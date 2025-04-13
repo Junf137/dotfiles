@@ -1,0 +1,6 @@
+#!/bin/bash
+
+for FOLDER in $(find . -maxdepth 1 -type d | tail -n +2); do
+  echo -ne "$FOLDER:\t"
+  find $FOLDER -type f | wc -l
+done
