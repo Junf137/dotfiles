@@ -5,13 +5,23 @@
 # Description:
 #   Linking dot files to home directory
 # usage:
-# 	1) ./bootstrap.sh
+# 	1) ./bootstrap.sh           # Create symbolic links
+#   2) ./bootstrap.sh --restore # Remove symbolic links and restore backups
 # --------------------------------
 
 # ---* Global Variable *---
 TIME_STAMP="$(date +'%Y_%m_%d_%H_%M_%S')"
 LOG_FILE_NAME="bootstrap_$TIME_STAMP.log"
 error_cnt=0
+RESTORE_MODE=false
+
+# Process command line arguments
+for arg in "$@"; do
+    if [[ "$arg" == "--restore" ]]; then
+        RESTORE_MODE=true
+        LOG_FILE_NAME="bootstrap_restore_$TIME_STAMP.log"
+    fi
+done
 
 # ---* Global env *---
 export DOT_FILES="$HOME/Documents/dotfiles"
@@ -109,9 +119,6 @@ create_soft_link() {
         fi
     fi
 
-    # log_print "ori_name: $ori_name"
-    # log_print "dst_name: $dst_name"
-
     # Create a symbolic link
     ln -s "$ori_name" "$dst_name"
     if [ $? -eq 0 ]; then
@@ -122,15 +129,69 @@ create_soft_link() {
     fi
 }
 
+remove_soft_link() {
+    # Check if the required number of arguments is provided
+    if [ "$#" -ne 2 ]; then
+        error_print "Usage: remove_soft_link ori_name dst_name"
+        return 1
+    fi
+
+    ori_name="$1"
+    dst_name="$2"
+
+    log_print ""
+    log_print "\e[32m---* $dst_name \e[0m"
+
+    # Check if the destination is a symbolic link
+    if [ -L "$dst_name" ]; then
+        # Get the target of the link to verify before removal
+        link_target=$(readlink "$dst_name")
+
+        # Remove the symbolic link
+        rm "$dst_name"
+        if [ $? -eq 0 ]; then
+            log_print "Symbolic link removed: \e[36m$dst_name -> $link_target\e[0m"
+        else
+            error_print "Failed to remove symbolic link: $dst_name"
+            return 1
+        fi
+
+        # Look for the most recent backup file
+        backup_files=( "$dst_name".*.bak )
+        if [ -e "${backup_files[-1]}" ]; then
+            most_recent_backup="${backup_files[-1]}"
+            mv "$most_recent_backup" "$dst_name"
+            if [ $? -eq 0 ]; then
+                log_print "Backup restored: $most_recent_backup -> $dst_name"
+            else
+                error_print "Failed to restore backup: $most_recent_backup -> $dst_name"
+                return 1
+            fi
+        else
+            log_print "No backup found for $dst_name"
+        fi
+    else
+        warn_print "File '$dst_name' is not a symbolic link or does not exist."
+    fi
+}
+
 # ---* Process Start *---
 
 # Redirect stdin and stdout to the log file and tee
 exec > >(tee -a "$LOG_FILE_NAME") 2>&1
 
 # Print welcome msg
-cat "./msg/msg_enjoy_your_day"
+if [ -f "./msg/msg_enjoy_your_day" ]; then
+    cat "./msg/msg_enjoy_your_day"
+fi
 log_print "------------------------------"
 log_print "time: $TIME_STAMP"
+if $RESTORE_MODE; then
+    log_print "Mode: RESTORE - Removing symbolic links"
+else
+    log_print "Mode: CREATE - Creating symbolic links"
+fi
+
 log_print "------------------------------"
 log_print "[Process Start]"
 
@@ -141,7 +202,11 @@ for file in "${files[@]}"; do
     # Get destination filename from array element
     dest="${file#*:}"
 
-    create_soft_link "$src" "$dest"
+    if $RESTORE_MODE; then
+        remove_soft_link "$src" "$dest"
+    else
+        create_soft_link "$src" "$dest"
+    fi
 done
 
 
@@ -153,12 +218,20 @@ log_print "[Process End]"
 if [ $error_cnt == 0 ]; then
     log_print "--------------------------------------------------"
     log_print "time: $TIME_STAMP"
-    log_print "Enjoy Your Day! :)"
+    if $RESTORE_MODE; then
+        log_print "Restore completed successfully!"
+    else
+        log_print "Enjoy Your Day! :)"
+    fi
     log_print "--------------------------------------------------"
 else
     log_print "--------------------------------------------------"
     log_print "time: $TIME_STAMP"
     log_print "total error: $error_cnt"
-    log_print "Check the error and rerun this script :("
+    if $RESTORE_MODE; then
+        log_print "Check the error in the restore process :("
+    else
+        log_print "Check the error and rerun this script :("
+    fi
     log_print "--------------------------------------------------"
 fi
