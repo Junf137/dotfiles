@@ -292,5 +292,5 @@ bindkey '^U' backward-kill-word
 # Alt + Shift + Backspace kill one line
 bindkey '^[^?' backward-kill-line
 
-# conflect with wezterm finding shortcut
+# conflict with wezterm finding shortcut
 # bindkey '\ef' autosuggest-accept
