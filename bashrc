@@ -151,6 +151,70 @@ fi
 # ============================================================
 # custom bash-script
 # ============================================================
+# Setup fzf (installed with git)
+# ---------
+if [[ ! "$PATH" == */home/junf/.local/share/fzf/bin* ]]; then
+  PATH="${PATH:+${PATH}:}/home/junf/.local/share/fzf/bin"
+fi
+
+# if fzf command exist
+if command -v fzf &> /dev/null; then
+  eval "$(fzf --bash)"
+fi
+
+export FZF_DEFAULT_COMMAND='fd --unrestricted'
+export FZF_DEFAULT_OPTS="
+  --height=60% --layout=reverse --info=inline --border --margin=1 --padding=1"
+
+# apply tmux mode when accessible
+export FZF_TMUX_OPTS='-p 80%,60%'
+
+# Use ~~ as the trigger sequence instead of the default **
+export FZF_COMPLETION_TRIGGER='~~'
+export FZF_COMPLETION_OPTS='--border --info=inline'
+
+# CTRL-T runs $FZF_CTRL_T_COMMAND to get a list of files and directories
+export FZF_CTRL_T_COMMAND="fd --unrestricted"
+export FZF_CTRL_T_OPTS="
+  --walker-skip .git
+  --preview 'bat -n --color=always {}'
+  --bind 'ctrl-/:toggle-preview'"
+
+# CTRL-R filters command history
+export FZF_CTRL_R_OPTS="
+  --preview 'echo {}' --preview-window up:3:hidden:wrap
+  --bind 'ctrl-/:toggle-preview'"
+
+# ALT-C runs $FZF_ALT_C_COMMAND to get a list of directories
+export FZF_ALT_C_COMMAND="fd --type d"
+export FZF_ALT_C_OPTS="
+  --walker-skip .git
+  --preview 'tree -C {}'
+  --bind 'ctrl-/:toggle-preview'"
+
+_fzf_compgen_path() {
+  fd --unrestricted --follow --exclude ".git" . "$1"
+}
+
+_fzf_compgen_dir() {
+  fd --type d --unrestricted --follow --exclude ".git" . "$1"
+}
+
+# Advanced customization of fzf options via _fzf_comprun function
+# - The first argument to the function is the name of the command.
+# - You should make sure to pass the rest of the arguments to fzf.
+_fzf_comprun() {
+  local command=$1
+  shift
+
+  case "$command" in
+    cd)           fzf --preview 'tree -C {} | head -200'   "$@" ;;
+    export|unset) fzf --preview "eval 'echo \$'{}"         "$@" ;;
+    ssh)          fzf --preview 'dig {}'                   "$@" ;;
+    *)            fzf --preview 'bat -n --color=always {}' "$@" ;;
+  esac
+}
+
 # correcting mistake-typing
 alias ..="cd .."
 alias ll="ls -lath --color=auto"

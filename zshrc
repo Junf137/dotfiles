@@ -153,8 +153,15 @@ fi
 # ============================================================
 # custom zsh-script
 # ============================================================
-# Setup fzf
-eval "$(fzf --zsh)"
+# Setup fzf (installed with git)
+if [[ ! "$PATH" == */home/junf/.local/share/fzf/bin* ]]; then
+  PATH="${PATH:+${PATH}:}/home/junf/.local/share/fzf/bin"
+fi
+
+# if fzf command exist
+if command -v fzf &> /dev/null; then
+  source <(fzf --zsh)
+fi
 
 export FZF_DEFAULT_COMMAND='fd --unrestricted'
 export FZF_DEFAULT_OPTS="
