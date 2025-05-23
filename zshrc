@@ -154,8 +154,8 @@ fi
 # custom zsh-script
 # ============================================================
 # Setup fzf (installed with git)
-if [[ ! "$PATH" == *$HOME/.local/share/fzf/bin* ]]; then
-  PATH="${PATH:+${PATH}:}$HOME/.local/share/fzf/bin"
+if [[ ! ":$PATH:" == *":$HOME/.local/share/fzf/bin:"* ]]; then
+  PATH="$HOME/.local/share/fzf/bin${PATH:+:}$PATH"
 fi
 
 # if fzf command exist
