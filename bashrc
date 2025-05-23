@@ -120,7 +120,11 @@ fi
 # Initialization(set up env)
 # ============================================================
 export DOT_FILES="$HOME/Documents/dotfiles"
-export PATH="$DOT_FILES/utils:$PATH"
+[ -f "$DOT_FILES/utils/add_path" ] && source "$DOT_FILES/utils/add_path" || echo "add_path() not found."
+
+add_path "$HOME/.local/bin"
+add_path "/usr/local/bin"
+add_path "$DOT_FILES/utils"
 
 # rust path setup
 export RUSTUP_HOME="$HOME/.local/share/rustup"
@@ -153,9 +157,7 @@ fi
 # ============================================================
 # Setup fzf (installed with git)
 # ---------
-if [[ ! ":$PATH:" == *":$HOME/.local/share/fzf/bin:"* ]]; then
-  PATH="$HOME/.local/share/fzf/bin${PATH:+:}$PATH"
-fi
+add_path "$HOME/.local/share/fzf/bin"
 
 # if fzf command exist
 if command -v fzf &> /dev/null; then

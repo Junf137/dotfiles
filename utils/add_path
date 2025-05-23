@@ -1,0 +1,12 @@
+#!/bin/bash
+
+# Adds a directory to the PATH environment variable only if it's not already present
+# Usage: add_path "/path/to/directory"
+function add_path() {
+  if [[ ":$PATH:" == *":$1:"* ]]; then
+    return 0
+  fi
+
+  # Add the path to PATH in the front
+  PATH="$1${PATH:+:}$PATH"
+}
