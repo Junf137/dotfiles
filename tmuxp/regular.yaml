@@ -11,7 +11,7 @@ windows:
     panes:
       - focus: true
         shell_command:
-        - tmux select-pane -m && neofetch
+        - tmux select-pane -m && fastfetch
   - window_name: other
     focus: false
     layout: even-horizontal
