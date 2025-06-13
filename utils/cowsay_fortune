@@ -1,12 +1,19 @@
 #!/bin/bash
 
 ##############################
-# fortune
+# cowsay_fortune - Display a random fortune message using cowsay/cowthink
 ##############################
-format_code_fortune=""
 
+# Initialize variables
+format_code_fortune=""
+format_code_cowsay=""
+declare -a arr_main_cowsay=()
+
+##############################
+# fortune check and setup
+##############################
 if ! command -v fortune &> /dev/null; then
-    echo "fortune is not available"
+    echo "Error: fortune is not available. Please install it." >&2
     exit 1
 else
     format_code_fortune="fortune -c -s -n 300"
@@ -14,10 +21,8 @@ fi
 
 
 ##############################
-# cowsay & cowthink
+# cowsay/cowthink check
 ##############################
-format_code_cowsay=""
-
 if command -v cowsay &> /dev/null; then
     arr_main_cowsay+=(cowsay)
 fi
@@ -26,24 +31,78 @@ if command -v cowthink &> /dev/null; then
     arr_main_cowsay+=(cowthink)
 fi
 
-# if length of arr_main_cowsay is bigger than 0
-if [ ${#arr_main_cowsay[@]} -gt 0 ]; then
-    # 1. available mode: -b -d -g -p -s -t -w -y. this is fixed, may brings problem.
-    arr_mode_cowsay=(-b -d -g -p -s -t -w -y)
-    # 2. available cowfiles: cowsay -l or cowthink -l
-    arr_file_cowsay=($( ${arr_main_cowsay[0]} -l | awk 'NR>1{print}'))
+# Function to check if element exists in array
+is_in_array() {
+    local element="$1"
+    shift
+    local array=("$@")
+    for i in "${array[@]}"; do
+        if [[ "$i" == "$element" ]]; then
+            return 0 # True, found in array
+        fi
+    done
+    return 1 # False, not found in array
+}
 
+# If cowsay/cowthink is available
+if [ ${#arr_main_cowsay[@]} -gt 0 ]; then
+    # 1. Available modes: -b -d -g -p -s -t -w -y
+    arr_mode_cowsay=(-b -d -g -p -s -t -w -y)
+
+    # 2. Get list of cowsay files
+    if ! all_cowfiles=($( ${arr_main_cowsay[0]} -l | awk 'NR>1{print}')); then
+        echo "Warning: Could not get list of cowsay files. Using default." >&2
+        all_cowfiles=(default)
+    fi
+
+    # 3. Files to exclude from the selection
+    exclude_cowsay_files=(
+        "head-in" "kiss" "supermilker" "surgery" "three-eyes"
+        "udder" "www" "beavis.zen" "blowfish" "ren"
+        "turkey" "turtle" "stimpy" "moofasa" "meow"
+        "kosh" "kitty" "fox" "elephant-in-snake" "elephant"
+        "dragon" "daemon" "cupcake" "bong" "ghostbusters"
+        "mech-and-cow"
+    )
+
+    # 4. Filter out excluded cowsay files
+    declare -a arr_file_cowsay=()
+    for cowfile in "${all_cowfiles[@]}"; do
+        if ! is_in_array "$cowfile" "${exclude_cowsay_files[@]}"; then
+            arr_file_cowsay+=("$cowfile")
+        fi
+    done
+
+    # If all files were excluded, use default
+    if [ ${#arr_file_cowsay[@]} -eq 0 ]; then
+        echo "Warning: All cowsay files were excluded. Using default." >&2
+        arr_file_cowsay=(default)
+    fi
+
+    # Random selection
+    RANDOM=$$$(date +%N)
+
+    # Build the cowsay command
+    # 1. Select random cowsay/cowthink
     format_code_cowsay+="${arr_main_cowsay[$RANDOM % ${#arr_main_cowsay[@]}]}"
+    # 2. Select random mode
     format_code_cowsay+=" ${arr_mode_cowsay[$RANDOM % ${#arr_mode_cowsay[@]}]}"
+    # 3. Select random cowfile (excluding the ones in exclude_cowsay_files)
     format_code_cowsay+=" -f ${arr_file_cowsay[$RANDOM % ${#arr_file_cowsay[@]}]}"
+    # 4. Set text width to fit terminal
     format_code_cowsay+=" -W $(($(tput cols) - 8))"
 
-    # echo "fortune_code_fortune: $format_code_fortune"
-    # echo "fortune_code_cowsay: $format_code_cowsay"
+    # For debugging:
+    # echo "format_code_fortune: $format_code_fortune"
+    # echo "format_code_cowsay: $format_code_cowsay"
+    # echo "Number of available cowfiles after exclusion: ${#arr_file_cowsay[@]}"
 
-    # print final result
-    $format_code_fortune | $format_code_cowsay
+    # Print final result
+    $format_code_fortune | $format_code_cowsay || {
+        echo "Error running cowsay. Falling back to fortune only." >&2
+        $format_code_fortune
+    }
 else
-    # print final result
+    # If cowsay/cowthink is not available, just display fortune
     $format_code_fortune
 fi
