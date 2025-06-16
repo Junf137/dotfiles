@@ -46,6 +46,10 @@ files=(
     # 3. links to tmuxp files
     "$DOT_FILES/tmuxp:$HOME/.tmuxp"
 
+    # 4. links to .config directory
+    "$DOT_FILES/nvim/nvim-kickstart:$HOME/.config/nvim"
+    "$DOT_FILES/wezterm/wezterm-config:$HOME/.config/wezterm"
+
     # Append more files here...
 )
 
