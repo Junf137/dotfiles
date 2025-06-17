@@ -126,12 +126,11 @@ add_path "$HOME/.local/bin"
 add_path "/usr/local/bin"
 add_path "$DOT_FILES/utils"
 
-# rust path setup
-export RUSTUP_HOME="$HOME/.local/share/rustup"
-export CARGO_HOME="$HOME/.local/share/cargo"
-
 # fixing color code output in man command
 export MANROFFOPT="-c"
+
+# disable virtualenv prompt
+export VIRTUAL_ENV_DISABLE_PROMPT=1
 
 # If not running interactively, don't do anything ???
 case $- in
@@ -156,7 +155,6 @@ fi
 # custom bash-script
 # ============================================================
 # Setup fzf (installed with git)
-# ---------
 add_path "$HOME/.local/share/fzf/bin"
 
 # if fzf command exist
