@@ -1,0 +1,5 @@
+#!/bin/bash
+
+source ~/projects/rrg-dclausi/j46lei/sea-ice-mmseg/computecanada/submit/load_modules.sh
+source ~/.venvs/mm_selfsup/bin/activate
+echo "Activated mm_selfsup virtual environment."
