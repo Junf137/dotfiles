@@ -179,3 +179,6 @@ alias gsa="git stash apply"
 
 # tmuxp: load session
 alias mux="tmuxp load"
+
+# Activate venv in computer canada cluster
+alias venv_mm_selfsup="source $DOT_FILES/utils/venv_mm_selfsup"
