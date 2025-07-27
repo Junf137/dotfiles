@@ -1,0 +1,108 @@
+# Alacritty configuration file based on your WezTerm setup.
+
+general.import = [
+    # uncomment the flavour you want below:
+    # "~/.config/alacritty/catppuccin-latte.toml"
+    # "~/.config/alacritty/catppuccin-frappe.toml"
+    "~/.config/alacritty/catppuccin-macchiato.toml"
+    # "~/.config/alacritty/catppuccin-mocha.toml"
+]
+
+# Shell configuration
+# Sets the default shell to zsh with the -l flag.
+[terminal.shell]
+program = "zsh"
+args = ["-l"]
+
+# Window appearance and behavior
+[window]
+# Sets the window padding.
+padding = { x = 0, y = 10 }
+
+# Removes the window title bar and decorations.
+decorations = "None"
+
+# Opacity
+opacity = 0.97
+
+blur = true
+
+startup_mode = "Maximized"
+
+dynamic_title = true
+
+# Scrolling configuration
+[scrolling]
+# Sets the scrollback history size.
+history = 20000
+
+# Font configuration
+[font]
+# Font family and size.
+normal = { family = "FiraCode Nerd Font Mono", style = "DemiLight" }
+size = 12.0
+
+# # Color scheme (Catppuccin Mocha based)
+# [colors]
+# primary = { background = "#1f1f28", foreground = "#cdd6f4" }
+# cursor = { text = "#11111b", cursor = "#f5e0dc" }
+# selection = { text = "#cdd6f4", background = "#585b70" }
+
+# # Normal colors
+# [colors.normal]
+# black = "#0C0C0C"
+# red = "#C50F1F"
+# green = "#13A10E"
+# yellow = "#C19C00"
+# blue = "#0037DA"
+# magenta = "#881798"
+# cyan = "#3A96DD"
+# white = "#CCCCCC"
+
+# # Bright colors
+# [colors.bright]
+# black = "#767676"
+# red = "#E74856"
+# green = "#16C60C"
+# yellow = "#F9F1A5"
+# blue = "#3B78FF"
+# magenta = "#B4009E"
+# cyan = "#61D6D6"
+# white = "#F2F2F2"
+
+# Key bindings
+# Note: Alacritty's keybinding system is less flexible than WezTerm's.
+# Complex leader key sequences and scripted actions are not supported.
+# Panes (splits) are also not a built-in feature of Alacritty.
+[keyboard]
+bindings = [
+    # Spawn new Alacritty window (equivalent to new tab in WezTerm)
+    { key = "T", mods = "Alt", action = "SpawnNewInstance" },
+    { key = "N", mods = "Alt", action = "SpawnNewInstance" },
+
+    # Close window (equivalent to closing tab/pane in WezTerm)
+    { key = "W", mods = "Alt", action = "Quit" },
+
+    # Font size adjustments
+    { key = "K", mods = "Alt", action = "IncreaseFontSize" },
+    { key = "J", mods = "Alt", action = "DecreaseFontSize" },
+    { key = "R", mods = "Alt", action = "ResetFontSize" },
+
+    # Fullscreen
+    { key = "F11", mods = "None", action = "ToggleFullscreen" },
+
+    # Copy and Paste (usually handled by default, but explicitly set here)
+    { key = "C", mods = "Control|Shift", action = "Copy" },
+    { key = "V", mods = "Control|Shift", action = "Paste" },
+
+    # Scrolling
+    { key = "PageUp", mods = "None", action = "ScrollPageUp" },
+    { key = "PageDown", mods = "None", action = "ScrollPageDown" },
+    { key = "U", mods = "Alt", action = "ScrollLineUp" },
+    { key = "D", mods = "Alt", action = "ScrollLineDown" },
+]
+
+[terminal]
+
+[env]
+TERM = "xterm-256color"
