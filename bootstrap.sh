@@ -47,6 +47,7 @@ files=(
     # 3. links to .config directory
     "$DOT_FILES/nvim/nvim-kickstart:$HOME/.config/nvim"
     "$DOT_FILES/wezterm/wezterm-config:$HOME/.config/wezterm"
+    "$DOT_FILES/alacritty/alacritty-default:$HOME/.config/alacritty"
 
     # Append more files here...
 )
