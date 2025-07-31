@@ -114,7 +114,8 @@ _fzf_comprun() {
 # ============================================================
 # correcting mistake-typing
 alias ..="cd .."
-alias ll="ls -lath --color=auto"
+alias ll="ls -lath --color=auto" # long listing + all files + time order + human-readable sizes
+alias lll="ls -lah --color=auto" # long listing + all files + human-readable sizes
 alias la="ll"
 alias lsa="ll"
 alias ls="ls --color=auto"
