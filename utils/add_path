@@ -1,12 +1,17 @@
 #!/bin/bash
 
-# Adds a directory to the PATH environment variable only if it's not already present
+# Adds a directory to the PATH environment variable at the front
+# If the path already exists, it will be moved to the front (prioritized)
 # Usage: add_path "/path/to/directory"
 function add_path() {
+  # Remove the path if it already exists
   if [[ ":$PATH:" == *":$1:"* ]]; then
-    return 0
+    # Remove all occurrences of the path
+    PATH="${PATH//$1:/}"
+    PATH="${PATH//:$1/}"
+    PATH="${PATH//$1/}"
   fi
 
-  # Add the path to PATH in the front
+  # Add the path to PATH at the front
   PATH="$1${PATH:+:}$PATH"
 }

@@ -11,9 +11,19 @@
 export DOT_FILES="$HOME/Documents/dotfiles"
 [ -f "$DOT_FILES/utils/add_path" ] && source "$DOT_FILES/utils/add_path" || echo "add_path() not found."
 
-add_path "$HOME/.local/bin"
-add_path "/usr/local/bin"
 add_path "$DOT_FILES/utils"
+add_path "/usr/local/bin"
+add_path "$HOME/.local/bin"
+
+# macOS-specific
+if [[ "$(uname -s)" == "Darwin" ]]; then
+    # Prioritize Homebrew paths (added last to be first in PATH)
+    add_path "/opt/homebrew/sbin"
+    add_path "/opt/homebrew/bin"
+
+    # Disable homebrew sending analytics data
+    export HOMEBREW_NO_ANALYTICS=1
+fi
 
 # fixing color code output in man command
 export MANROFFOPT="-c"
