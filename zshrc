@@ -79,6 +79,9 @@ plugins=(
 )
 # zsh-syntax-highlighting needs to be the last one parsed
 
+# Add brew plugin on macOS
+[[ "$OSTYPE" == darwin* ]] && plugins+=(brew)
+
 source $ZSH/oh-my-zsh.sh
 
 # User configuration
@@ -146,3 +149,18 @@ bindkey '^[^?' backward-kill-line
 
 # conflict with wezterm finding shortcut
 # bindkey '\ef' autosuggest-accept
+
+# >>> conda initialize >>>
+# !! Contents within this block are managed by 'conda init' !!
+__conda_setup="$('/Users/junf/.local/share/miniconda3/bin/conda' 'shell.zsh' 'hook' 2> /dev/null)"
+if [ $? -eq 0 ]; then
+    eval "$__conda_setup"
+else
+    if [ -f "/Users/junf/.local/share/miniconda3/etc/profile.d/conda.sh" ]; then
+        . "/Users/junf/.local/share/miniconda3/etc/profile.d/conda.sh"
+    else
+        export PATH="/Users/junf/.local/share/miniconda3/bin:$PATH"
+    fi
+fi
+unset __conda_setup
+# <<< conda initialize <<<
