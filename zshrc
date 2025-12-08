@@ -79,6 +79,9 @@ plugins=(
 )
 # zsh-syntax-highlighting needs to be the last one parsed
 
+# Add brew plugin on macOS
+[[ "$OSTYPE" == darwin* ]] && plugins+=(brew)
+
 source $ZSH/oh-my-zsh.sh
 
 # User configuration
