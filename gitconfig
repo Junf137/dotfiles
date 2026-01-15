@@ -1,18 +1,17 @@
 [user]
-	name = Junfeng Lei
+    name = Junfeng Lei
     email = junf137@outlook.com
 
 [core]
     editor = vim
-	excludesfile = ~/.gitignore_global
-
-[alias]
+    excludesfile = ~/.gitignore_global
 
 [credential]
-	helper = cache
-
-[init]
-	defaultBranch = master
+    helper = cache
 
 [color]
-	ui = auto
+    ui = auto
+
+[init]
+    defaultBranch = main
+
