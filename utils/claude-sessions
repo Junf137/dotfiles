@@ -1,0 +1,335 @@
+#!/bin/bash
+
+# Display detailed information for all running Claude Code sessions
+# Shows PID, tmux location, working directory, git branch, uptime, CPU, and memory usage
+#
+# Usage: claude-sessions [options]
+#   -h, --help    Show this help message
+#   -n, --no-color    Disable colored output
+
+# Colors
+BOLD='\033[1m'
+DIM='\033[2m'
+CYAN='\033[36m'
+GREEN='\033[32m'
+YELLOW='\033[33m'
+MAGENTA='\033[35m'
+RESET='\033[0m'
+
+# Box drawing characters
+H_LINE="─"
+V_LINE="│"
+TL_CORNER="┌"
+TR_CORNER="┐"
+BL_CORNER="└"
+BR_CORNER="┘"
+T_DOWN="┬"
+T_UP="┴"
+T_RIGHT="├"
+T_LEFT="┤"
+CROSS="┼"
+
+# Parse arguments
+NO_COLOR=false
+for arg in "$@"; do
+    case "$arg" in
+        -h|--help)
+            echo "Usage: claude-sessions [options]"
+            echo ""
+            echo "Display detailed information for all running Claude Code sessions."
+            echo ""
+            echo "Options:"
+            echo "  -h, --help      Show this help message"
+            echo "  -n, --no-color  Disable colored output"
+            exit 0
+            ;;
+        -n|--no-color)
+            NO_COLOR=true
+            ;;
+    esac
+done
+
+# Disable colors if requested
+if $NO_COLOR; then
+    BOLD=""
+    DIM=""
+    CYAN=""
+    GREEN=""
+    YELLOW=""
+    MAGENTA=""
+    RESET=""
+fi
+
+# Get terminal width
+TERM_WIDTH=$(tput cols 2>/dev/null || echo 80)
+[ "$TERM_WIDTH" -lt 60 ] && TERM_WIDTH=60
+[ "$TERM_WIDTH" -gt 200 ] && TERM_WIDTH=200
+
+# Get current tty to highlight current session
+CURRENT_TTY=$(tty 2>/dev/null)
+
+# Get all Claude PIDs
+CLAUDE_PIDS=$(pgrep -x claude 2>/dev/null)
+
+if [ -z "$CLAUDE_PIDS" ]; then
+    echo "No Claude Code sessions found."
+    exit 0
+fi
+
+# Function to repeat a character n times
+repeat_char() {
+    local char="$1"
+    local count="$2"
+    local result=""
+    for ((i=0; i<count; i++)); do
+        result+="$char"
+    done
+    echo "$result"
+}
+
+# Function to truncate string to fit width
+truncate() {
+    local str="$1"
+    local max_len="$2"
+    if [ ${#str} -gt $max_len ]; then
+        echo "${str:0:$((max_len-2))}.."
+    else
+        echo "$str"
+    fi
+}
+
+# Function to pad string to width
+pad_right() {
+    printf "%-${2}s" "$1"
+}
+
+pad_left() {
+    printf "%${2}s" "$1"
+}
+
+# Calculate column widths based on terminal width
+USABLE_WIDTH=$((TERM_WIDTH - 2))
+
+# Fixed width columns
+COL_NUM=3
+COL_PID=7
+COL_TMUX=12
+COL_UPTIME=10
+COL_MEM=8
+COL_CPU=6
+
+# Variable width columns get remaining space
+FIXED_WIDTH=$((COL_NUM + COL_PID + COL_TMUX + COL_UPTIME + COL_MEM + COL_CPU + 21))
+REMAINING=$((USABLE_WIDTH - FIXED_WIDTH))
+
+# Split remaining between directory and branch
+COL_DIR=$((REMAINING * 65 / 100))
+COL_BRANCH=$((REMAINING * 35 / 100))
+
+# Minimum widths
+[ "$COL_DIR" -lt 15 ] && COL_DIR=15
+[ "$COL_BRANCH" -lt 8 ] && COL_BRANCH=8
+
+# Collect session data
+declare -a SESSIONS
+SESSION_COUNT=0
+TOTAL_MEM=0
+
+for pid in $CLAUDE_PIDS; do
+    [ ! -d "/proc/$pid" ] && continue
+
+    # Get TTY
+    tty_path=$(readlink /proc/$pid/fd/0 2>/dev/null)
+    tty_name=$(echo "$tty_path" | sed 's|/dev/||')
+
+    # Check if current
+    is_current=""
+    [ "$tty_path" = "$CURRENT_TTY" ] && is_current="*"
+
+    # Get working directory
+    cwd=$(readlink /proc/$pid/cwd 2>/dev/null)
+    cwd_short=$(echo "$cwd" | sed "s|^$HOME|~|")
+
+    # Get process stats
+    ps_info=$(ps -p "$pid" -o etime=,%cpu=,rss= 2>/dev/null)
+    elapsed=$(echo "$ps_info" | awk '{print $1}')
+    cpu=$(echo "$ps_info" | awk '{print $2}')
+    rss_kb=$(echo "$ps_info" | awk '{print $3}')
+
+    # Convert RSS to human readable
+    rss_human="N/A"
+    if [ -n "$rss_kb" ] && [ "$rss_kb" -gt 0 ] 2>/dev/null; then
+        TOTAL_MEM=$((TOTAL_MEM + rss_kb))
+        rss_mb=$((rss_kb / 1024))
+        if [ "$rss_mb" -gt 1024 ]; then
+            rss_gb=$((rss_mb / 1024))
+            rss_remainder=$(( (rss_mb % 1024) * 10 / 1024 ))
+            rss_human="${rss_gb}.${rss_remainder}G"
+        else
+            rss_human="${rss_mb}M"
+        fi
+    fi
+
+    # Get tmux info
+    tmux_info="-"
+    if command -v tmux &>/dev/null; then
+        tmux_line=$(tmux list-panes -a -F "#{pane_tty}|#{session_name}|#{window_index}|#{pane_index}" 2>/dev/null | grep "^$tty_path|")
+        if [ -n "$tmux_line" ]; then
+            tmux_session=$(echo "$tmux_line" | cut -d'|' -f2)
+            tmux_window=$(echo "$tmux_line" | cut -d'|' -f3)
+            tmux_pane=$(echo "$tmux_line" | cut -d'|' -f4)
+            tmux_info="$tmux_session:$tmux_window.$tmux_pane"
+        fi
+    fi
+
+    # Get git branch
+    git_branch="-"
+    if [ -d "$cwd/.git" ] || git -C "$cwd" rev-parse --git-dir &>/dev/null 2>&1; then
+        git_branch=$(git -C "$cwd" branch --show-current 2>/dev/null)
+        [ -z "$git_branch" ] && git_branch="-"
+    fi
+
+    SESSION_COUNT=$((SESSION_COUNT + 1))
+    SESSIONS+=("$SESSION_COUNT|$pid|$tmux_info|$cwd_short|$git_branch|$elapsed|${cpu}%|$rss_human|$is_current")
+done
+
+# Print horizontal line
+print_horizontal_line() {
+    local left="$1"
+    local mid="$2"
+    local right="$3"
+
+    echo -n "$left"
+    echo -n "$(repeat_char "$H_LINE" $((COL_NUM + 2)))"
+    echo -n "$mid"
+    echo -n "$(repeat_char "$H_LINE" $((COL_PID + 2)))"
+    echo -n "$mid"
+    echo -n "$(repeat_char "$H_LINE" $((COL_TMUX + 2)))"
+    echo -n "$mid"
+    echo -n "$(repeat_char "$H_LINE" $((COL_DIR + 2)))"
+    echo -n "$mid"
+    echo -n "$(repeat_char "$H_LINE" $((COL_BRANCH + 2)))"
+    echo -n "$mid"
+    echo -n "$(repeat_char "$H_LINE" $((COL_UPTIME + 2)))"
+    echo -n "$mid"
+    echo -n "$(repeat_char "$H_LINE" $((COL_CPU + 2)))"
+    echo -n "$mid"
+    echo -n "$(repeat_char "$H_LINE" $((COL_MEM + 2)))"
+    echo "$right"
+}
+
+# Print data row
+print_row() {
+    local num="$1"
+    local pid="$2"
+    local tmux="$3"
+    local dir="$4"
+    local branch="$5"
+    local uptime="$6"
+    local cpu="$7"
+    local mem="$8"
+    local current="$9"
+
+    # Truncate values to fit columns
+    tmux=$(truncate "$tmux" $COL_TMUX)
+    dir=$(truncate "$dir" $COL_DIR)
+    branch=$(truncate "$branch" $COL_BRANCH)
+
+    echo -n "$V_LINE "
+    if [ -n "$current" ]; then
+        echo -en "${GREEN}${BOLD}"
+    fi
+    echo -n "$(pad_right "$num" $COL_NUM)"
+    if [ -n "$current" ]; then
+        echo -en "${RESET}"
+    fi
+    echo -n " $V_LINE "
+    echo -n "$(pad_right "$pid" $COL_PID)"
+    echo -n " $V_LINE "
+    echo -en "${MAGENTA}"
+    echo -n "$(pad_right "$tmux" $COL_TMUX)"
+    echo -en "${RESET}"
+    echo -n " $V_LINE "
+    echo -en "${YELLOW}"
+    echo -n "$(pad_right "$dir" $COL_DIR)"
+    echo -en "${RESET}"
+    echo -n " $V_LINE "
+    echo -en "${CYAN}"
+    echo -n "$(pad_right "$branch" $COL_BRANCH)"
+    echo -en "${RESET}"
+    echo -n " $V_LINE "
+    echo -n "$(pad_left "$uptime" $COL_UPTIME)"
+    echo -n " $V_LINE "
+    echo -n "$(pad_left "$cpu" $COL_CPU)"
+    echo -n " $V_LINE "
+    echo -n "$(pad_left "$mem" $COL_MEM)"
+    echo " $V_LINE"
+}
+
+# Title
+echo ""
+echo -e "${BOLD}${CYAN}  Claude Code Sessions${RESET} ${DIM}($SESSION_COUNT active)${RESET}"
+echo ""
+
+# Print table
+print_horizontal_line "$TL_CORNER" "$T_DOWN" "$TR_CORNER"
+
+# Header row
+echo -n "$V_LINE "
+echo -en "${BOLD}"
+echo -n "$(pad_right "#" $COL_NUM)"
+echo -en "${RESET}"
+echo -n " $V_LINE "
+echo -en "${BOLD}"
+echo -n "$(pad_right "PID" $COL_PID)"
+echo -en "${RESET}"
+echo -n " $V_LINE "
+echo -en "${BOLD}"
+echo -n "$(pad_right "tmux" $COL_TMUX)"
+echo -en "${RESET}"
+echo -n " $V_LINE "
+echo -en "${BOLD}"
+echo -n "$(pad_right "Directory" $COL_DIR)"
+echo -en "${RESET}"
+echo -n " $V_LINE "
+echo -en "${BOLD}"
+echo -n "$(pad_right "Branch" $COL_BRANCH)"
+echo -en "${RESET}"
+echo -n " $V_LINE "
+echo -en "${BOLD}"
+echo -n "$(pad_left "Uptime" $COL_UPTIME)"
+echo -en "${RESET}"
+echo -n " $V_LINE "
+echo -en "${BOLD}"
+echo -n "$(pad_left "CPU" $COL_CPU)"
+echo -en "${RESET}"
+echo -n " $V_LINE "
+echo -en "${BOLD}"
+echo -n "$(pad_left "Mem" $COL_MEM)"
+echo -en "${RESET}"
+echo " $V_LINE"
+
+print_horizontal_line "$T_RIGHT" "$CROSS" "$T_LEFT"
+
+# Data rows
+for session in "${SESSIONS[@]}"; do
+    IFS='|' read -r num pid tmux dir branch uptime cpu mem current <<< "$session"
+    print_row "$num" "$pid" "$tmux" "$dir" "$branch" "$uptime" "$cpu" "$mem" "$current"
+done
+
+print_horizontal_line "$BL_CORNER" "$T_UP" "$BR_CORNER"
+
+# Summary
+if [ "$TOTAL_MEM" -gt 0 ]; then
+    total_mem_mb=$((TOTAL_MEM / 1024))
+    if [ "$total_mem_mb" -gt 1024 ]; then
+        total_gb=$((total_mem_mb / 1024))
+        total_remainder=$(( (total_mem_mb % 1024) * 10 / 1024 ))
+        total_mem_human="${total_gb}.${total_remainder}G"
+    else
+        total_mem_human="${total_mem_mb}M"
+    fi
+    echo ""
+    echo -e "  ${DIM}Total memory: ${RESET}${BOLD}$total_mem_human${RESET}  ${DIM}${GREEN}● current session${RESET}"
+fi
+echo ""
