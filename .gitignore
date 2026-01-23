@@ -6,3 +6,6 @@
 
 # ignore all files in .vscode
 .vscode/
+.cursor/
+.claude/settings.local.json
+CLAUDE.local.md
