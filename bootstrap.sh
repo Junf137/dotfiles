@@ -49,6 +49,10 @@ files=(
     "$DOT_FILES/wezterm/wezterm-config:$HOME/.config/wezterm"
     "$DOT_FILES/alacritty/alacritty-default:$HOME/.config/alacritty"
 
+    # 4. links to Claude Code config
+    "$DOT_FILES/claude/CLAUDE.md:$HOME/.claude/CLAUDE.md"
+    "$DOT_FILES/claude/settings.json:$HOME/.claude/settings.json"
+
     # Append more files here...
 )
 
