@@ -71,6 +71,7 @@ dotfiles/
 | `alacritty/alacritty-default`           | `~/.config/alacritty`                |
 | `claude/CLAUDE.md`                      | `~/.claude/CLAUDE.md`               |
 | `claude/settings.json`                  | `~/.claude/settings.json`           |
+| `/home/junf/Pictures/Background`        | `~/.config/wezterm/backdrops`        |
 
 ## Git Submodules
 
