@@ -15,8 +15,20 @@
       "Bash(ffprobe:*)",
       "Bash(git add:*)",
       "Bash(git commit:*)",
+      "Bash(git branch:*)",
+      "Bash(git log:*)",
+      "Bash(git status:*)",
+      "Bash(git checkout:*)",
       "Bash(python -m py_compile:*)",
-      "Bash(git branch:*)"
+      "Bash(conda activate:*)",
+      "Bash(chmod:*)",
+      "Bash(identify:*)",
+      "Bash(cat:*)",
+      "Bash(sort:*)",
+      "Bash(awk:*)",
+      "Bash(tail:*)",
+      "Bash(lscpu:*)",
+      "Bash(nvidia-smi:*)"
     ],
     "deny": [
       "Read(./.env)",

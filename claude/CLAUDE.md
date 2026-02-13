@@ -31,3 +31,12 @@ pytest -q
 # Coding conventions
 - Keep changes small and incremental; add or update tests for behavior changes.
 - When uncertain: ask before large refactors or dependency/tooling changes.
+
+# Git
+- Never commit `plan.md`, `code_review.md`, or similar planning/review files, but do not automatically delete them either.
+
+# Standardized Workflow
+## Responding to code reviews
+- Read the code review content carefully and cross-check each point against the actual codebase.
+- Either correct the code if the review is valid, or defend the implementation with reasoning if the review is incorrect.
+- If the code review is provided in an editable file, append the response and action result to that file.
