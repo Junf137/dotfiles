@@ -51,6 +51,7 @@ files=(
     "$DOT_FILES/nvim/nvim-kickstart:$HOME/.config/nvim"
     "$DOT_FILES/wezterm/wezterm-config:$HOME/.config/wezterm"
     "$DOT_FILES/alacritty/alacritty-default:$HOME/.config/alacritty"
+    "$DOT_FILES/yazi:$HOME/.config/yazi"
 
     # 4. links to Claude Code config
     "$DOT_FILES/claude/CLAUDE.md:$HOME/.claude/CLAUDE.md"

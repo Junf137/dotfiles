@@ -39,6 +39,8 @@ dotfiles/
 │   └── shell_welcome       # Random welcome message display
 ├── wezterm/
 │   └── wezterm-config/     # Git submodule: Junf137/wezterm-config
+├── yazi/                   # Yazi file manager configs
+│   └── keymap.toml         # Yazi keybindings
 ├── bashrc                  # Bash configuration
 ├── bootstrap.sh            # Main installer (creates/restores symlinks)
 ├── CLAUDE.md               # This file (repo-specific AI assistant guide)
@@ -69,6 +71,7 @@ dotfiles/
 | `nvim/nvim-kickstart`                   | `~/.config/nvim`                     |
 | `wezterm/wezterm-config`                | `~/.config/wezterm`                  |
 | `alacritty/alacritty-default`           | `~/.config/alacritty`                |
+| `yazi/`                                 | `~/.config/yazi`                     |
 | `claude/CLAUDE.md`                      | `~/.claude/CLAUDE.md`               |
 | `claude/settings.json`                  | `~/.claude/settings.json`           |
 | `/home/junf/Pictures/Background`        | `~/.config/wezterm/backdrops`        |

@@ -1,0 +1,6 @@
+[[mgr.prepend_keymap]]
+on = [ "g", "v" ]
+run = '''
+shell 'mpv --vo=tct --vf=fps=10,scale=160:-2 --no-audio --osd-level=0 --msg-level=all=no "$1"' --interactive --block
+'''
+desc = "Terminal video preview (mpv tct)"
