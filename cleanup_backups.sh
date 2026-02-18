@@ -58,7 +58,7 @@ files=(
     "$DOT_FILES/claude/settings.json:$HOME/.claude/settings.json"
 
     # 5. links for wezterm backdrops (external images)
-    "/home/junf/Pictures/Background:$HOME/.config/wezterm/backdrops"
+    "$HOME/Pictures/Background:$HOME/.config/wezterm/backdrops"
 
     # Append more files here...
 )

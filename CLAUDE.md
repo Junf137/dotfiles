@@ -74,7 +74,7 @@ dotfiles/
 | `yazi/`                                 | `~/.config/yazi`                     |
 | `claude/CLAUDE.md`                      | `~/.claude/CLAUDE.md`               |
 | `claude/settings.json`                  | `~/.claude/settings.json`           |
-| `/home/junf/Pictures/Background`        | `~/.config/wezterm/backdrops`        |
+| `~/Pictures/Background`                 | `~/.config/wezterm/backdrops`        |
 
 ## Git Submodules
 
