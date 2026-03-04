@@ -10,25 +10,40 @@
       "Bash(tree:*)",
       "Bash(find:*)",
       "Bash(head:*)",
+      "Bash(tail:*)",
+      "Bash(cat:*)",
+      "Bash(sort:*)",
+      "Bash(awk:*)",
       "Bash(xargs ls:*)",
       "Bash(grep:*)",
+      "Bash(du:*)",
+      "Bash(file:*)",
+      "Bash(stat:*)",
+      "Bash(readlink:*)",
       "Bash(ffprobe:*)",
+      "Bash(identify:*)",
+      "Bash(lscpu:*)",
+      "Bash(nvidia-smi:*)",
+      "Bash(chmod:*)",
+      "Bash(ln:*)",
+      "Bash(bash -n:*)",
+      "Bash(python -m py_compile:*)",
+      "Bash(python -c:*)",
+      "Bash(conda activate:*)",
+      "Bash(*/conda run:*)",
+      "Bash(*/conda env:*)",
+      "Bash(*/conda list:*)",
       "Bash(git add:*)",
       "Bash(git commit:*)",
       "Bash(git branch:*)",
       "Bash(git log:*)",
       "Bash(git status:*)",
       "Bash(git checkout:*)",
-      "Bash(python -m py_compile:*)",
-      "Bash(conda activate:*)",
-      "Bash(chmod:*)",
-      "Bash(identify:*)",
-      "Bash(cat:*)",
-      "Bash(sort:*)",
-      "Bash(awk:*)",
-      "Bash(tail:*)",
-      "Bash(lscpu:*)",
-      "Bash(nvidia-smi:*)"
+      "Bash(git diff:*)",
+      "Bash(git mv:*)",
+      "Bash(git rm:*)",
+      "Bash(git submodule:*)",
+      "Bash(git stash:*)"
     ],
     "deny": [
       "Read(./.env)",
@@ -36,8 +51,10 @@
       "Read(./secrets/**)"
     ],
     "ask": [
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "Bash(git reset:*)",
+      "Bash(git restore:*)",
+      "Bash(git rebase:*)"
     ]
-  },
-  "model": "opus"
+  }
 }
