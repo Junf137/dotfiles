@@ -19,6 +19,9 @@ dotfiles/
 ├── claude/                 # Global Claude Code configuration (symlinked to ~/.claude/)
 │   ├── CLAUDE.md           # Global Claude policies (symlinked to ~/.claude/CLAUDE.md)
 │   └── settings.json       # Permissions config (symlinked to ~/.claude/settings.json)
+├── codex/                  # Global OpenAI Codex configuration (symlinked to ~/.codex/)
+│   ├── AGENTS.md           # Global Codex agent instructions (symlinked to ~/.codex/AGENTS.md)
+│   └── config.toml         # Codex config (symlinked to ~/.codex/config.toml)
 ├── msg/                    # ASCII art welcome messages
 │   ├── msg_enjoy_your_day  # Bootstrap banner
 │   └── msg_shell_welcome   # Shell startup messages
@@ -74,6 +77,8 @@ dotfiles/
 | `yazi/`                                 | `~/.config/yazi`                     |
 | `claude/CLAUDE.md`                      | `~/.claude/CLAUDE.md`               |
 | `claude/settings.json`                  | `~/.claude/settings.json`           |
+| `codex/AGENTS.md`                       | `~/.codex/AGENTS.md`                |
+| `codex/config.toml`                     | `~/.codex/config.toml`              |
 | `~/Pictures/Background`                 | `~/.config/wezterm/backdrops`        |
 
 ## Git Submodules

@@ -57,7 +57,11 @@ files=(
     "$DOT_FILES/claude/CLAUDE.md:$HOME/.claude/CLAUDE.md"
     "$DOT_FILES/claude/settings.json:$HOME/.claude/settings.json"
 
-    # 5. links for wezterm backdrops (external images)
+    # 5. links to OpenAI Codex config
+    "$DOT_FILES/codex/AGENTS.md:$HOME/.codex/AGENTS.md"
+    "$DOT_FILES/codex/config.toml:$HOME/.codex/config.toml"
+
+    # 6. links for wezterm backdrops (external images)
     "$HOME/Pictures/Background:$HOME/.config/wezterm/backdrops"
 
     # Append more files here...
