@@ -55,6 +55,9 @@
       "Bash(git reset:*)",
       "Bash(git restore:*)",
       "Bash(git rebase:*)"
-    ]
-  }
+    ],
+    "defaultMode": "default"
+  },
+  "voiceEnabled": true,
+  "skipDangerousModePermissionPrompt": true
 }
