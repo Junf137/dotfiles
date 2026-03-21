@@ -1,10 +1,11 @@
-model = "gpt-5.3-codex"
+model = "gpt-5.4"
 model_reasoning_effort = "xhigh"
 personality = "pragmatic"
 
 [notice.model_migrations]
 "gpt-5.1-codex-max" = "gpt-5.2-codex"
 "gpt-5.2-codex" = "gpt-5.3-codex"
+"gpt-5.3-codex" = "gpt-5.4"
 
 [features]
 multi_agent = true
@@ -40,5 +41,8 @@ trust_level = "trusted"
 trust_level = "trusted"
 
 [projects."/home/junf/Mecka/haptic"]
+trust_level = "trusted"
+
+[projects."/home/junf/Mecka/ultralytics"]
 trust_level = "trusted"
 
