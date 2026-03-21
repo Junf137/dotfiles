@@ -58,6 +58,7 @@
     ],
     "defaultMode": "default"
   },
+  "effortLevel": "high",
   "voiceEnabled": true,
   "skipDangerousModePermissionPrompt": true
 }
