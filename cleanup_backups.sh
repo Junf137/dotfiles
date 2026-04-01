@@ -61,7 +61,10 @@ files=(
     "$DOT_FILES/codex/AGENTS.md:$HOME/.codex/AGENTS.md"
     "$DOT_FILES/codex/config.toml:$HOME/.codex/config.toml"
 
-    # 6. links for wezterm backdrops (external images)
+    # 6. links to markdownlint config
+    "$DOT_FILES/nvim/markdownlint.jsonc:$HOME/.markdownlint.jsonc"
+
+    # 7. links for wezterm backdrops (external images)
     "$HOME/Pictures/Background:$HOME/.config/wezterm/backdrops"
 
     # Append more files here...
