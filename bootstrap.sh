@@ -53,10 +53,12 @@ files=(
     # 4. links to Claude Code config
     "$DOT_FILES/claude/CLAUDE.md:$HOME/.claude/CLAUDE.md"
     "$DOT_FILES/claude/settings.json:$HOME/.claude/settings.json"
+    "$DOT_FILES/claude/skills:$HOME/.claude/skills"
 
     # 5. links to OpenAI Codex config
     "$DOT_FILES/codex/AGENTS.md:$HOME/.codex/AGENTS.md"
     "$DOT_FILES/codex/config.toml:$HOME/.codex/config.toml"
+    "$DOT_FILES/codex/skills:$HOME/.agents/skills"
 
     # 6. links to markdownlint config
     "$DOT_FILES/nvim/markdownlint.jsonc:$HOME/.markdownlint.jsonc"

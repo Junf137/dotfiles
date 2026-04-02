@@ -34,6 +34,13 @@ pytest -q
 
 # Git
 - Never commit `plan.md`, `code_review.md`, or similar planning/review files, but do not automatically delete them either.
+- Before writing a commit message, check `git log` for recent commits and follow the same format, prefix conventions, and tone.
+
+## Git Safety: Always Check Before Acting
+- **Run `git status` before every git operation** (commit, add, stash, reset, checkout, etc.) to understand the current repo state.
+- **Never blindly `git add -A` or `git add .`**. Only stage the files relevant to the current task. Pre-existing staged or unstaged changes may be unrelated—adding everything risks committing someone else's or earlier unfinished work.
+- **Operate at the file level**. Do not split or partially stage changes within a single file (`git add -p`). File-level adds/commits keep operations simple and reduce the risk of broken or incomplete commits.
+- **Purpose**: Prevent accidental overwrites, unintended commits, and tangled histories.
 
 # Standardized Workflow
 ## Responding to code reviews
