@@ -7,6 +7,10 @@ description: "Use when the user is running ML training workloads on Modal, manag
 
 Generic patterns and pitfalls for running ML training on Modal.
 
+## Defaults
+
+- **Environment**: `junfeng` — do not use `main` unless explicitly asked. CLI: `MODAL_ENVIRONMENT=junfeng modal ...`, Python: `modal.App("my-app", environment_name="junfeng")`.
+
 ## Data Upload Strategy
 
 Pick the method based on file characteristics:
