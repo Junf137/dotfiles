@@ -46,3 +46,18 @@ trust_level = "trusted"
 [projects."/home/junf/Mecka/ultralytics"]
 trust_level = "trusted"
 
+[projects."/home/junf/Mecka/hands_dataset_exp/dataset_viz"]
+trust_level = "trusted"
+
+[projects."/home/junf/Mecka/rf-detr"]
+trust_level = "trusted"
+
+[projects."/home/junf"]
+trust_level = "trusted"
+
+[projects."/home/junf/Mecka/hands_dataset_exp"]
+trust_level = "trusted"
+
+[projects."/home/junf/Mecka/eval_benchmark"]
+trust_level = "trusted"
+
