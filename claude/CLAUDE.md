@@ -35,6 +35,7 @@ pytest -q
 # Git
 - Never commit `plan.md`, `code_review.md`, or similar planning/review files, but do not automatically delete them either.
 - Before writing a commit message, check `git log` for recent commits and follow the same format, prefix conventions, and tone.
+- Use commit messages in the form `feat/fix/doc...(module): xxx`, where `(module)` is optional when applicable; additional detail may be added after the first line.
 
 ## Git Safety: Always Check Before Acting
 - **Run `git status` before every git operation** (commit, add, stash, reset, checkout, etc.) to understand the current repo state.
