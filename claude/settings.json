@@ -58,6 +58,7 @@
     ],
     "defaultMode": "default"
   },
+  "model": "opus[1m]",
   "effortLevel": "high",
   "voiceEnabled": true,
   "skipDangerousModePermissionPrompt": true
