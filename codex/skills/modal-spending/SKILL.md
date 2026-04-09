@@ -1,9 +1,6 @@
 ---
 name: modal-spending
 description: Analyze Modal billing and spend. Use when the user wants per-environment costs, top spending apps, billing reports, or a spend breakdown for a requested time range.
-argument-hint: [time-range, e.g. "2 days ago", "last week", "last month" — defaults to 24hrs]
-user-invocable: true
-allowed-tools: Bash
 ---
 
 # Modal Spending Analysis
@@ -12,18 +9,18 @@ Analyze Modal billing data grouped by environment.
 
 ## Parameters
 
-- `$ARGUMENTS` — time range for the report start date. If empty, default to `"1 day ago"` (past 24 hours).
+Use the user-provided time range if present. If the user did not specify one, default to `"1 day ago"` (past 24 hours).
 
 ## Steps
 
 1. Run the billing report:
 
 ```bash
-RANGE="${ARGUMENTS:-1 day ago}"
+RANGE="<requested time range or 1 day ago>"
 $HOME/.local/share/miniconda3/bin/conda run -n yolo_pose modal billing report --start "$RANGE" --json
 ```
 
-2. Parse the JSON output with Python (`conda run -n yolo_pose python3`) to produce:
+2. Parse the JSON output with Python in the same conda environment to produce:
 
    a. **Per-environment summary table** — environment name, total cost, sorted descending by cost.
    b. **Top 10 apps across all environments** — app name, environment, cost.

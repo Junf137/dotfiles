@@ -1,6 +1,6 @@
 ---
 name: download-multicam
-description: Download 6-camera multicam episode videos and calibration files. Use when the user wants to download episode data by ID, fetch multicam recordings, or get calibration files for episodes.
+description: Download 6-camera multicam episode videos and calibration files. Use when the user wants to fetch episode data by episode ID, download multicam recordings from cloud storage, or retrieve calibration JSON for specific episodes.
 ---
 
 # Download Multicam Episode Data

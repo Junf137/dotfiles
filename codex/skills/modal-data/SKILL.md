@@ -1,6 +1,6 @@
 ---
-name: "modal-data"
-description: "Use when the user is uploading datasets to Modal, managing Modal volumes, downloading artifacts, migrating data between volumes, or troubleshooting volume I/O performance like slow reads or ENOSPC errors; do not use for launching or debugging Modal containers or apps."
+name: modal-data
+description: Manage Modal data workflows. Use when uploading datasets to Modal, managing volumes, downloading artifacts, migrating data, or troubleshooting volume I/O performance. Do not use for launching apps, debugging live containers, or general runtime issues.
 ---
 
 # Modal Data Management
@@ -17,10 +17,12 @@ Pick the method based on file characteristics:
 |---|---|
 | Few large files (weights, archives, <1K entries) | `modal volume put` directly |
 | Many small files (images, thousands+) | Tar-upload-extract (or `CloudBucketMount`) |
-| Very large datasets (100+ GiB, 100K+ files) | `CloudBucketMount` from S3/GCS/R2 |
+| Very large datasets (100+ GiB, 100K+ files) | `CloudBucketMount` from R2/S3/GCS (prefer R2 — no egress fees) |
 | Public URL (S3, HTTP) | Modal-side download in a container |
 
-For datasets exceeding ~50 GiB or hundreds of thousands of files, consider `modal.CloudBucketMount` backed by object storage (S3, GCS, R2) as the primary path. Volume-based tar archives work well for moderate datasets (~5-50 GiB).
+For datasets exceeding ~50 GiB or hundreds of thousands of files, consider `modal.CloudBucketMount` backed by object storage as the primary path — **prefer Cloudflare R2** over S3/GCS to avoid egress charges. Volume-based tar archives work well for moderate datasets (~5-50 GiB).
+
+For functions processing large datasets, increase `ephemeral_disk` (default is small) when downloading/transforming hundreds of GiBs in `/tmp/`.
 
 ### `modal volume put` — simple but limited
 
@@ -45,9 +47,20 @@ rm /tmp/chunk.tar
 
 Parallelizable — multiple tar-upload-extract streams work simultaneously on v2 volumes.
 
+### `batch_upload` — programmatic upload from any Python client
+
+```python
+vol = modal.Volume.from_name("my-vol")
+with vol.batch_upload() as batch:
+    batch.put_file("local/path/file.bin", "/remote/path/file.bin")
+    batch.put_directory("local/dir", "/remote/dir")
+```
+
+Works from any machine with the `modal` SDK. Use for automated pipelines pushing data to Modal from external systems.
+
 ### Modal-side download — fastest for public URLs
 
-Download directly inside a container. Avoids local upload entirely. Only works for publicly accessible URLs.
+Download directly inside a container to `/tmp/` first, then move to the volume or process in-place. Avoids local upload entirely. Only works for publicly accessible URLs.
 
 ## Volume Management
 
@@ -119,6 +132,9 @@ modal volume get <volume> <remote_path> <local_dir>/
 
 # Delete volume contents
 modal volume rm <volume> <path>/ -r
+
+# Open volume in Modal dashboard
+modal volume dashboard <volume>
 ```
 
 ## References
@@ -126,3 +142,13 @@ modal volume rm <volume> <path>/ -r
 - [Modal Volumes](https://modal.com/docs/guide/volumes)
 - [Large dataset ingestion](https://modal.com/docs/guide/dataset-ingestion)
 - [Storing model weights](https://modal.com/docs/guide/model-weights)
+- [Cloud bucket mounts](https://modal.com/docs/guide/cloud-bucket-mounts)
+- [Passing local data](https://modal.com/docs/guide/local-data)
+
+## Official Modal Docs for Agents
+
+When you encounter a Modal data/volume topic not covered above, look it up:
+
+- **Doc index**: https://modal.com/llms.txt — structured table of contents with links to every guide, example, and API reference page. Fetch this to find the right URL.
+- **Full docs** (large): https://modal.com/llms-full.txt — all Modal documentation in one file. Only fetch if you need broad context.
+- **API reference**: https://modal.com/docs/reference/modal.Volume.md, https://modal.com/docs/reference/modal.CloudBucketMount.md
