@@ -91,11 +91,13 @@ source $ZSH/oh-my-zsh.sh
 # You may need to manually set your language environment
 # export LANG=en_US.UTF-8
 
-# Preferred editor for local and remote sessions
-if [[ -n $SSH_CONNECTION ]]; then
+# Preferred editor: nvim > vim > vi
+if command -v nvim &>/dev/null; then
+  export EDITOR='nvim'
+elif command -v vim &>/dev/null; then
   export EDITOR='vim'
 else
-  export EDITOR='mvim'
+  export EDITOR='vi'
 fi
 
 # Compilation flags
