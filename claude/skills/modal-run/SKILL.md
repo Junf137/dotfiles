@@ -8,6 +8,8 @@ description: Manage Modal runtime workflows. Use when launching Modal apps, moni
 ## Defaults
 
 - **Environment**: `junfeng` — do not use `main` unless explicitly asked. CLI: `MODAL_ENVIRONMENT=junfeng modal ...`, Python: `modal.App("my-app", environment_name="junfeng")`.
+- **App naming**: If the code uses a generic default name (`"app"`, `"train"`, `"main"`), add an owner/experiment prefix or suffix before launching (e.g., `"junfeng-train-smolvla"`, `"train-exp01"`) to avoid collisions in `modal app list` and reduce the risk of stopping the wrong app.
+- **Always launch detached**: Default to `modal run --detach app.py` so the remote app keeps running if the local shell/session dies. Use foreground runs only for short interactive debugging.
 
 ## Training on Modal
 
