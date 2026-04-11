@@ -47,6 +47,13 @@ rm /tmp/chunk.tar
 
 Parallelizable — multiple tar-upload-extract streams work simultaneously on v2 volumes.
 
+### Migration rules for large raw datasets
+
+- For large raw image trees, prefer local `tar -> modal volume put -> remote extract` over volume-to-volume raw-tree copy.
+- Chunk by natural dataset unit such as subject, sequence, split, or capture. Do not migrate a whole dataset as one job.
+- After extracting a chunk, write `_MANIFEST/<slug>.json` with bytes/files/dirs and source metadata so verification and repair can be incremental.
+- Before deleting old volumes, grep and patch runtime code for old volume names and legacy mounts. Verify code cutover before storage cleanup.
+
 ### `batch_upload` — programmatic upload from any Python client
 
 ```python
