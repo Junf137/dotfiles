@@ -1,0 +1,7 @@
+interface:
+  display_name: "Session Wrap-Up"
+  short_description: "Summarize the session and give a close/no-close verdict"
+  default_prompt: "Use $session-wrap-up to summarize this session before closing."
+
+policy:
+  allow_implicit_invocation: false
