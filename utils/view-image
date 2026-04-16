@@ -1,0 +1,23 @@
+#!/bin/bash
+# __author__ == Junfeng Lei
+# View images in the terminal.
+# - Local WezTerm: uses `wezterm imgcat` (full-res, tmux-aware)
+# - SSH or no wezterm: falls back to `chafa -f symbols` (Unicode, always renders)
+
+if [ $# -eq 0 ]; then
+    echo "usage: view-image <file>..." >&2
+    exit 1
+fi
+
+if [ -z "$SSH_CONNECTION" ] && command -v wezterm >/dev/null 2>&1; then
+    # Cap image size to avoid tmux DCS passthrough truncation on large/high-res images
+    for f in "$@"; do
+        if command -v magick >/dev/null 2>&1; then
+            magick "$f" -resize '1920x1080>' - | wezterm imgcat --tmux-passthru enable
+        else
+            wezterm imgcat --tmux-passthru enable "$f"
+        fi
+    done
+else
+    chafa -f symbols -s "$(tput cols)x$(tput lines)" "$@"
+fi

@@ -1,0 +1,9 @@
+[opener]
+view_image = [
+  { run = 'view-image "$@"; read -n 1', block = true, for = "unix", desc = "View in terminal" },
+]
+
+[open]
+prepend_rules = [
+  { mime = "image/*", use = "view_image" },
+]
