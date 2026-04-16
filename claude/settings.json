@@ -58,7 +58,19 @@
     ],
     "defaultMode": "default"
   },
-  "model": "opus[1m]",
+  "hooks": {
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "printf '\\a' > /dev/tty"
+          }
+        ]
+      }
+    ]
+  },
   "effortLevel": "high",
   "voiceEnabled": true,
   "skipDangerousModePermissionPrompt": true
