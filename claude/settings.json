@@ -71,7 +71,7 @@
       }
     ]
   },
-  "effortLevel": "high",
+  "effortLevel": "xhigh",
   "voiceEnabled": true,
   "skipDangerousModePermissionPrompt": true
 }
