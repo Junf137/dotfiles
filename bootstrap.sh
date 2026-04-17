@@ -40,6 +40,7 @@ files=(
     "$DOT_FILES/tmux.conf:$HOME/.tmux.conf"
     "$DOT_FILES/gitconfig:$HOME/.gitconfig"
     "$DOT_FILES/tmuxp:$HOME/.tmuxp"
+    "$DOT_FILES/tmux/tmux-nerd-font-window-name.yml:$HOME/.config/tmux/tmux-nerd-font-window-name.yml"
 
     # 2. links to oh-my-zsh themes
     "$DOT_FILES/omz_themes/ys_customized.zsh-theme:$ZSH_CUSTOM/themes/ys_customized.zsh-theme"
@@ -54,7 +55,7 @@ files=(
     "$DOT_FILES/claude/CLAUDE.md:$HOME/.claude/CLAUDE.md"
     "$DOT_FILES/claude/settings.json:$HOME/.claude/settings.json"
     "$DOT_FILES/claude/skills:$HOME/.claude/skills"
-"$DOT_FILES/claude/statusline-command.sh:$HOME/.claude/statusline-command.sh"
+    "$DOT_FILES/claude/statusline-command.sh:$HOME/.claude/statusline-command.sh"
 
     # 5. links to OpenAI Codex config
     "$DOT_FILES/codex/AGENTS.md:$HOME/.codex/AGENTS.md"

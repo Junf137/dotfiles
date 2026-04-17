@@ -30,6 +30,8 @@ dotfiles/
 │   └── nvim-kickstart/     # Git submodule: Junf137/kickstart.nvim
 ├── omz_themes/
 │   └── ys_customized.zsh-theme  # Custom Oh My ZSH theme
+├── tmux/
+│   └── tmux-nerd-font-window-name.yml  # Overrides for joshmedeski/tmux-nerd-font-window-name (symlinked to ~/.config/tmux/)
 ├── tmuxp/
 │   └── regular.yaml        # tmuxp session layout
 ├── utils/                  # Custom shell utility scripts
@@ -71,6 +73,7 @@ dotfiles/
 | `tmux.conf`                             | `~/.tmux.conf`                       |
 | `gitconfig`                             | `~/.gitconfig`                       |
 | `tmuxp/`                                | `~/.tmuxp`                           |
+| `tmux/tmux-nerd-font-window-name.yml`   | `~/.config/tmux/tmux-nerd-font-window-name.yml` |
 | `omz_themes/ys_customized.zsh-theme`    | `$ZSH_CUSTOM/themes/...`            |
 | `nvim/nvim-kickstart`                   | `~/.config/nvim`                     |
 | `wezterm/wezterm-config`                | `~/.config/wezterm`                  |
