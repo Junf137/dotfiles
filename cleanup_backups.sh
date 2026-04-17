@@ -57,6 +57,7 @@ files=(
     "$DOT_FILES/claude/CLAUDE.md:$HOME/.claude/CLAUDE.md"
     "$DOT_FILES/claude/settings.json:$HOME/.claude/settings.json"
     "$DOT_FILES/claude/skills:$HOME/.claude/skills"
+"$DOT_FILES/claude/statusline-command.sh:$HOME/.claude/statusline-command.sh"
 
     # 5. links to OpenAI Codex config
     "$DOT_FILES/codex/AGENTS.md:$HOME/.codex/AGENTS.md"

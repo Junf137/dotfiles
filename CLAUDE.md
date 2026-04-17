@@ -18,7 +18,8 @@ dotfiles/
 │   └── alacritty-default/  # Symlinked to ~/.config/alacritty
 ├── claude/                 # Global Claude Code configuration (symlinked to ~/.claude/)
 │   ├── CLAUDE.md           # Global Claude policies (symlinked to ~/.claude/CLAUDE.md)
-│   └── settings.json       # Permissions config (symlinked to ~/.claude/settings.json)
+│   ├── settings.json       # Permissions config (symlinked to ~/.claude/settings.json)
+│   └── statusline-command.sh  # Custom statusLine script (symlinked to ~/.claude/statusline-command.sh)
 ├── codex/                  # Global OpenAI Codex configuration (symlinked to ~/.codex/)
 │   ├── AGENTS.md           # Global Codex agent instructions (symlinked to ~/.codex/AGENTS.md)
 │   └── config.toml         # Codex config (symlinked to ~/.codex/config.toml)
@@ -77,6 +78,7 @@ dotfiles/
 | `yazi/`                                 | `~/.config/yazi`                     |
 | `claude/CLAUDE.md`                      | `~/.claude/CLAUDE.md`               |
 | `claude/settings.json`                  | `~/.claude/settings.json`           |
+| `claude/statusline-command.sh`          | `~/.claude/statusline-command.sh`   |
 | `codex/AGENTS.md`                       | `~/.codex/AGENTS.md`                |
 | `codex/config.toml`                     | `~/.codex/config.toml`              |
 | `~/Pictures/Background`                 | `~/.config/wezterm/backdrops`        |

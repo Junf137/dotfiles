@@ -71,6 +71,10 @@
       }
     ]
   },
+  "statusLine": {
+    "type": "command",
+    "command": "bash /home/junf/.claude/statusline-command.sh"
+  },
   "effortLevel": "xhigh",
   "voiceEnabled": true,
   "skipDangerousModePermissionPrompt": true
