@@ -1,0 +1,101 @@
+#!/usr/bin/env bash
+# gwtlink — symlink local config files from the main worktree into a target worktree.
+#
+# Standalone utility — does NOT wrap `git worktree add`. Run it manually any
+# time you want to (re)populate a worktree with local-only config (.env,
+# editor settings, CLAUDE.local.md, .claude/, etc.) from the main worktree.
+#
+# Usage:
+#   gwtlink                 # link into current directory (must be a worktree)
+#   gwtlink <target-path>   # link into the given worktree path
+#
+# Source is auto-detected as the main worktree of the repo (the directory
+# containing the shared .git dir — resolved via `git rev-parse --git-common-dir`).
+
+set -euo pipefail
+
+if [ "${1:-}" = "-h" ] || [ "${1:-}" = "--help" ]; then
+  sed -n '2,/^$/p' "$0" | sed 's/^# \{0,1\}//'
+  exit 0
+fi
+
+target="${1:-$PWD}"
+
+if [ ! -d "$target" ]; then
+  echo "gwtlink: target is not a directory: $target" >&2
+  exit 1
+fi
+
+target=$(cd "$target" && pwd)
+
+# Locate source = main worktree.
+#   - `--git-common-dir` returns the shared .git dir (relative ".git" when
+#     run from the main worktree; absolute path when run from a secondary).
+#   - Its parent is the main worktree root.
+common_dir=$(cd "$target" && git rev-parse --git-common-dir 2>/dev/null) || {
+  echo "gwtlink: target is not inside a git repo: $target" >&2
+  exit 1
+}
+if [ "${common_dir:0:1}" != "/" ]; then
+  common_dir=$(cd "$target" && cd "$common_dir" && pwd)
+fi
+source_root=$(dirname "$common_dir")
+
+if [ "$source_root" = "$target" ]; then
+  echo "gwtlink: target is the main worktree itself — nothing to link."
+  exit 0
+fi
+
+whitelist=(
+  # Env / direnv
+  ".env"
+  ".env.local"
+  ".envrc"
+
+  # Editor configs
+  ".vscode"
+  ".idea"
+  ".cursorrules"
+  ".cursor"
+
+  # Claude Code (project-local settings, agents, commands, skills, memory)
+  "CLAUDE.local.md"
+  ".claude"
+
+  # Other agent conventions
+  "AGENTS.md"
+
+  # MCP local config
+  ".mcp.json"
+)
+
+linked=()
+skipped_existing=()
+
+for item in "${whitelist[@]}"; do
+  src="$source_root/$item"
+  dest="$target/$item"
+  [ -e "$src" ] || continue
+  if [ -e "$dest" ] || [ -L "$dest" ]; then
+    skipped_existing+=("$item")
+    continue
+  fi
+  mkdir -p "$(dirname "$dest")"
+  ln -s "$src" "$dest"
+  linked+=("$item")
+done
+
+echo "source: $source_root"
+echo "target: $target"
+echo ""
+if [ ${#linked[@]} -gt 0 ]; then
+  echo "Symlinked:"
+  printf '  %s\n' "${linked[@]}"
+fi
+if [ ${#skipped_existing[@]} -gt 0 ]; then
+  echo "Skipped (already present):"
+  printf '  %s\n' "${skipped_existing[@]}"
+fi
+if [ ${#linked[@]} -eq 0 ] && [ ${#skipped_existing[@]} -eq 0 ]; then
+  echo "No whitelisted items found in source."
+fi
