@@ -7,7 +7,9 @@ description: Manage Modal data workflows. Use when uploading datasets to Modal, 
 
 ## Defaults
 
-- **Environment**: `junfeng` — do not use `main` unless explicitly asked. CLI: `MODAL_ENVIRONMENT=junfeng modal ...`, Python: `modal.App("my-app", environment_name="junfeng")`.
+- **Environment**: `junfeng` — do not use `main` unless explicitly asked.
+- **CLI**: Prefer subcommand-level environment flags such as `modal run --env junfeng ...` or `modal volume get --env junfeng ...`. `MODAL_ENVIRONMENT=junfeng` still works as a fallback, but `--env junfeng` is the current preferred form.
+- **Python SDK**: `modal.App(...)` does not take `environment_name` in the current SDK. Set environments on resource lookups and deploy/runtime entrypoints that support it, for example `modal.Volume.from_name("my-vol", environment_name="junfeng")`.
 
 ## Data Upload Strategy
 
@@ -27,7 +29,7 @@ For functions processing large datasets, increase `ephemeral_disk` (default is s
 ### `modal volume put` — simple but limited
 
 ```bash
-modal volume put <volume> <local_path> <remote_path>/
+modal volume put --env junfeng <volume> <local_path> <remote_path>/
 ```
 
 Works for directories with few entries or large files. May fail or be unreliable on directories with many small files (thousands of images).
@@ -38,9 +40,9 @@ Works for directories with few entries or large files. May fail or be unreliable
 # 1. Tar locally
 tar -cf /tmp/chunk.tar -C <dataset_root> <subdirectory>
 # 2. Upload single tar (reliable at any size)
-modal volume put <volume> /tmp/chunk.tar _staging/chunk.tar
+modal volume put --env junfeng <volume> /tmp/chunk.tar _staging/chunk.tar
 # 3. Extract on Modal (run a function that untars + deletes staging file)
-modal run <app>::extract_tar --tar-path _staging/chunk.tar --dest-path <dest>
+modal run --env junfeng <app>::extract_tar --tar-path _staging/chunk.tar --dest-path <dest>
 # 4. Clean up local tar
 rm /tmp/chunk.tar
 ```
@@ -57,7 +59,7 @@ Parallelizable — multiple tar-upload-extract streams work simultaneously on v2
 ### `batch_upload` — programmatic upload from any Python client
 
 ```python
-vol = modal.Volume.from_name("my-vol")
+vol = modal.Volume.from_name("my-vol", environment_name="junfeng")
 with vol.batch_upload() as batch:
     batch.put_file("local/path/file.bin", "/remote/path/file.bin")
     batch.put_directory("local/dir", "/remote/dir")
@@ -74,7 +76,7 @@ Download directly inside a container to `/tmp/` first, then move to the volume o
 ### Volume v2
 
 ```bash
-modal volume create <name> --version=2
+modal volume create --env junfeng <name> --version=2
 ```
 
 - v1 has a **500K inode hard limit** — image datasets easily exceed this (`ENOSPC` errors)
@@ -131,17 +133,17 @@ model.train(output_dir="/tmp/output/experiment_name", ...)  # lost on timeout
 
 ```bash
 # List volume contents
-modal volume ls <volume>
-modal volume ls <volume> <subdir>/
+modal volume ls --env junfeng <volume>
+modal volume ls --env junfeng <volume> <subdir>/
 
 # Download artifacts from volume
-modal volume get <volume> <remote_path> <local_dir>/
+modal volume get --env junfeng <volume> <remote_path> <local_dir>/
 
 # Delete volume contents
-modal volume rm <volume> <path>/ -r
+modal volume rm --env junfeng <volume> <path>/ -r
 
 # Open volume in Modal dashboard
-modal volume dashboard <volume>
+modal volume dashboard --env junfeng <volume>
 ```
 
 ## References
