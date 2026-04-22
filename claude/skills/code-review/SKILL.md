@@ -38,11 +38,22 @@ After Scope & Understanding, list findings. For each:
 
 Group by severity or by file, whichever reads cleaner. Skip bike-shedding.
 
+During the initial review, stay in the reviewer's role: record issues in the review file, but do not fix them.
+
 ## 4. Output file
 
 - Always write to `code_review.md` at the repo root.
 - If `code_review.md` already exists, write to a non-conflicting name instead (e.g. `code_review.2.md`, or `code_review-<short-scope>.md`). Never overwrite an existing review file.
 - End the file with a short **Summary** line: overall verdict (approve / request changes / needs discussion) and top 1–3 priorities.
+
+## 5. Follow-up review
+
+When the author has responded in the review file and made fixes or defenses:
+
+- Check both the code changes and the author's responses, including fix claims, defenses, and clarification questions.
+- Verify each issue against the current code. For trivial newly found errors that are easy and safe, apply the fix.
+- If all issues are properly addressed, print a concise status list for each issue and close with the final review-stage status.
+- If concerns remain, append a new follow-up section after the author's response with reviewer opinions and suggested fix direction. Do not rewrite the original review or the author's response.
 
 ## Quality bar
 
