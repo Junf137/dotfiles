@@ -1,6 +1,7 @@
-model = "gpt-5.4"
+model = "gpt-5.5"
 model_reasoning_effort = "xhigh"
 personality = "pragmatic"
+service_tier = "fast"
 
 [notice.model_migrations]
 "gpt-5.1-codex-max" = "gpt-5.2-codex"
@@ -9,6 +10,9 @@ personality = "pragmatic"
 
 [features]
 multi_agent = true
+
+[tui]
+status_line = ["model-with-reasoning", "current-dir", "context-usage", "five-hour-limit", "thread-title"]
 
 [projects."/home/junf/Mecka/hands"]
 trust_level = "trusted"
