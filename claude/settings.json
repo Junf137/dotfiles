@@ -78,5 +78,6 @@
   "effortLevel": "xhigh",
   "voiceEnabled": true,
   "skipDangerousModePermissionPrompt": true,
-  "remoteControlAtStartup": true
+  "remoteControlAtStartup": true,
+  "agentPushNotifEnabled": true
 }

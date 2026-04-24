@@ -14,6 +14,9 @@ multi_agent = true
 [tui]
 status_line = ["model-with-reasoning", "current-dir", "context-usage", "five-hour-limit", "thread-title"]
 
+[tui.model_availability_nux]
+"gpt-5.5" = 4
+
 [projects."/home/junf/Mecka/hands"]
 trust_level = "trusted"
 
