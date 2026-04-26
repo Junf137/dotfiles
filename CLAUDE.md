@@ -16,6 +16,9 @@ Personal dotfiles for **Junfeng Lei** (`junf137@outlook.com`). Manages shell, ed
 dotfiles/
 ├── alacritty/              # Alacritty terminal emulator configs
 │   └── alacritty-default/  # Symlinked to ~/.config/alacritty
+├── agent-skills/           # Git submodule: Junf137/agent-skills
+│   ├── claude/             # Symlinked to ~/.claude/skills
+│   └── codex/              # Symlinked to ~/.agents/skills
 ├── claude/                 # Global Claude Code configuration (symlinked to ~/.claude/)
 │   ├── CLAUDE.md           # Global Claude policies (symlinked to ~/.claude/CLAUDE.md)
 │   ├── settings.json       # Permissions config (symlinked to ~/.claude/settings.json)
@@ -79,6 +82,8 @@ dotfiles/
 | `wezterm/wezterm-config`                | `~/.config/wezterm`                  |
 | `alacritty/alacritty-default`           | `~/.config/alacritty`                |
 | `yazi/`                                 | `~/.config/yazi`                     |
+| `agent-skills/claude`                   | `~/.claude/skills`                   |
+| `agent-skills/codex`                    | `~/.agents/skills`                   |
 | `claude/CLAUDE.md`                      | `~/.claude/CLAUDE.md`               |
 | `claude/settings.json`                  | `~/.claude/settings.json`           |
 | `claude/statusline-command.sh`          | `~/.claude/statusline-command.sh`   |
@@ -88,7 +93,8 @@ dotfiles/
 
 ## Git Submodules
 
-Two configs are managed as separate repos:
+Three configs are managed as separate repos:
+- `agent-skills` -> `git@github.com:Junf137/agent-skills.git`
 - `nvim/nvim-kickstart` -> `git@github.com:Junf137/kickstart.nvim.git`
 - `wezterm/wezterm-config` -> `git@github.com:Junf137/wezterm-config.git`
 
@@ -177,4 +183,4 @@ After cloning, initialize with: `git submodule update --init --recursive`
 - Homebrew paths (`/opt/homebrew/bin`, `/opt/homebrew/sbin`) added only on macOS
 
 ### Submodules
-- Do not modify git submodule contents directly in this repo; changes to nvim or wezterm configs should go through their respective repositories.
+- Do not modify git submodule contents directly in this repo; changes to agent skills, nvim, or wezterm configs should go through their respective repositories.

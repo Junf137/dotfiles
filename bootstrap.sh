@@ -106,6 +106,17 @@ create_soft_link() {
     log_print ""
     log_print "\e[32m---* $dst_name \e[0m"
 
+    # Check if the original file exists before mutating any existing destination
+    if [ ! -e "$ori_name" ]; then
+        error_print "File '$ori_name' does not exist."
+        case "$ori_name" in
+            "$DOT_FILES"/agent-skills/*)
+                warn_print "Run 'git submodule update --init --recursive' from $DOT_FILES."
+                ;;
+        esac
+        return 1
+    fi
+
     # Check if the destination file or link already exists
     if [ -e "$dst_name" ] || [ -L "$dst_name" ]; then
         warn_print "File '$dst_name' already exists."
@@ -118,12 +129,6 @@ create_soft_link() {
             error_print "Failed to rename file: $dst_name -> $dst_name.$TIME_STAMP.bak"
             return 1
         fi
-    fi
-
-    # Check if the original file exists
-    if [ ! -e "$ori_name" ]; then
-        error_print "File '$ori_name' does not exist."
-        return 1
     fi
 
     # Check if the path to the destination file exists
