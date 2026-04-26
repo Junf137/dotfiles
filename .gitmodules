@@ -4,3 +4,6 @@
 [submodule "nvim/nvim-kickstart"]
 	path = nvim/nvim-kickstart
 	url = git@github.com:Junf137/kickstart.nvim.git
+[submodule "agent-skills"]
+	path = agent-skills
+	url = git@github.com:Junf137/agent-skills.git

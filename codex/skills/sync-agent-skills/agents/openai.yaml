@@ -1,7 +1,0 @@
-interface:
-  display_name: "Sync Agent Skills"
-  short_description: "Audit and sync Claude/Codex repo skills"
-  default_prompt: "Use $sync-agent-skills to audit and sync the Claude Code and Codex skills in ~/Documents/dotfiles."
-
-policy:
-  allow_implicit_invocation: false

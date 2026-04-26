@@ -10,6 +10,7 @@ This repository contains my personal dotfiles for various applications and tools
 - tmux settings
 - Custom oh-my-zsh themes
 - tmuxp session configurations
+- Claude and Codex agent skills via the private `agent-skills` submodule
 
 ## Usage
 
@@ -17,11 +18,14 @@ This repository contains my personal dotfiles for various applications and tools
 # ---* Attention *---
 # Don't run this script until you know what it does
 
-# Clone the repository
-git clone git@github.com:Junf137/dotfiles.git ${DOT_FILES:-$HOME/Documents/dotfiles}
+# Clone the repository with submodules
+git clone --recurse-submodules git@github.com:Junf137/dotfiles.git ${DOT_FILES:-$HOME/Documents/dotfiles}
+
+# If already cloned, initialize or update submodules
+cd ${DOT_FILES:-$HOME/Documents/dotfiles} && git submodule update --init --recursive
 
 # Create symbolic links
-cd ${DOT_FILES:-$HOME/Documents/dotfiles} && ./bootstrap.sh
+./bootstrap.sh
 
 # To remove all symbolic links and restore backups
 ./bootstrap.sh --restore

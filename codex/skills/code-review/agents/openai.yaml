@@ -1,7 +1,0 @@
-interface:
-  display_name: "Code Review"
-  short_description: "Review code and write findings to code_review.md"
-  default_prompt: "Use $code-review to review the requested scope and write findings to code_review.md."
-
-policy:
-  allow_implicit_invocation: false

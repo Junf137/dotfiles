@@ -54,13 +54,13 @@ files=(
     # 4. links to Claude Code config
     "$DOT_FILES/claude/CLAUDE.md:$HOME/.claude/CLAUDE.md"
     "$DOT_FILES/claude/settings.json:$HOME/.claude/settings.json"
-    "$DOT_FILES/claude/skills:$HOME/.claude/skills"
+    "$DOT_FILES/agent-skills/claude:$HOME/.claude/skills"
     "$DOT_FILES/claude/statusline-command.sh:$HOME/.claude/statusline-command.sh"
 
     # 5. links to OpenAI Codex config
     "$DOT_FILES/codex/AGENTS.md:$HOME/.codex/AGENTS.md"
     "$DOT_FILES/codex/config.toml:$HOME/.codex/config.toml"
-    "$DOT_FILES/codex/skills:$HOME/.agents/skills"
+    "$DOT_FILES/agent-skills/codex:$HOME/.agents/skills"
 
     # 6. links to markdownlint config
     "$DOT_FILES/nvim/markdownlint.jsonc:$HOME/.markdownlint.jsonc"
@@ -107,7 +107,7 @@ create_soft_link() {
     log_print "\e[32m---* $dst_name \e[0m"
 
     # Check if the destination file or link already exists
-    if [ -e "$dst_name" ]; then
+    if [ -e "$dst_name" ] || [ -L "$dst_name" ]; then
         warn_print "File '$dst_name' already exists."
 
         # Rename the existing file. Add a suffix with the current time
