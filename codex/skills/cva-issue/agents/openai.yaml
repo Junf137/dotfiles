@@ -1,0 +1,7 @@
+interface:
+  display_name: "CVA Issue"
+  short_description: "Create a complete CVA Linear issue"
+  default_prompt: "Use $cva-issue to draft and create a CVA Linear issue with all required context."
+
+policy:
+  allow_implicit_invocation: false

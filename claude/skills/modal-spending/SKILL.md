@@ -32,6 +32,13 @@ The script produces:
 
 Useful flags: `--top N` to change the app count, `--env <conda-env>` if `yolo_pose` doesn't have the modal CLI, `--stdin` to pipe in pre-fetched JSON.
 
+When using `--stdin` with piped JSON, add `--no-capture-output` to `conda run`; plain `conda run` does not forward stdin reliably:
+
+```bash
+modal billing report --start "$RANGE" --json \
+  | $HOME/.local/share/miniconda3/bin/conda run --no-capture-output -n yolo_pose python3 "$HOME/.claude/skills/modal-spending/report.py" --stdin
+```
+
 Forward the script's output to the user verbatim — no extra re-formatting needed. Add a one- or two-line narrative observation (biggest driver, notable spike) after the tables if something stands out.
 
 Note: `modal billing report` is GA since modal 1.3.3.

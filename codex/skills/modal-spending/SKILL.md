@@ -13,40 +13,32 @@ Use the user-provided time range if present. If the user did not specify one, de
 
 ## Steps
 
-1. Run the billing report:
+Run the bundled aggregator — it calls `modal billing report --json` and prints the markdown summary directly. Do NOT re-implement the parsing logic inline; edit `report.py` if the output needs changing.
 
 ```bash
 RANGE="<requested time range or 1 day ago>"
-$HOME/.local/share/miniconda3/bin/conda run -n yolo_pose modal billing report --start "$RANGE" --json
+$HOME/.local/share/miniconda3/bin/conda run -n yolo_pose python "$HOME/.agents/skills/modal-spending/report.py" --start "$RANGE"
 ```
 
-2. Parse the JSON output with Python in the same conda environment to produce:
+The script produces:
 
-   a. **Per-environment summary table** — environment name, total cost, sorted descending by cost.
-   b. **Top 10 apps across all environments** — app name, environment, cost.
-   c. **Grand total** across all environments.
-   d. **Daily breakdown** if the range spans multiple days — show cost per environment per day.
+- Per-environment summary table (sorted descending, flagged if > $500).
+- Top 10 apps across all environments.
+- Grand total.
+- Daily breakdown when the range spans multiple days.
 
-3. Present results as a clean markdown table. Flag any environment spending over $500 in the period.
+Useful flags: `--top N` to change the app count, `--env <conda-env>` if `yolo_pose` doesn't have the modal CLI, `--stdin` to pipe in pre-fetched JSON.
+
+When using `--stdin` with piped JSON, add `--no-capture-output` to `conda run`; plain `conda run` does not forward stdin reliably:
+
+```bash
+modal billing report --start "$RANGE" --json \
+  | $HOME/.local/share/miniconda3/bin/conda run --no-capture-output -n yolo_pose python "$HOME/.agents/skills/modal-spending/report.py" --stdin
+```
+
+Forward the script's output to the user verbatim — no extra re-formatting needed. Add a one- or two-line narrative observation (biggest driver, notable spike) after the tables if something stands out.
 
 Note: `modal billing report` is GA since modal 1.3.3.
-
-## Output Format
-
-```
-## Modal Spending: <time range>
-
-| Environment | Total |
-|---|---|
-| ... | $X.XX |
-
-**Grand Total: $X.XX**
-
-### Top Apps
-| App | Environment | Cost |
-|---|---|---|
-| ... | ... | $X.XX |
-```
 
 ## Official Modal Docs for Agents
 

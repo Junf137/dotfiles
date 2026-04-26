@@ -1,0 +1,4 @@
+interface:
+  display_name: "LLM Wiki Maintainer"
+  short_description: "Maintain an Obsidian LLM wiki"
+  default_prompt: "Use $llm-wiki-maintainer to update this Obsidian LLM wiki while preserving links, provenance, indexes, and logs."

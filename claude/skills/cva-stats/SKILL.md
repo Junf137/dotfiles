@@ -20,7 +20,7 @@ Keep the workflow lightweight:
 
 ## Default Behavior
 
-If the user invokes `$cva-stats` without a concrete request, reply with a concise option list instead of running a query.
+If the user invokes `/cva-stats` without a concrete request, reply with a concise option list instead of running a query.
 
 Use this shape:
 

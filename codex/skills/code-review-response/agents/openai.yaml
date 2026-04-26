@@ -1,0 +1,7 @@
+interface:
+  display_name: "Code Review Response"
+  short_description: "Verify review points, then fix or defend them"
+  default_prompt: "Use $code-review-response to verify each review point against the code and either fix it or write a reasoned response."
+
+policy:
+  allow_implicit_invocation: false

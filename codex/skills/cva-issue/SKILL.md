@@ -1,9 +1,6 @@
 ---
 name: cva-issue
 description: Create a well-contextualized Linear issue for the CVA (Computer Vision Annotation Platform) project on Atlas Capture team. Actively prompts the user for any missing fields the dev needs.
-argument-hint: [description of the issue]
-user-invocable: true
-disable-model-invocation: true
 ---
 
 # CVA Issue
@@ -15,7 +12,7 @@ Create a Linear issue for the **Computer Vision Annotation Platform** project on
 | Field | Options / format | How to fill |
 |---|---|---|
 | Type | Bug / Feature Request / Improvement | Infer if obvious, else ask |
-| Description | what happened + what was expected | From `$ARGUMENTS`, tightened |
+| Description | what happened + what was expected | From the user's issue description, tightened |
 | Steps to Reproduce | numbered list (bugs only) | **Ask if bug** |
 | Video ID | string | **Ask if bug** (template requires it) |
 | Screenshots | URL / Loom link | Ask — visual context is king for CV |
@@ -30,7 +27,7 @@ Label mapping: Bug → `Bug`, Feature Request → `Feature`, Improvement → `Im
 
 ## Before drafting
 
-Parse `$ARGUMENTS` for any fields already answered. Then use **`AskUserQuestion`** to collect the rest, batched in one call per bundle:
+Parse the user's issue description for any fields already answered. Then ask the user for the rest, batched where possible:
 
 - **Bundle A — classification**: Type, Affected Area, Affected Tooling
 - **Bundle B — impact & priority**: Who's Impacted, Urgency, Priority
@@ -74,7 +71,7 @@ Video ID: <id or N/A>
 
 ## Create
 
-Show the drafted title + description and ask (`AskUserQuestion`): "Create this issue as drafted?" — options "Yes, create it" / "Let me edit first". On confirm, call `mcp__claude_ai_Linear__save_issue` with:
+Show the drafted title + description and ask: "Create this issue as drafted?" Wait for confirmation before creating anything. On confirm, use the available Linear connector/tool to create the issue with:
 
 - `team`: Atlas Capture
 - `project`: Computer Vision Annotation Platform
@@ -84,7 +81,7 @@ Show the drafted title + description and ask (`AskUserQuestion`): "Create this i
 - `title`: specific and action-oriented (e.g. "Polygon tool crashes when zooming on Hands videos")
 - `description`: filled template, real newlines
 
-Reply with the issue URL.
+Reply with the issue URL. If no Linear connector/tool is available, stop after the draft and tell the user what still needs to be created manually.
 
 ## Don't ship
 

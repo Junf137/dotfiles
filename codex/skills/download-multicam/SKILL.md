@@ -15,13 +15,13 @@ Download 6-camera multicam videos and calibration for episodes from MongoDB/clou
 
 ```bash
 # Single episode
-python scripts/download_multicam_episode.py <episode_id>
+python scripts/download_multicam_episode.py <episode_id> --print-summary
 
 # Multiple episodes
-python scripts/download_multicam_episode.py <id1> <id2> <id3>
+python scripts/download_multicam_episode.py <id1> <id2> <id3> --print-summary
 
 # Custom output directory (default: ./output/multicam_episodes)
-python scripts/download_multicam_episode.py <episode_id> --output ./downloads
+python scripts/download_multicam_episode.py <episode_id> --print-summary --output ./downloads
 ```
 
 Output structure: `{output}/{episode_id}/` containing 7 files:
@@ -35,31 +35,29 @@ Output structure: `{output}/{episode_id}/` containing 7 files:
 
 ## Download Logic
 
+The script reads Mongo to get the six `split_results.*_video_key` URLs and the `calibration_key`, then hands each URL/key to `mecka_cloud.storage.StorageClient.download()` for the actual transfer. `StorageClient` handles backend resolution and fallback — the script no longer needs per-URL backend-detection logic.
+
 **Videos:**
-1. Detect backend by parsing the first video key URL (`r2://...` = R2, raw path = DO Spaces)
-2. If R2: try batch rclone download of the whole `video_dir_key` folder (fast, 4 parallel transfers)
-3. If DO Spaces or batch fails: download each of the 6 videos individually
+1. Try batch rclone download of `split_results.video_dir_key` (R2 only; fast, 4 parallel transfers).
+2. If the batch path is missing or fails: download each of the 6 videos individually via `StorageClient.download(url)`.
 
 **Calibration:**
-1. Download from whichever backend the `calibration_key` URL maps to (usually DO Spaces)
-2. If DO Spaces fails: fallback to R2 (`r2://atlas/<same_key>`)
+- Single call to `StorageClient.download(cal_url)`; StorageClient picks the backend.
+
+**StorageClient fallback chain** (applied when a value is a bare key with no `r2://`/`do://` prefix):
+1. R2 with configured `R2_BUCKET` (e.g. `data`)
+2. R2 with legacy `atlas` bucket
+3. DO Spaces
+
+If `StorageClient` raises (e.g. credentials missing for one of the backends), the script falls back to repo-native downloaders: `rclone copyto` on the R2 remote, then a boto3 atlas client, then `S3Client` for DO Spaces. Explicit `r2://bucket/key` or `do://bucket/key` URIs always go straight to the named backend.
 
 ## Post-Download
 
-After the download completes, show a summary table listing each downloaded file with its source backend and storage key. Example:
-
-| File | Backend | Source Key |
-|---|---|---|
-| recording_left_cam.mp4 | DO Spaces | `episodes/<id>/hands_multicam/recording_left_cam.mp4` |
-| recording_right_cam.mp4 | DO Spaces | `episodes/<id>/hands_multicam/recording_right_cam.mp4` |
-| ... | ... | ... |
-| calibration.json | R2 | `multicam-calibrations/ATLASHX282_20260212_005109.json` |
-
-To get the source keys, query the episode from MongoDB and read `split_results.*_video_key` for videos and `calibration_key` for calibration. Use `parse_storage_url()` to determine the backend for each.
+`--print-summary` makes the script print a `| File | Backend | Source Key |` markdown table per episode at the end of its run. Surface that block to the user verbatim — no extra Mongo lookup needed. The flag is opt-in (default off) so library callers of `download_episode_to_dir` are unaffected.
 
 ## Conda Environment
 
 Run with the `yolo_pose` conda environment:
 ```bash
-$HOME/.local/share/miniconda3/bin/conda run -n yolo_pose python scripts/download_multicam_episode.py <episode_id>
+$HOME/.local/share/miniconda3/bin/conda run -n yolo_pose python scripts/download_multicam_episode.py <episode_id> --print-summary
 ```
