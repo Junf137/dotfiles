@@ -135,17 +135,29 @@ After cloning, initialize with: `git submodule update --init --recursive`
 
 ### bootstrap.sh
 ```bash
-./bootstrap.sh            # Create symlinks (backs up existing files with .TIMESTAMP.bak)
-./bootstrap.sh --restore  # Remove symlinks and restore most recent backups
+./bootstrap.sh --check    # Validate manifest sources and audit destinations
+./bootstrap.sh --dry-run  # Preview link creation without changing files
+./bootstrap.sh            # Create symlinks (backs up differing files with .TIMESTAMP.bak)
+./bootstrap.sh --restore  # Remove managed symlinks and restore most recent backups
 ```
-- Logs operations to timestamped `bootstrap_*.log` files
+- Loads symlink entries from `lib/link_manifest.sh`
+- Logs create/restore/dry-run operations to timestamped files under `logs/`
 - Automatically creates parent directories if needed
+- Skips destinations already linked to the expected source
 
 ### cleanup_backups.sh
 ```bash
 ./cleanup_backups.sh      # Dry-run: show redundant .bak symlinks
 ./cleanup_backups.sh -f   # Force: actually remove them
 ```
+- Loads the same `lib/link_manifest.sh` entries as `bootstrap.sh`
+
+### Repo Checks
+```bash
+./scripts/check-dotfiles.sh
+```
+- Runs non-destructive syntax, manifest, welcome corpus, and agent config checks
+- Uses optional tools (`zsh`, `jq`, `taplo`, `shfmt`, `shellcheck`) when available
 
 ### Utility Scripts (in utils/)
 | Script            | Purpose                                             |
@@ -170,8 +182,10 @@ After cloning, initialize with: `git submodule update --init --recursive`
 
 ### Adding New Dotfiles
 1. Add the config file to the repo root or an appropriate subdirectory
-2. Add a `"source:destination"` entry to the `files=()` array in both `bootstrap.sh` and `cleanup_backups.sh`
-3. Run `./bootstrap.sh` to create the symlink
+2. Add one entry to `lib/link_manifest.sh`
+3. Run `./scripts/check-dotfiles.sh` and `./bootstrap.sh --check`
+4. Run `./bootstrap.sh --dry-run` before creating the symlink
+5. Run `./bootstrap.sh` to create the symlink
 
 ### Git Conventions
 - **Default branch**: `main`

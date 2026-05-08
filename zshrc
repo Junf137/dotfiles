@@ -120,8 +120,23 @@ fi
 # ============================================================
 # Source common shell configuration
 # ============================================================
-SCRIPT_DIR="$(cd "$(dirname "$(readlink -f "${(%):-%N}" 2>/dev/null || echo "${(%):-%N}")")" && pwd)"
+_dotfiles_source="${(%):-%N}"
+while [ -L "$_dotfiles_source" ]; do
+    _dotfiles_dir="$(cd -P -- "$(dirname -- "$_dotfiles_source")" >/dev/null 2>&1 && pwd)"
+    _dotfiles_target="$(readlink "$_dotfiles_source")"
+    case "$_dotfiles_target" in
+        /*) _dotfiles_source="$_dotfiles_target" ;;
+        *) _dotfiles_source="$_dotfiles_dir/$_dotfiles_target" ;;
+    esac
+done
+SCRIPT_DIR="$(cd -P -- "$(dirname -- "$_dotfiles_source")" >/dev/null 2>&1 && pwd)"
+if [ -f "$SCRIPT_DIR/lib/shell_paths.sh" ]; then
+    source "$SCRIPT_DIR/lib/shell_paths.sh"
+    SCRIPT_DIR="$(dotfiles_resolve_script_dir "${(%):-%N}")"
+fi
+export DOT_FILES="$SCRIPT_DIR"
 [ -f "$SCRIPT_DIR/shell_common.sh" ] && source "$SCRIPT_DIR/shell_common.sh"
+unset _dotfiles_dir _dotfiles_source _dotfiles_target
 
 # ============================================================
 # keymapping

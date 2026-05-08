@@ -14,6 +14,7 @@
 # --------------------------------
 
 FORCE_MODE=false
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
 
 # Parse command line arguments
 for arg in "$@"; do
@@ -29,50 +30,18 @@ for arg in "$@"; do
 done
 
 # ---* Global env *---
-export DOT_FILES="$HOME/Documents/dotfiles"
-export ZSH="$HOME/.local/share/oh-my-zsh"
-export ZSH_CUSTOM="$ZSH/custom"
+export DOT_FILES="${DOT_FILES:-$SCRIPT_DIR}"
+export ZSH="${ZSH:-$HOME/.local/share/oh-my-zsh}"
+export ZSH_CUSTOM="${ZSH_CUSTOM:-$ZSH/custom}"
 
-# Same files array as bootstrap.sh
-files=(
-    # 1. links to home directory
-    "$DOT_FILES/bashrc:$HOME/.bashrc"
-    "$DOT_FILES/zshrc:$HOME/.zshrc"
-    "$DOT_FILES/vimrc:$HOME/.vimrc"
-    "$DOT_FILES/condarc:$HOME/.condarc"
-    "$DOT_FILES/tmux.conf:$HOME/.tmux.conf"
-    "$DOT_FILES/gitconfig:$HOME/.gitconfig"
-    "$DOT_FILES/tmuxp:$HOME/.tmuxp"
-    "$DOT_FILES/tmux/tmux-nerd-font-window-name.yml:$HOME/.config/tmux/tmux-nerd-font-window-name.yml"
-
-    # 2. links to oh-my-zsh themes
-    "$DOT_FILES/omz_themes/ys_customized.zsh-theme:$ZSH_CUSTOM/themes/ys_customized.zsh-theme"
-
-    # 3. links to .config directory
-    "$DOT_FILES/nvim/nvim-kickstart:$HOME/.config/nvim"
-    "$DOT_FILES/wezterm/wezterm-config:$HOME/.config/wezterm"
-    "$DOT_FILES/alacritty/alacritty-default:$HOME/.config/alacritty"
-    "$DOT_FILES/yazi:$HOME/.config/yazi"
-
-    # 4. links to Claude Code config
-    "$DOT_FILES/claude/CLAUDE.md:$HOME/.claude/CLAUDE.md"
-    "$DOT_FILES/claude/settings.json:$HOME/.claude/settings.json"
-    "$DOT_FILES/agent-skills/claude:$HOME/.claude/skills"
-    "$DOT_FILES/claude/statusline-command.sh:$HOME/.claude/statusline-command.sh"
-
-    # 5. links to OpenAI Codex config
-    "$DOT_FILES/codex/AGENTS.md:$HOME/.codex/AGENTS.md"
-    "$DOT_FILES/codex/config.toml:$HOME/.codex/config.toml"
-    "$DOT_FILES/agent-skills/codex:$HOME/.agents/skills"
-
-    # 6. links to markdownlint config
-    "$DOT_FILES/nvim/markdownlint.jsonc:$HOME/.markdownlint.jsonc"
-
-    # 7. links for wezterm backdrops (external images)
-    "$HOME/Pictures/Background:$HOME/.config/wezterm/backdrops"
-
-    # Append more files here...
-)
+MANIFEST_FILE="$DOT_FILES/lib/link_manifest.sh"
+if [ ! -f "$MANIFEST_FILE" ]; then
+    echo "Link manifest not found: $MANIFEST_FILE" >&2
+    exit 1
+fi
+# shellcheck source=lib/link_manifest.sh
+source "$MANIFEST_FILE"
+load_link_manifest || exit 1
 
 removed_count=0
 
@@ -114,8 +83,7 @@ fi
 echo "-------------------------------------------"
 
 # Process each destination
-for file in "${files[@]}"; do
-    dest="${file#*:}"
+for dest in "${LINK_DESTS[@]}"; do
     cleanup_backup "$dest"
 done
 
