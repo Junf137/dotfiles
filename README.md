@@ -54,11 +54,13 @@ cd ${DOT_FILES:-$HOME/Documents/dotfiles} && git submodule update --init --recur
 |---------|-------------|
 | `./scripts/check-dotfiles.sh` | Run non-destructive repo checks |
 | `./bootstrap.sh --check` | Validate manifest sources and audit destinations |
-| `./bootstrap.sh --dry-run` | Preview symbolic link creation |
-| `./bootstrap.sh` | Create symbolic links and back up existing differing files |
+| `./bootstrap.sh --dry-run` | Preview symbolic link creation and backup cleanup without deleting backups |
+| `./bootstrap.sh` | Create symbolic links, back up existing differing files, and run backup cleanup in dry-run mode |
 | `./bootstrap.sh --restore` | Remove managed symbolic links and restore original files |
 | `./cleanup_backups.sh` | Preview redundant backup symlink cleanup |
 | `./cleanup_backups.sh --force` | Remove redundant backup symlinks |
+
+Set `DOTFILES_SKIP_CLEANUP=1` to skip the automatic backup cleanup report during `./bootstrap.sh`.
 
 ## Log Files
 

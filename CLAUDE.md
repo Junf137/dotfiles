@@ -136,14 +136,16 @@ After cloning, initialize with: `git submodule update --init --recursive`
 ### bootstrap.sh
 ```bash
 ./bootstrap.sh --check    # Validate manifest sources and audit destinations
-./bootstrap.sh --dry-run  # Preview link creation without changing files
-./bootstrap.sh            # Create symlinks (backs up differing files with .TIMESTAMP.bak)
+./bootstrap.sh --dry-run  # Preview link creation and backup cleanup without deleting backups
+./bootstrap.sh            # Create symlinks, then run cleanup_backups.sh dry-run
 ./bootstrap.sh --restore  # Remove managed symlinks and restore most recent backups
 ```
 - Loads symlink entries from `lib/link_manifest.sh`
 - Logs create/restore/dry-run operations to timestamped files under `logs/`
 - Automatically creates parent directories if needed
 - Skips destinations already linked to the expected source
+- Runs `cleanup_backups.sh` in default dry-run mode after create/dry-run flows
+- Set `DOTFILES_SKIP_CLEANUP=1` to skip the automatic backup cleanup report
 
 ### cleanup_backups.sh
 ```bash

@@ -323,6 +323,31 @@ run_yazi_install() {
     fi
 }
 
+run_backup_cleanup() {
+    local cleanup_script="$DOT_FILES/cleanup_backups.sh"
+
+    log_print ""
+    log_print "\033[32m---* backup cleanup \033[0m"
+
+    if [ "${DOTFILES_SKIP_CLEANUP:-0}" = "1" ]; then
+        warn_print "DOTFILES_SKIP_CLEANUP=1, skipping backup cleanup."
+        return 0
+    fi
+
+    if [ ! -x "$cleanup_script" ]; then
+        warn_print "Cleanup script not executable, skipping: $cleanup_script"
+        return 0
+    fi
+
+    log_print "Running cleanup_backups.sh in default dry-run mode."
+    if "$cleanup_script"; then
+        return 0
+    fi
+
+    warn_print "cleanup_backups.sh failed; continuing because integrated cleanup is advisory."
+    return 0
+}
+
 setup_logging() {
     local log_dir
 
@@ -399,6 +424,7 @@ else
     # yazi/flavors/ and yazi/plugins/ are gitignored; `ya pkg install` populates them.
     if ! $RESTORE_MODE; then
         run_yazi_install
+        run_backup_cleanup
     fi
 fi
 
