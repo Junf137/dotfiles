@@ -9,3 +9,7 @@
 .cursor/
 .claude/settings.local.json
 CLAUDE.local.md
+
+# yazi packages — managed by `ya pkg`, materialized by bootstrap.sh from yazi/package.toml
+yazi/flavors/
+yazi/plugins/

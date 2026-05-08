@@ -237,6 +237,23 @@ for file in "${files[@]}"; do
 done
 
 
+# ---* Materialize yazi packages from yazi/package.toml *---
+# yazi/flavors/ and yazi/plugins/ are gitignored; `ya pkg install` populates them.
+if ! $RESTORE_MODE; then
+    log_print ""
+    log_print "\e[32m---* yazi packages \e[0m"
+    if command -v ya >/dev/null 2>&1; then
+        if [ -f "$HOME/.config/yazi/package.toml" ]; then
+            ya pkg install
+        else
+            warn_print "$HOME/.config/yazi/package.toml not found, skipping ya pkg install."
+        fi
+    else
+        warn_print "'ya' not found in PATH, skipping yazi package install."
+    fi
+fi
+
+
 log_print ""
 log_print "[Process End]"
 
