@@ -60,6 +60,15 @@ if $NO_COLOR; then
     RESET=""
 fi
 
+OS_NAME=$(uname -s)
+if [ "$OS_NAME" != "Linux" ]; then
+    echo "Detailed Claude session inspection uses Linux /proc and is not supported on $OS_NAME."
+    echo ""
+    echo "Running Claude processes:"
+    ps -axo pid,etime,%cpu,rss,command 2>/dev/null | awk '/[c]laude/ {print}'
+    exit 0
+fi
+
 # Get terminal width
 TERM_WIDTH=$(tput cols 2>/dev/null || echo 80)
 [ "$TERM_WIDTH" -lt 60 ] && TERM_WIDTH=60

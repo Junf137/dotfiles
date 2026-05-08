@@ -4,9 +4,18 @@
 
 input=$(cat)
 
-cwd=$(echo "$input" | jq -r '.workspace.current_dir // .cwd')
-model=$(echo "$input" | jq -r '.model.display_name // .model.id')
-remaining=$(echo "$input" | jq -r '.context_window.remaining_percentage // empty')
+if command -v jq >/dev/null 2>&1 && printf '%s' "$input" | jq empty >/dev/null 2>&1; then
+    cwd=$(printf '%s' "$input" | jq -r '.workspace.current_dir // .cwd // empty')
+    model=$(printf '%s' "$input" | jq -r '.model.display_name // .model.id // "Claude"')
+    remaining=$(printf '%s' "$input" | jq -r '.context_window.remaining_percentage // empty')
+    five_pct=$(printf '%s' "$input" | jq -r '.rate_limits.five_hour.used_percentage // empty')
+else
+    cwd="${PWD:-$HOME}"
+    model="Claude"
+    remaining=""
+    five_pct=""
+fi
+cwd="${cwd:-${PWD:-$HOME}}"
 
 # User and host
 user=$(whoami)
@@ -36,7 +45,6 @@ fi
 
 # Rate limits (5-hour)
 rate_part=""
-five_pct=$(echo "$input" | jq -r '.rate_limits.five_hour.used_percentage // empty')
 if [ -n "$five_pct" ]; then
     rate_part=" 5h:$(printf '%.0f' "$five_pct")%"
 fi

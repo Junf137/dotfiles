@@ -8,6 +8,7 @@
 format_code_fortune=""
 format_code_cowsay=""
 declare -a arr_main_cowsay=()
+declare -a fortune_cmd=()
 
 ##############################
 # fortune check and setup
@@ -16,7 +17,7 @@ if ! command -v fortune &> /dev/null; then
     echo "Error: fortune is not available. Please install it." >&2
     exit 1
 else
-    format_code_fortune="fortune -c -s -n 300"
+    fortune_cmd=(fortune -c -s -n 300)
 fi
 
 
@@ -50,7 +51,10 @@ if [ ${#arr_main_cowsay[@]} -gt 0 ]; then
     arr_mode_cowsay=(-b -d -g -p -s -t -w -y)
 
     # 2. Get list of cowsay files
-    if ! all_cowfiles=($( ${arr_main_cowsay[0]} -l | awk 'NR>1{print}')); then
+    declare -a all_cowfiles=()
+    if ! while IFS= read -r cowfile; do
+        all_cowfiles+=("$cowfile")
+    done < <("${arr_main_cowsay[0]}" -l | awk 'NR>1 { for (i = 1; i <= NF; i++) print $i }'); then
         echo "Warning: Could not get list of cowsay files. Using default." >&2
         all_cowfiles=(default)
     fi
@@ -80,17 +84,21 @@ if [ ${#arr_main_cowsay[@]} -gt 0 ]; then
     fi
 
     # Random selection
-    RANDOM=$$$(date +%N)
+    RANDOM=$$
+    terminal_cols=$(tput cols 2>/dev/null || echo 80)
+    cowsay_width=$((terminal_cols - 8))
+    [ "$cowsay_width" -lt 20 ] && cowsay_width=20
 
     # Build the cowsay command
+    declare -a cowsay_cmd=()
     # 1. Select random cowsay/cowthink
-    format_code_cowsay+="${arr_main_cowsay[$RANDOM % ${#arr_main_cowsay[@]}]}"
+    cowsay_cmd+=("${arr_main_cowsay[$RANDOM % ${#arr_main_cowsay[@]}]}")
     # 2. Select random mode
-    format_code_cowsay+=" ${arr_mode_cowsay[$RANDOM % ${#arr_mode_cowsay[@]}]}"
+    cowsay_cmd+=("${arr_mode_cowsay[$RANDOM % ${#arr_mode_cowsay[@]}]}")
     # 3. Select random cowfile (excluding the ones in exclude_cowsay_files)
-    format_code_cowsay+=" -f ${arr_file_cowsay[$RANDOM % ${#arr_file_cowsay[@]}]}"
+    cowsay_cmd+=(-f "${arr_file_cowsay[$RANDOM % ${#arr_file_cowsay[@]}]}")
     # 4. Set text width to fit terminal
-    format_code_cowsay+=" -W $(($(tput cols) - 8))"
+    cowsay_cmd+=(-W "$cowsay_width")
 
     # For debugging:
     # echo "format_code_fortune: $format_code_fortune"
@@ -98,11 +106,11 @@ if [ ${#arr_main_cowsay[@]} -gt 0 ]; then
     # echo "Number of available cowfiles after exclusion: ${#arr_file_cowsay[@]}"
 
     # Print final result
-    $format_code_fortune | $format_code_cowsay || {
+    "${fortune_cmd[@]}" | "${cowsay_cmd[@]}" || {
         echo "Error running cowsay. Falling back to fortune only." >&2
-        $format_code_fortune
+        "${fortune_cmd[@]}"
     }
 else
     # If cowsay/cowthink is not available, just display fortune
-    $format_code_fortune
+    "${fortune_cmd[@]}"
 fi

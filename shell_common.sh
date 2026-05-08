@@ -8,8 +8,13 @@
 # ============================================================
 # Initialization(set up env)
 # ============================================================
-export DOT_FILES="$HOME/Documents/dotfiles"
-[ -f "$DOT_FILES/utils/add_path" ] && source "$DOT_FILES/utils/add_path" || echo "add_path() not found."
+export DOT_FILES="${DOT_FILES:-$HOME/Documents/dotfiles}"
+if [ -f "$DOT_FILES/utils/add_path" ]; then
+    source "$DOT_FILES/utils/add_path"
+else
+    echo "add_path() not found at $DOT_FILES/utils/add_path; skipping shared shell setup." >&2
+    return 0 2>/dev/null || exit 0
+fi
 
 add_path "$DOT_FILES/utils"
 add_path "/usr/local/bin"
@@ -41,14 +46,20 @@ esac
 # Welcome Message
 # ============================================================
 # print welcome msg
-echo ""
-# assemble output of shell_welcome and cowsay_fortune
-msg="$(shell_welcome)\n"
-
-if command -v lolcat &> /dev/null; then
-  echo -e "$msg" | lolcat --animate --duration=1 --speed=120 --freq=0.05 --truecolor
-else
-  echo -e "$msg"
+if [ "${DOTFILES_DISABLE_WELCOME:-0}" != "1" ] \
+    && [ "${TERM:-}" != "dumb" ] \
+    && command -v shell_welcome &> /dev/null; then
+  echo ""
+  msg="$(shell_welcome 2>/dev/null)"
+  if [ -n "$msg" ]; then
+    if [ -z "${SSH_CONNECTION:-}" ] \
+        && [ "${DOTFILES_DISABLE_ANIMATED_WELCOME:-0}" != "1" ] \
+        && command -v lolcat &> /dev/null; then
+      echo -e "$msg\n" | lolcat --animate --duration=1 --speed=120 --freq=0.05 --truecolor
+    else
+      echo -e "$msg\n"
+    fi
+  fi
 fi
 
 # ============================================================
@@ -66,7 +77,28 @@ if command -v fzf &> /dev/null; then
   fi
 fi
 
-export FZF_DEFAULT_COMMAND='fd --unrestricted'
+if command -v fd &> /dev/null; then
+  export FZF_DEFAULT_COMMAND='fd --unrestricted'
+  export FZF_CTRL_T_COMMAND='fd --unrestricted'
+  export FZF_ALT_C_COMMAND='fd --type d'
+else
+  export FZF_DEFAULT_COMMAND='find . -path "*/.git" -prune -o -print'
+  export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
+  export FZF_ALT_C_COMMAND='find . -path "*/.git" -prune -o -type d -print'
+fi
+
+if command -v bat &> /dev/null; then
+  _DOTFILES_FZF_FILE_PREVIEW='bat -n --color=always {}'
+else
+  _DOTFILES_FZF_FILE_PREVIEW='sed -n "1,200p" {}'
+fi
+
+if command -v tree &> /dev/null; then
+  _DOTFILES_FZF_DIR_PREVIEW='tree -C {} | head -200'
+else
+  _DOTFILES_FZF_DIR_PREVIEW='find {} -maxdepth 2 -print | sed -n "1,200p"'
+fi
+
 export FZF_DEFAULT_OPTS="
   --height=60% --layout=reverse --info=inline --border --margin=1 --padding=1"
 
@@ -77,11 +109,9 @@ export FZF_TMUX_OPTS='-p 80%,60%'
 export FZF_COMPLETION_TRIGGER='~~'
 export FZF_COMPLETION_OPTS='--border --info=inline'
 
-# CTRL-T runs $FZF_CTRL_T_COMMAND to get a list of files and directories
-export FZF_CTRL_T_COMMAND="fd --unrestricted"
 export FZF_CTRL_T_OPTS="
   --walker-skip .git
-  --preview 'bat -n --color=always {}'
+  --preview '$_DOTFILES_FZF_FILE_PREVIEW'
   --bind 'ctrl-/:toggle-preview'"
 
 # CTRL-R filters command history
@@ -89,19 +119,25 @@ export FZF_CTRL_R_OPTS="
   --preview 'echo {}' --preview-window up:3:hidden:wrap
   --bind 'ctrl-/:toggle-preview'"
 
-# ALT-C runs $FZF_ALT_C_COMMAND to get a list of directories
-export FZF_ALT_C_COMMAND="fd --type d"
 export FZF_ALT_C_OPTS="
   --walker-skip .git
-  --preview 'tree -C {}'
+  --preview '$_DOTFILES_FZF_DIR_PREVIEW'
   --bind 'ctrl-/:toggle-preview'"
 
 _fzf_compgen_path() {
-  fd --unrestricted --follow --exclude ".git" . "$1"
+  if command -v fd &> /dev/null; then
+    fd --unrestricted --follow --exclude ".git" . "$1"
+  else
+    find "${1:-.}" -path "*/.git" -prune -o -print
+  fi
 }
 
 _fzf_compgen_dir() {
-  fd --type d --unrestricted --follow --exclude ".git" . "$1"
+  if command -v fd &> /dev/null; then
+    fd --type d --unrestricted --follow --exclude ".git" . "$1"
+  else
+    find "${1:-.}" -path "*/.git" -prune -o -type d -print
+  fi
 }
 
 # Advanced customization of fzf options via _fzf_comprun function
@@ -112,10 +148,10 @@ _fzf_comprun() {
   shift
 
   case "$command" in
-    cd)           fzf --preview 'tree -C {} | head -200'   "$@" ;;
+    cd)           fzf --preview "$_DOTFILES_FZF_DIR_PREVIEW" "$@" ;;
     export|unset) fzf --preview "eval 'echo \$'{}"         "$@" ;;
-    ssh)          fzf --preview 'dig {}'                   "$@" ;;
-    *)            fzf --preview 'bat -n --color=always {}' "$@" ;;
+    ssh)          fzf --preview 'command -v dig >/dev/null 2>&1 && dig {} || printf "%s\n" {}' "$@" ;;
+    *)            fzf --preview "$_DOTFILES_FZF_FILE_PREVIEW" "$@" ;;
   esac
 }
 

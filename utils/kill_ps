@@ -5,19 +5,46 @@
 # Usage: kill_ps [signal]
 # Interactively select and kill processes by name or PID.
 # If a signal is provided, it will be sent to the selected processes.
-# If no signal is provided, SIGKILL (9) will be sent by default.
+# If no signal is provided, SIGTERM will be sent by default.
 
 kill_ps() {
-    # Check if the first argument is --help or -h
-    case "$1" in
+    local signal="TERM"
+    local force=false
+
+    while [ $# -gt 0 ]; do
+        case "$1" in
         --help|-h)
             echo "Usage: kill_ps [signal]"
             echo "Interactively select and kill processes by name or PID."
             echo "If a signal is provided, it will be sent to the selected processes."
-            echo "If no signal is provided, SIGKILL (9) will be sent by default."
+            echo "If no signal is provided, SIGTERM will be sent by default."
+            echo "Use --force to allow SIGKILL/9."
             return
             ;;
-    esac
+        --force)
+            force=true
+            ;;
+        --signal)
+            shift
+            signal="${1:-}"
+            ;;
+        *)
+            signal="$1"
+            ;;
+        esac
+        shift
+    done
+
+    signal="${signal#SIG}"
+    if [ -z "$signal" ] || ! kill -l "$signal" >/dev/null 2>&1; then
+        echo "Error: invalid signal: $signal" >&2
+        return 1
+    fi
+
+    if { [ "$signal" = "9" ] || [ "$signal" = "KILL" ]; } && ! $force; then
+        echo "Error: SIGKILL requires --force." >&2
+        return 1
+    fi
 
     # Check if fzf-tmux is installed
     if ! command -v fzf-tmux &>/dev/null; then
@@ -47,12 +74,11 @@ kill_ps() {
         pid="${pid%"${pid##*[![:space:]]}"}"
 
         # Kill selected processes
-        echo "Killing processes: $pid"
+        echo "Killing processes with SIG$signal: $pid"
 
         # echo "$pid": This command prints the PID(s) of the selected process(es).
         # | xargs: This command passes the output of echo (i.e., the PID(s)) as arguments to the kill command.
-        # kill -${1:-9}: This command sends the specified signal to the processes. ${1:-9} is a parameter expansion that uses the first argument passed to the function ($1). If no argument is provided, it defaults to 9, which is the signal number for SIGKILL (forceful termination).
-        echo "$pid" | xargs kill -${1:-9}
+        printf '%s\n' "$pid" | xargs kill -s "$signal"
     else
         echo "No processes selected."
     fi
