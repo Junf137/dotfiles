@@ -14,6 +14,7 @@ fast_default_opt_out = true
 multi_agent = true
 terminal_resize_reflow = true
 memories = true
+goals = true
 
 [tui]
 status_line = ["model-with-reasoning", "current-dir", "context-used", "five-hour-limit", "thread-title"]
