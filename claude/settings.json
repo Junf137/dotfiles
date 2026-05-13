@@ -65,6 +65,7 @@
   "effortLevel": "xhigh",
   "voiceEnabled": true,
   "skipDangerousModePermissionPrompt": true,
-  "remoteControlAtStartup": true,
-  "agentPushNotifEnabled": true
+  "remoteControlAtStartup": false,
+  "agentPushNotifEnabled": true,
+  "model": "opus[1m]"
 }
