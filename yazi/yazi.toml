@@ -1,3 +1,9 @@
+[preview]
+max_width = 1920
+max_height = 1080
+image_filter = "lanczos3"
+image_quality = 90
+
 [opener]
 view_image = [
   { run = 'view-image "$@"; read -n 1', block = true, for = "unix", desc = "View in terminal" },

@@ -13,6 +13,16 @@ use = "yazi-rs/plugins:git"
 rev = "4ffa48f"
 hash = "6849444b7c2df08eace83f3f86fb55a3"
 
+[[plugin.deps]]
+use = "yazi-rs/plugins:toggle-pane"
+rev = "5d5c480"
+hash = "9c7987da2d2a2120dac33abb64132004"
+
+[[plugin.deps]]
+use = "yazi-rs/plugins:zoom"
+rev = "5d5c480"
+hash = "fa268cb59989a87780605fdcfb8d99a9"
+
 [[flavor.deps]]
 use = "yazi-rs/flavors:catppuccin-latte"
 rev = "0670801"
