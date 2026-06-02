@@ -1,6 +1,7 @@
 model = "gpt-5.5"
 model_reasoning_effort = "xhigh"
 personality = "pragmatic"
+service_tier = "default"
 
 [notice]
 fast_default_opt_out = true
