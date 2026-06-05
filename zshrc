@@ -159,13 +159,12 @@ bindkey '\e[1;3C' forward-word
 bindkey '\e[1;3A' beginning-of-line
 bindkey '\e[1;3B' end-of-line
 
-# Alt + Backspace kill one word
-bindkey '^U' backward-kill-word
-# Ctrl + Backspace / Delete from WezTerm, kept distinct from tmux C-h navigation.
+# Terminal deletion keys from WezTerm. Keep Ctrl+Backspace distinct from tmux C-h navigation.
+bindkey '^?' backward-delete-char
 bindkey '^W' backward-kill-word
+bindkey '^U' backward-kill-line
 bindkey '\e[3;5~' kill-word
-# Alt + Shift + Backspace kill one line
-bindkey '^[^?' backward-kill-line
+bindkey '^[^?' backward-kill-word
 
 # conflict with wezterm finding shortcut
 # bindkey '\ef' autosuggest-accept
