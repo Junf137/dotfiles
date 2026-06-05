@@ -163,6 +163,7 @@ bindkey '\e[1;3B' end-of-line
 bindkey '^?' backward-delete-char
 bindkey '^W' backward-kill-word
 bindkey '^U' backward-kill-line
+bindkey '\e[3;3~' kill-line
 bindkey '\e[3;5~' kill-word
 bindkey '^[^?' backward-kill-word
 
