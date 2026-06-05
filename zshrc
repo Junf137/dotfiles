@@ -161,6 +161,9 @@ bindkey '\e[1;3B' end-of-line
 
 # Alt + Backspace kill one word
 bindkey '^U' backward-kill-word
+# Ctrl + Backspace / Delete from WezTerm, kept distinct from tmux C-h navigation.
+bindkey '^W' backward-kill-word
+bindkey '\e[3;5~' kill-word
 # Alt + Shift + Backspace kill one line
 bindkey '^[^?' backward-kill-line
 
