@@ -11,7 +11,7 @@
       "Read(./secrets/**)"
     ],
     "ask": [],
-    "defaultMode": "default"
+    "defaultMode": "auto"
   },
   "model": "claude-opus-4-8[1m]",
   "statusLine": {
@@ -20,7 +20,7 @@
   },
   "effortLevel": "xhigh",
   "skipDangerousModePermissionPrompt": true,
-  "remoteControlAtStartup": false,
+  "remoteControlAtStartup": true,
   "agentPushNotifEnabled": true,
   "voiceEnabled": true
 }
