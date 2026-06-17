@@ -20,6 +20,7 @@ goals = true
 
 [tui]
 status_line = ["model-with-reasoning", "current-dir", "context-used", "five-hour-limit", "thread-title"]
+session_picker_view = "comfortable"
 
 [tui.model_availability_nux]
 "gpt-5.5" = 4
