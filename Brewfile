@@ -83,8 +83,6 @@ cask "font-fira-code-nerd-font"
 cask "google-chrome"
 # AI-powered notepad for meetings
 cask "granola"
-# Software for Logitech devices
-cask "logi-options+"
 # File system integration
 cask "macfuse"
 # Interactive tool for analyzing MongoDB data
