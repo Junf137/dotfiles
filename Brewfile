@@ -48,8 +48,6 @@ brew "texinfo"
 brew "tmux"
 # Tmux session manager. Built on libtmux
 brew "tmuxp"
-# CLI tool that moves files or folder to the trash
-brew "trash"
 # Display directories as trees (with optional color/HTML output)
 brew "tree"
 # Parser generator tool
