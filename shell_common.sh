@@ -26,6 +26,9 @@ if [[ "$(uname -s)" == "Darwin" ]]; then
     add_path "/opt/homebrew/sbin"
     add_path "/opt/homebrew/bin"
 
+    # Prefer Homebrew's newer keg-only curl over the older macOS system curl
+    [ -d "/opt/homebrew/opt/curl/bin" ] && add_path "/opt/homebrew/opt/curl/bin"
+
     # Disable homebrew sending analytics data
     export HOMEBREW_NO_ANALYTICS=1
 fi
@@ -175,7 +178,7 @@ alias rm="rm -i"
 alias cp="cp -i"
 alias mv="mv -i"
 
-# trash-cli
+# trash-cli (Linux only; not available on macOS — these aliases are inert there)
 alias trash="trash-put"
 alias tlist="trash-list"
 alias trestore="trash-restore"
