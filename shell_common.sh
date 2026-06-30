@@ -48,8 +48,14 @@ esac
 # ============================================================
 # Welcome Message
 # ============================================================
-# print welcome msg
+# Greet only on a "login"-style shell: the first shell of a terminal
+# session, not every tmux pane/window. tmux spawns a fresh shell per
+# pane, so gating on $TMUX keeps the (animated) banner from replaying
+# -- and skips the ~1s lolcat animation -- in every split. The rest of
+# this file (fzf, aliases, nvm) intentionally still runs per shell.
+# Set DOTFILES_WELCOME_IN_TMUX=1 to opt the banner back in inside tmux.
 if [ "${DOTFILES_DISABLE_WELCOME:-0}" != "1" ] \
+    && { [ -z "${TMUX:-}" ] || [ "${DOTFILES_WELCOME_IN_TMUX:-0}" = "1" ]; } \
     && [ "${TERM:-}" != "dumb" ] \
     && command -v shell_welcome &> /dev/null; then
   echo ""
