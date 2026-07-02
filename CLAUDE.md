@@ -39,6 +39,7 @@ dotfiles/
 │   └── regular.yaml        # tmuxp session layout
 ├── utils/                  # Custom shell utility scripts
 │   ├── add_path            # PATH management function
+│   ├── clip                # SSH/tmux-aware clipboard copy (OSC 52 fallback)
 │   ├── claude-sessions     # List running Claude Code sessions
 │   ├── color_pwd           # Colored PWD display
 │   ├── cowsay_fortune      # Random ASCII art + fortune
@@ -167,6 +168,7 @@ After cloning, initialize with: `git submodule update --init --recursive`
 | `rfv`             | Ripgrep + FZF + Vim: interactive search-and-open    |
 | `kill_ps`         | FZF-based interactive process killer                |
 | `claude-sessions` | List running Claude Code sessions with details      |
+| `clip`            | Copy stdin to the clipboard; picks tmux/OSC 52/native transport so it works over SSH without hanging |
 | `shell_welcome`   | Display random ASCII art welcome on shell start     |
 | `cowsay_fortune`  | Random cowsay/cowthink with fortune quotes          |
 | `color_pwd`       | Print colored working directory                     |

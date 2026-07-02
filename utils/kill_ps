@@ -52,6 +52,20 @@ kill_ps() {
         return 1
     fi
 
+    # CTRL-Y copies the selected line(s) (PID, PPID, CMD, ...) to the clipboard.
+    # {+} covers marked selections, or the current line if none is marked. The work is
+    # delegated to the sibling `clip` helper, which picks a transport that reaches the
+    # terminal you are actually sitting at (tmux/OSC 52 over SSH, a native tool when
+    # local) and never hangs the way wl-copy/xclip do when no display is reachable.
+    # Resolve `clip` next to this script (portable: no `readlink -f`, which BSD/macOS
+    # lacks). Falls back to the PATH copy (utils/ is on PATH) if the sibling is absent.
+    local clip_bin
+    clip_bin="$(cd "$(dirname "${BASH_SOURCE[0]}")" 2>/dev/null && pwd)/clip"
+    [ -x "$clip_bin" ] || clip_bin="clip"
+
+    local copy_bind=(--bind="ctrl-y:execute-silent(printf '%s\n' {+} | '$clip_bin')")
+    local copy_hint=", CTRL-Y to copy"
+
     # Get PID interactively using fzf
     local pid
 
@@ -61,10 +75,11 @@ kill_ps() {
     # awk '{print $2}': extracts the second column (PID) from the output of fzf and assigns it to the pid variable.
     pid=$((date; ps -ef) | \
         fzf-tmux --multi -p 80%,70% \
-            --header=$'Press CTRL-R to reload\n' --header-lines=2 \
+            --header="Press CTRL-R to reload${copy_hint}"$'\n' --header-lines=2 \
             --preview='echo {}' --preview-window=down,3,wrap \
             --bind='ctrl-r:reload(date; ps -ef)' \
-            --bind='ctrl-/:toggle-preview' | \
+            --bind='ctrl-/:toggle-preview' \
+            "${copy_bind[@]}" | \
         awk '{print $2}')
 
     # Check if a PID is selected

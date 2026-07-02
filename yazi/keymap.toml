@@ -24,3 +24,35 @@ desc = "Terminal video preview (mpv tct)"
 on = [ "g", "c" ]
 run = "plugin vcs-files"
 desc = "Show Git file changes"
+
+# Override yazi's built-in copy (c c / c d / c f / c n) to route through the `clip`
+# helper. Yazi's native copy shells out to wl-copy/xclip, which HANG over SSH when no
+# display server is reachable; `clip` uses tmux/OSC 52 so it reaches the machine you
+# are sitting at. Operates on the hovered file; $(...) trims the trailing newline.
+[[mgr.prepend_keymap]]
+on = [ "c", "c" ]
+run = '''
+shell 'printf "%s" "$1" | clip'
+'''
+desc = "Copy full path (SSH-safe)"
+
+[[mgr.prepend_keymap]]
+on = [ "c", "d" ]
+run = '''
+shell 'printf "%s" "$(dirname "$1")" | clip'
+'''
+desc = "Copy dirname (SSH-safe)"
+
+[[mgr.prepend_keymap]]
+on = [ "c", "f" ]
+run = '''
+shell 'printf "%s" "$(basename "$1")" | clip'
+'''
+desc = "Copy filename (SSH-safe)"
+
+[[mgr.prepend_keymap]]
+on = [ "c", "n" ]
+run = '''
+shell 'n="$(basename "$1")"; printf "%s" "${n%.*}" | clip'
+'''
+desc = "Copy filename without extension (SSH-safe)"

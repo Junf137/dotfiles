@@ -1,0 +1,66 @@
+#!/bin/bash
+
+# __author__ == Junfeng Lei
+
+# clip: read stdin and copy it to the clipboard of the machine you are sitting at,
+# choosing a transport that stays correct across every session shape:
+#
+#   local / SSH  x  bare terminal / tmux  x  either direction (Arch<->Mac)
+#
+# The hard requirement: the text must land on the clipboard of the terminal you are
+# physically using, never the far end of an SSH hop. That rules out most tools:
+#   - wl-copy / xclip / xsel / pbcopy copy to the clipboard of the host the process
+#     runs on. Correct only when local; over SSH they hang (no display reachable) or
+#     copy to the WRONG machine.
+#   - OSC 52 is an escape sequence that rides the terminal connection back to where
+#     WezTerm runs, so it always reaches the machine you are sitting at.
+#   - Inside tmux, tmux forwards application OSC 52 to the outer terminal when
+#     set-clipboard is on, so `tmux load-buffer -w -` is correct local AND remote.
+#
+# Decision order:
+#   1. Inside tmux            -> tmux load-buffer -w -   (forwarded via OSC 52)
+#   2. Over SSH (bare term)   -> OSC 52 straight to the controlling terminal
+#   3. Truly local            -> native clipboard tool, OSC 52 as a last resort
+
+set -u
+
+# ---* Read the payload *---
+# Text only: command substitution strips trailing newlines (desirable here -- keeps a
+# lone trailing newline out of the clipboard) and the shell drops embedded NUL bytes,
+# so `clip` cannot round-trip binary data. That is fine for its use (paths, PIDs, etc).
+data="$(cat)"
+
+# ---* OSC 52 emitter *---
+# Writes the clipboard-set escape sequence to the controlling terminal. The tmux DCS
+# passthrough wrap (needs allow-passthrough on) is defensive: the transport ladder
+# below only reaches emit_osc52 when TMUX is unset, so the wrap is not exercised today,
+# but it keeps this function correct if it is ever reused from inside tmux.
+# If /dev/tty is not writable there is no terminal to reach, so fail quietly rather
+# than writing escape bytes to stdout (which a caller may be capturing in a pipe).
+emit_osc52() {
+    local b64 seq
+    b64="$(printf '%s' "$data" | base64 | tr -d '\n')" || return 1
+    seq="$(printf '\033]52;c;%s\a' "$b64")"
+    if [ -n "${TMUX:-}" ]; then
+        seq="$(printf '\033Ptmux;\033%s\033\\' "$seq")"
+    fi
+    [ -w /dev/tty ] || return 1
+    printf '%s' "$seq" >/dev/tty
+}
+
+# ---* Transport selection *---
+if [ -n "${TMUX:-}" ] && command -v tmux >/dev/null 2>&1; then
+    printf '%s' "$data" | tmux load-buffer -w -
+elif [ -n "${SSH_CONNECTION:-}${SSH_TTY:-}${SSH_CLIENT:-}" ]; then
+    emit_osc52
+elif [ -n "${WAYLAND_DISPLAY:-}" ] && command -v wl-copy >/dev/null 2>&1; then
+    printf '%s' "$data" | wl-copy >/dev/null 2>&1
+elif [ -n "${DISPLAY:-}" ] && command -v xclip >/dev/null 2>&1; then
+    printf '%s' "$data" | xclip -selection clipboard >/dev/null 2>&1
+elif [ -n "${DISPLAY:-}" ] && command -v xsel >/dev/null 2>&1; then
+    printf '%s' "$data" | xsel --clipboard --input >/dev/null 2>&1
+elif command -v pbcopy >/dev/null 2>&1; then
+    printf '%s' "$data" | pbcopy
+else
+    emit_osc52
+fi
