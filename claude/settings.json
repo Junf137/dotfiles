@@ -18,6 +18,9 @@
     "type": "command",
     "command": "bash /home/junf/.claude/statusline-command.sh"
   },
+  "enabledPlugins": {
+    "clangd-lsp@claude-plugins-official": true
+  },
   "effortLevel": "xhigh",
   "tui": "fullscreen",
   "skipDangerousModePermissionPrompt": true,
