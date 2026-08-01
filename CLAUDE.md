@@ -34,7 +34,8 @@ dotfiles/
 ├── omz_themes/
 │   └── ys_customized.zsh-theme  # Custom Oh My ZSH theme
 ├── tmpfiles/               # systemd-tmpfiles rules
-│   └── handoffs.conf       # Prunes ~/hf handoff docs after 10 days (symlinked to ~/.config/user-tmpfiles.d/)
+│   ├── handoffs.conf       # Prunes ~/hf handoff docs after 10 days (symlinked to ~/.config/user-tmpfiles.d/)
+│   └── README.md           # Trigger chain, age semantics, on/off, and removal steps
 ├── tmux/
 │   └── tmux-nerd-font-window-name.yml  # Overrides for joshmedeski/tmux-nerd-font-window-name (symlinked to ~/.config/tmux/)
 ├── tmuxp/
