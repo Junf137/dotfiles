@@ -53,6 +53,8 @@ load_link_manifest() {
 
     _link_manifest_add "$DOT_FILES/nvim/markdownlint.jsonc" "$HOME/.markdownlint.jsonc" required "markdownlint"
 
+    _link_manifest_add "$DOT_FILES/tmpfiles/handoffs.conf" "$HOME/.config/user-tmpfiles.d/handoffs.conf" required "handoff cleanup rules"
+
     # External, user-managed image directory. It is useful when present but should
     # not block bootstrap checks on a fresh machine.
     _link_manifest_add "$HOME/Pictures/Background" "$HOME/.config/wezterm/backdrops" optional "wezterm backdrops"

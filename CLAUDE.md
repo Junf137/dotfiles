@@ -33,6 +33,8 @@ dotfiles/
 │   └── nvim-kickstart/     # Git submodule: Junf137/kickstart.nvim
 ├── omz_themes/
 │   └── ys_customized.zsh-theme  # Custom Oh My ZSH theme
+├── tmpfiles/               # systemd-tmpfiles rules
+│   └── handoffs.conf       # Prunes ~/hf handoff docs after 10 days (symlinked to ~/.config/user-tmpfiles.d/)
 ├── tmux/
 │   └── tmux-nerd-font-window-name.yml  # Overrides for joshmedeski/tmux-nerd-font-window-name (symlinked to ~/.config/tmux/)
 ├── tmuxp/
@@ -90,6 +92,7 @@ dotfiles/
 | `claude/statusline-command.sh`          | `~/.claude/statusline-command.sh`   |
 | `codex/AGENTS.md`                       | `~/.codex/AGENTS.md`                |
 | `codex/config.toml`                     | `~/.codex/config.toml`              |
+| `tmpfiles/handoffs.conf`                | `~/.config/user-tmpfiles.d/handoffs.conf` |
 | `~/Pictures/Background`                 | `~/.config/wezterm/backdrops`        |
 
 ## Git Submodules
