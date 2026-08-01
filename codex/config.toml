@@ -19,8 +19,9 @@ memories = true
 goals = true
 
 [tui]
-status_line = ["model-with-reasoning", "current-dir", "context-used", "five-hour-limit", "thread-title"]
+status_line = ["project-name", "thread-title", "git-branch", "model-with-reasoning", "context-used", "five-hour-limit", "weekly-limit"]
 session_picker_view = "comfortable"
+status_line_use_colors = true
 
 [tui.model_availability_nux]
 "gpt-5.5" = 4
@@ -30,6 +31,12 @@ session_picker_view = "comfortable"
 enabled = true
 
 [plugins."linear@openai-curated"]
+enabled = true
+
+[plugins."sites@openai-bundled"]
+enabled = true
+
+[plugins."visualize@openai-bundled"]
 enabled = true
 
 [mcp_servers.openaiDeveloperDocs]
