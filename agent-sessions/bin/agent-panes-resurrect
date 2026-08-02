@@ -1,0 +1,2165 @@
+#!/usr/bin/env python3
+
+# __author__ == Junfeng Lei
+
+"""Carry Claude/Codex session ids across a tmux-resurrect save and restore.
+
+tmux-resurrect already replays a pane's scrollback: the capture goes into
+<resurrect dir>/pane_contents.tar.gz, and the pane is recreated running
+`cat <that file>; exec $SHELL`. This hangs one more thing off that mechanism --
+after the replayed contents, a pane that had an agent in it prints a short block
+naming the session that was there and the command that resumes it. Nothing is
+restarted and there is no restore-side code; the block is text that was already
+sitting in the archive when the pane was recreated.
+
+It is wired as the plugin's own post-save hook, the first point at which the
+archive exists:
+
+    set -g @resurrect-hook-post-save-all '.../agent-sessions/bin/agent-panes-resurrect save'
+
+`save` writes into the *archived* copy of a pane's contents, never into the live
+pane, and records the same mapping in agent_sessions.json beside the archive.
+The sidecar is the durable half: the in-archive block is best effort, because
+tmux-resurrect rewrites that archive in place, under no lock, from a save this
+hook cannot see.
+
+Panes are annotated whether or not the agent is still running, and a pane that
+has held several sessions gets a stanza for each. Three sources feed that:
+
+  * the live scan, `agent-panes`, for whatever is running right now;
+  * the exit banner the agent itself left in the pane's captured scrollback,
+    which reaches back as far as that pane's history does and is the only record
+    of a session that started and exited between two saves. Both agents write
+    one on a graceful exit: Codex prints its uuid, and Claude leaves the
+    alternate screen first and then prints either its uuid or -- for a session
+    with a custom title, about a third of them -- that title, which is resolved
+    back through Claude's own transcripts;
+  * this script's own block, parsed back out of the capture. That is what carries
+    a pane's ids across a tmux server restart: the restored pane replays the
+    capture, block and all, so the evidence travels with the pane's contents
+    rather than with a `%N` the new server has already reissued to someone else.
+    It is also load-bearing in the ordinary case -- a pane is stripped whenever it
+    is annotated, and a pane killed, or lost to a reboot, prints no banner at
+    all, so for those the block is the only thing the record was ever written to.
+
+The harvest reads the archive rather than calling `tmux capture-pane`: the
+archive is a file this hook already opens, it holds the pane's whole history with
+wrapped lines rejoined, and the hook runs inline with the save and freezes the
+client that triggered it, so a subprocess per pane is not free.
+
+What a text match means is deliberately weak. A `codex resume <uuid>` in a
+document, a ripgrep hit or a `cat`ed handoff is indistinguishable from a real
+banner, so those rows are recorded under the `scrollback` source and the block
+prints them as `(recovered)`.
+
+The block is emitted even when the pane already shows the agent's own parting
+banner. Codex prints one on exit and the capture replays it verbatim, so that
+pane ends up saying the same thing twice -- deliberately. Suppressing on the
+strength of scrollback would mean parsing another tool's output to decide
+whether our own record is worth printing, which puts the one line the user
+actually needs behind a pattern that rots the next time Codex changes its
+wording. The block is also not merely a restatement: it carries the `cd` into
+the session's project directory, which `claude --resume` requires and the
+banner omits, plus the save time and the pane the session was bound to.
+
+Which pane a record belongs to is decided by tmux's stable `%N` pane id, paired
+with the id of the server that issued it, never by the `session:window.pane`
+location a record happens to be filed under. Locations drift -- with
+`renumber-windows on` a closing window shifts every one after it -- and a stored
+location is stale by however long the agent has been gone. A record whose pane
+id is not live on this same server is skipped rather than guessed at; its block
+is already in that pane's scrollback from the previous restore, so the capture
+carries it forward on its own.
+
+That is not a guarantee about the *archive*, only about which record goes with
+which pane. The block is still written to `pane-<location>`, and the plugin
+fixed those filenames from its own earlier pane list, so a window closing inside
+that window still misfiles a block. Closing it would need a hook that runs
+before the capture; `post-save-layout` is the only candidate and it fires before
+the archive exists.
+
+Every plugin internal relied on here (hook name, archive path, member layout,
+content-file naming) is undocumented; verified against tmux-resurrect cff343cf.
+
+Usage: agent-panes-resurrect save [--dry-run]   # hook target; silent by design
+       agent-panes-resurrect list [--json]
+       agent-panes-resurrect purge [--dry-run]  # remove every block, sidecar, log
+Env:   AGENT_SESSIONS_KEEP_DAYS     how long a record survives in the sidecar
+                                    after the last save that found evidence of
+                                    it (30).
+       AGENT_SESSIONS_MAX_STANZAS   most sessions printed in one pane's block
+                                    (6); the rest stay in the sidecar.
+       NO_COLOR                     emit the block without colour.
+"""
+
+import datetime
+import fcntl
+import glob
+import gzip
+import hashlib
+import io
+import json
+import os
+import re
+import shutil
+import signal
+import socket
+import subprocess
+import sys
+import tarfile
+import tempfile
+import time
+import zlib
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+AGENT_PANES = os.path.join(HERE, "agent-panes")
+
+# The resume-marker patterns are shared with agent-scrollback-ids rather than
+# copied: they match Claude's and Codex's own terminal output, they rot silently
+# when either changes its wording, and the unit tests can only cover one copy.
+#
+# Guarded, because this is the first fallible statement in the file and it runs
+# before silence() has anywhere to write. An ImportError here -- bin/ copied
+# without lib/, a permissions mistake -- would kill the process before a single
+# line could be logged, and tmux-resurrect discards both the exit status and
+# stderr, so the hook would become a completely silent no-op. Losing the harvest
+# is survivable; losing the whole save hook without a word is not.
+sys.path.insert(0, os.path.join(os.path.dirname(HERE), "lib"))
+try:
+    from agent_ids import UUID, extract  # noqa: E402
+    from claude_names import name_index  # noqa: E402
+
+    IMPORT_ERROR = ""
+except Exception as err:  # noqa: BLE001 - reported through the log, never raised
+    UUID = r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"
+    IMPORT_ERROR = f"{type(err).__name__}: {err}"
+
+    def extract(_text):
+        return []
+
+    def name_index(**_kwargs):
+        return {}
+
+CLAUDE_PROJECTS = os.path.expanduser("~/.claude/projects")
+CODEX_SESSIONS = os.path.expanduser("~/.codex/sessions")
+
+ARCHIVE_NAME = "pane_contents.tar.gz"
+ARCHIVE_MEMBER_DIR = "./pane_contents"
+CONTENT_DIR = "pane_contents"
+SIDECAR_NAME = "agent_sessions.json"
+# A sidecar that would not parse, kept rather than written over. Named with a
+# prefix rather than an exact name so sweep_scratch() and purge agree about it
+# whatever suffix a future uniquifier adds.
+UNREADABLE_PREFIX = f"{SIDECAR_NAME}.unreadable"
+LOG_NAME = "agent_sessions.log"
+LOCK_NAME = ".agent-panes-resurrect.lock"
+SCRATCH_PREFIX = ".agent-panes-resurrect."
+LOG_MAX_BYTES = 64 * 1024
+SCRATCH_MAX_AGE_S = 3600
+
+# Every injected line starts with this, at column 0, which is what makes the
+# block removable on the next save: a restored pane replays the block into its
+# own scrollback, so without a strip pass the capture would carry it forward and
+# stack a fresh copy on every reboot. Column 0 is the whole guard against
+# stripping a line that merely mentions the sentinel -- prose, ripgrep output and
+# indented code samples all sit further right.
+#
+# It opens with `#` so that every line of the block is a shell comment. The
+# block lands in a pane that is about to hand control to an interactive shell,
+# and the resume line exists to be copied; pasting a line that began with a bare
+# `[agent-session]` made bash glob it and complain, and pasting the whole block
+# was worse. As a comment the entire block is inert if pasted whole.
+SENTINEL = b"#[agent-session]"
+
+# The pre-`#` spelling. Stripping has to keep recognising it or the blocks
+# already sitting in an archive from a previous version would never be removed,
+# and each reboot would replay them alongside the new ones.
+LEGACY_SENTINELS = (b"[agent-session]",)
+ANSI_RE = re.compile(rb"\x1b\[[0-9;?]*[ -/]*[@-~]|\x1b\][^\a\x1b]*(?:\a|\x1b\\)|\x1b[@-Z\\-_]")
+
+# Session titles are free text an agent wrote, and they end up in a file that is
+# later replayed straight into a terminal. A stray control sequence there is not
+# cosmetic: ESC[6n makes the restored shell receive the reply as typed input,
+# one Enter away from running.
+#
+# C1 (U+0080-U+009F) is in the class as well as C0: a terminal in an 8-bit mode
+# treats U+009B as CSI outright, and U+2028/2029 are line separators that would
+# split one sanitised field across two lines and break the column-0 sentinel
+# rule for everything after it.
+CONTROL_RE = re.compile("[\x00-\x1f\x7f-\x9f\u2028\u2029]")
+
+# A session id ends up in a command line the reader is invited to paste, so
+# anything outside this set is quoted rather than handed to their shell bare.
+SAFE_TOKEN_RE = re.compile(r"[A-Za-z0-9._@:+-]+")
+
+
+def _keep_days():
+    """Read at import, so a bad value must not raise before main()'s guard."""
+    try:
+        return max(0.0, float(os.environ.get("AGENT_SESSIONS_KEEP_DAYS", "30")))
+    except ValueError:
+        return 30.0
+
+
+KEEP_DAYS = _keep_days()
+
+
+def _max_stanzas():
+    """Read at import, so a bad value must not raise before main()'s guard."""
+    try:
+        return max(1, int(os.environ.get("AGENT_SESSIONS_MAX_STANZAS", "6")))
+    except ValueError:
+        return 6
+
+
+# A pane holds one agent at a time but many over its life, and the point of the
+# block is to name all of them. The cap is a safety valve, not a policy: it stops
+# a pane that has been in use for months growing an unbounded block, and it
+# doubles as the LRU that lets the oldest records fall out -- a record that stops
+# being printed stops being re-observed, and ages out of the sidecar KEEP_DAYS
+# later. Six is generous against the measured worst case of two per pane.
+MAX_STANZAS = _max_stanzas()
+
+# How many ids a single pane may contribute from *genuine* text in one save. A
+# `cat` of a session dump or a ripgrep over a directory of handoff notes puts
+# hundreds of resume commands into one pane's scrollback, each indistinguishable
+# from an exit banner, and the record is append-only.
+#
+# Rows read back out of a block are capped separately, at MAX_STANZAS -- see
+# harvest(). A block this hook wrote can never hold more stanzas than it prints,
+# so anything past that arrived as text too.
+MAX_HARVEST_PER_PANE = 2 * MAX_STANZAS
+
+# Where a row's session id came from, best first. agent-panes owns the exact
+# tiers (hook, sessions, env, cmdline, fd) and the inferred ones, which it spells
+# with the tolerance it accepted -- `meta~4s`, `btime~12s`. This script adds one:
+#
+#   scrollback  a genuine agent exit banner in the pane's captured contents.
+#               Advisory, and ranked last on purpose: a `codex resume <uuid>` in
+#               a document, a ripgrep hit or a `cat`ed handoff is
+#               indistinguishable from a banner an agent actually printed.
+#
+# A record parsed back out of our own block keeps whatever source it was written
+# with. It is the same record travelling forward on the pane's contents, not a
+# weaker second-hand observation of it, and preserving the string is also what
+# makes render -> parse -> render converge.
+SCROLLBACK_SOURCE = "scrollback"
+ADVISORY_SOURCES = (SCROLLBACK_SOURCE,)
+EXACT_RANK = {"hook": 0, "sessions": 1, "env": 2, "cmdline": 3, "fd": 4}
+
+
+def source_rank(source):
+    """Lower is better. Used to decide which record wins a field on a merge."""
+    source = str(source or "")
+    if source in EXACT_RANK:
+        return EXACT_RANK[source]
+    if source in ADVISORY_SOURCES:
+        return 8
+    if "~" in source:
+        return 6
+    if source in ("", "unknown", "?"):
+        return 9
+    # An exact tier agent-panes grew after this was written: better than inferred,
+    # worse than the ones named above, rather than worse than everything.
+    return 5
+
+# The hook runs inline with the save and freezes the client that triggered it.
+# The subprocess timeouts below have to fit inside this with room to spare, or
+# the alarm fires while a child is still running and the run is lost after doing
+# all of its work. The save path spawns four children, not three: agent-panes,
+# pane_index, and tmux_option twice (@resurrect-dir, then
+# @resurrect-capture-pane-contents). 10 + 3 + 3 + 3 = 19.
+#
+# The rest is in-process and proportional to the archive, which is read twice --
+# once to harvest, once to rewrite. Measured on a 78-pane server: 0.8 MB
+# compressed, 5.6 MB of captures, 14 ms to decompress and unpack in memory and
+# 115 ms to scan, against a whole-hook time of 0.35 s. Ten times the scrollback
+# still leaves the alarm most of its budget, and nothing here grows with
+# anything but the archive.
+WATCHDOG_S = 30
+TMUX_TIMEOUT_S = 3
+AGENT_PANES_TIMEOUT_S = 10
+
+# ANSI-16 only: the block is written at save time but rendered later by whatever
+# terminal is attached, and 256-colour or truecolor picks a Catppuccin flavour
+# the reader may not be using. 2m (dim) is close to invisible on Mocha.
+if os.environ.get("NO_COLOR"):
+    RESET = GREY = CYAN = ""
+else:
+    RESET, GREY, CYAN = "\x1b[0m", "\x1b[90m", "\x1b[36m"
+
+RESUME = {"claude": "claude --resume {sid}", "codex": "codex resume {sid}"}
+
+
+# ---* tmux / resurrect paths *---
+
+
+def tmux_option(name, default=""):
+    """A global tmux option, read from whichever server invoked us via $TMUX."""
+    try:
+        out = subprocess.run(
+            ["tmux", "show-option", "-gqv", name],
+            capture_output=True,
+            text=True,
+            timeout=TMUX_TIMEOUT_S,
+        ).stdout.strip()
+    except (OSError, subprocess.SubprocessError):
+        return default
+    return out or default
+
+
+def pane_index():
+    """Stable pane id -> the location resurrect files that pane's capture under.
+
+    This is the only thing that makes a record attributable. `renumber-windows
+    on` reassigns session:window.pane the moment a window closes, and the
+    plugin's capture and this hook read the pane list at different moments, so a
+    location recorded even seconds ago can now belong to a different pane. `%N`
+    never moves for the life of the pane.
+    """
+    try:
+        out = subprocess.run(
+            ["tmux", "list-panes", "-a", "-F", "#{pane_id}\t#{session_name}:#{window_index}.#{pane_index}"],
+            capture_output=True,
+            text=True,
+            timeout=TMUX_TIMEOUT_S,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return {}
+    index = {}
+    for line in out.stdout.splitlines():
+        pane_id, _, loc = line.partition("\t")
+        if pane_id and loc:
+            index[pane_id] = loc
+    return index
+
+
+def resurrect_dir():
+    """Mirror of tmux-resurrect's own resolution.
+
+    Nothing is handed to the hook -- not even the directory it just wrote -- so
+    this has to be re-derived, and @resurrect-dir is a raw string the plugin
+    sed-expands itself.
+    """
+    path = tmux_option("@resurrect-dir", "")
+    if not path:
+        legacy = os.path.expanduser("~/.tmux/resurrect")
+        if os.path.isdir(legacy):
+            return legacy
+        data = os.environ.get("XDG_DATA_HOME") or os.path.expanduser("~/.local/share")
+        return os.path.join(data, "tmux", "resurrect")
+    home = os.path.expanduser("~")
+    # The plugin's own expansion is `sed 's/\\$HOME/$HOME/g; s/~/$HOME/g'`, i.e.
+    # a global replace of `~` and not a leading-only one. expanduser() would
+    # leave a non-leading `~` alone and resolve a different directory than the
+    # one the plugin just wrote the archive into.
+    return (
+        path.replace("$HOME", home).replace("$HOSTNAME", socket.gethostname()).replace("~", home)
+    )
+
+
+def server_id():
+    """Which tmux server generation this save belongs to.
+
+    `%N` is a per-server counter that restarts at 0, while the sidecar
+    deliberately outlives the server by up to KEEP_DAYS. Placing a record by its
+    pane id alone is therefore only sound within one generation: after a restore
+    the new server reissues the low ids, and a record written before the reboot
+    would land on whichever restored pane inherited its number -- a pane that
+    never ran that session. The pid's kernel start time is in the key because a
+    pid alone is reused too.
+    """
+    parts = (os.environ.get("TMUX") or "").split(",")
+    if len(parts) < 2:
+        return ""
+    sock, pid = parts[0], parts[1]
+    try:
+        with open(f"/proc/{int(pid)}/stat") as fh:
+            stat = fh.read()
+        # Field 22, counted from after comm -- which is parenthesised and may
+        # itself contain spaces, so it cannot be split on naively.
+        start = stat[stat.rindex(")") + 2 :].split()[19]
+    except (OSError, ValueError, IndexError):
+        start = "?"
+    return f"{sock}:{pid}:{start}"
+
+
+def server_alive():
+    """Whether the server that started this save still exists.
+
+    A hook is not signalled when the server dies under it, so without this a run
+    orphaned by `tmux kill-server` would still publish an archive.
+
+    The socket path alone is not enough: a killed server leaves its socket
+    behind, and a server restarted since would have re-bound the same path. The
+    pid in $TMUX is what distinguishes "still the server that called us".
+    """
+    parts = (os.environ.get("TMUX") or "").split(",")
+    if len(parts) < 2 or not os.path.exists(parts[0]):
+        return False
+    try:
+        with open(f"/proc/{int(parts[1])}/comm") as fh:
+            # `tmux: server`, and `tmux: server ()` for one started with a
+            # command -- never a bare `tmux`, which is the client. comm is
+            # capped at 15 characters, so only the prefix is dependable.
+            return fh.read().strip().startswith("tmux")
+    except (OSError, ValueError):
+        # No /proc, or an unparseable $TMUX: fall back to the socket test rather
+        # than refusing to publish on a platform where the pid cannot be checked.
+        return True
+
+
+# ---* The injected block *---
+
+
+def clean(value, limit):
+    return CONTROL_RE.sub("", str(value or ""))[:limit]
+
+
+def shell_quote(text):
+    if SAFE_TOKEN_RE.fullmatch(text):
+        return text
+    return "'" + text.replace("'", "'\\''") + "'"
+
+
+def when(row, stamp):
+    """The phrase placing this session in time.
+
+    A live agent is pinned to the save itself, which is the moment the pane's
+    contents were captured. An exited one can only be placed at the last save
+    that still saw it, and saying so is the difference between "this is what is
+    running here" and "this is what used to run here" -- the reader is deciding
+    whether to resume, and a stale record presented as current wastes that.
+    """
+    if row.get("live"):
+        return f"ran in this pane until tmux was saved {stamp}"
+    seen = row.get("last_seen")
+    if seen:
+        return f"ran in this pane, last seen {datetime.datetime.fromtimestamp(seen):%Y-%m-%d %H:%M}"
+    return "ran in this pane earlier"
+
+
+def identity(row):
+    """`pid N · started T`, or as much of it as the record actually has.
+
+    A row recovered from text has neither: it names a session that ran here, not
+    a process anyone watched. `pid  · started ?` would claim otherwise, and the
+    tail line is the one place the reader looks to judge how much to trust a row.
+    """
+    bits = []
+    pid = clean(row.get("pid"), 12)
+    if pid:
+        bits.append(f"pid {pid}")
+    started = clean(row.get("started"), 20)
+    if started:
+        bits.append(f"started {started}")
+    return " · ".join(bits)
+
+
+def server_tag(server):
+    """A short, stable stand-in for a server id, short enough to print.
+
+    The block carries which pane and which tmux server generation a record
+    belongs to, so that reading the block back can tell a pane's own history
+    from text that merely arrived there -- a `--dry-run` preview, a pasted
+    stanza, a `cat` of somebody else's capture. The full server id is a socket
+    path, a pid and a start time; only equality is ever asked of it, so eight
+    hex digits carry the whole meaning at a twentieth of the width.
+    """
+    if not server:
+        return ""
+    return hashlib.sha1(server.encode("utf-8", "replace")).hexdigest()[:8]
+
+
+def binding(row):
+    """`bound to %N@server`, when the record knows both. Empty otherwise.
+
+    Records written before this existed have neither, and are read back on trust
+    -- there is nothing else left of them.
+    """
+    pane_id = clean(row.get("pane_id"), 12)
+    tag = server_tag(clean(row.get("server"), 128))
+    return f"bound to {pane_id}@{tag}" if pane_id and tag else ""
+
+
+def confidence(source):
+    """The parenthesised caveat after the source, if that source earns one.
+
+    agent-panes spells its inferred tiers with the tolerance it accepted --
+    `meta~4s`, `btime~12s` -- so keying on the tilde stays right if it grows a
+    new exact tier, which a hard-coded list of exact names would not.
+    """
+    if source in ADVISORY_SOURCES:
+        return " (recovered)"
+    return " (inferred)" if "~" in source else ""
+
+
+def stanza(row, stamp):
+    """The lines describing one agent, before the sentinel prefix is added."""
+    agent = clean(row.get("agent"), 12) or "agent"
+    sid = clean(row.get("session_id"), 64)
+    ident = identity(row)
+    state = "still running at save" if row.get("live") else "exited"
+
+    if not sid:
+        # Nothing actionable to offer, so it gets one line rather than a stanza.
+        tail = f" · {ident}" if ident else ""
+        return [f"{CYAN}{agent}{RESET}{GREY} {when(row, stamp)}; session id not resolved{tail}{RESET}"]
+
+    name = clean(row.get("name"), 60)
+    source = clean(row.get("source"), 20) or "?"
+    # Not truncated: a shortened path would produce a `cd` that silently lands
+    # somewhere else. PATH_MAX is the only bound that matters here.
+    cwd = clean(row.get("cwd"), 4096)
+    command = RESUME.get(agent, "{sid}").format(sid=shell_quote(sid))
+    # Claude resolves --resume inside the project dir of the current cwd, so the
+    # bare command only works from the right directory -- and this line is meant
+    # to be copied out of the pane as much as run in it.
+    resume = f"cd {shell_quote(cwd)} && {command}" if cwd else command
+    facts = (
+        ["not restarted", state]
+        + ([ident] if ident else [])
+        + [f"id from {source}{confidence(source)}"]
+        + ([binding(row)] if binding(row) else [])
+    )
+
+    return [
+        f"{GREY}─{RESET} {CYAN}{agent}{RESET}"
+        + (f"{GREY} · {name}{RESET}" if name else "")
+        + f"{GREY} · {when(row, stamp)}{RESET}",
+        # `resume:` labels where the command starts, so the reader knows what to
+        # select. The sentinel cannot be dropped from this line -- it is what
+        # makes the block removable -- and the whole line being a comment is what
+        # makes selecting sloppily harmless.
+        #
+        # It is also the one line parse_stanzas() requires: everything the head
+        # and tail lines carry is enrichment, so a wording change in either costs
+        # a name, never a session id.
+        f"{GREY}resume:{RESET} {resume}",
+        f"{GREY}  {' · '.join(facts)}{RESET}",
+    ]
+
+
+def rank_rows(rows):
+    """Newest first: live, then last seen, then whatever the record was told.
+
+    A pane that has an agent right now is answering a different question than one
+    that merely used to, so live outranks everything regardless of dates.
+    """
+    return sorted(
+        rows,
+        key=lambda r: (bool(r.get("live")), r.get("last_seen") or 0, str(r.get("started") or "")),
+        reverse=True,
+    )
+
+
+def marker_block(rows, stamp):
+    """The bytes appended to one pane's saved contents.
+
+    Every line opens with a reset. The capture ends wherever the agent's last
+    redraw left the terminal's attributes -- a live Claude pane really does end
+    on an unclosed colour -- and `cat` replays that state, so without the reset
+    the block, and the shell prompt after it, inherit whatever was still open.
+    """
+    ordered = rank_rows(rows)
+    shown, hidden = ordered[:MAX_STANZAS], ordered[MAX_STANZAS:]
+    lines = [line for row in shown for line in stanza(row, stamp)]
+    if hidden:
+        # Deliberately not a resume line: the overflow must not parse back as a
+        # stanza, and the sidecar is where those rows still live.
+        lines.append(
+            f"{GREY}… and {len(hidden)} older session(s) here · agent-panes-resurrect list{RESET}"
+        )
+    return "".join(
+        f"{RESET}{GREY}{SENTINEL.decode()}{RESET} {line}{RESET}\n" for line in lines
+    ).encode()
+
+
+MARKER_PREFIXES = (SENTINEL,) + LEGACY_SENTINELS
+
+
+def marker_line(line):
+    """(the ANSI-stripped line, the sentinel it opens with or None).
+
+    The single test for "did we write this". strip_markers() removes exactly the
+    lines this reports as ours and split_capture() reads exactly those lines, and
+    the two must not drift: a line the strip removes but the harvest never read
+    is a session id deleted without being written down, and a line the harvest
+    reads but the strip leaves behind stacks a copy on every reboot.
+
+    Matching runs on the ANSI-stripped line because tmux does not hand back the
+    bytes we wrote -- it re-emits its own idea of the cell attributes, so an
+    emitted `ESC[0m ESC[2m` comes back re-coalesced as `ESC[0;2m` -- and anything
+    comparing raw prefixes would silently stop matching.
+    """
+    bare = ANSI_RE.sub(b"", line)
+    return bare, next((prefix for prefix in MARKER_PREFIXES if bare.startswith(prefix)), None)
+
+
+def strip_markers(data):
+    """Drop previously injected lines, wherever they sit in the capture.
+
+    Whole-file rather than trailing-only: a restored pane prints its shell prompt
+    after the block, so by the next save the block is no longer at the end.
+    """
+    return b"".join(
+        line for line in data.splitlines(keepends=True) if marker_line(line)[1] is None
+    )
+
+
+# ---* Reading the block back *---
+#
+# The block is this script's own output, and reading it back is what carries a
+# pane's session ids forward. It matters twice over. Across a tmux server restart
+# it is the only carrier there is: the sidecar's records are stamped with the
+# server that issued their `%N`, and a new server reissues those numbers to
+# unrelated panes -- but the restored pane replays the capture, block and all, so
+# the evidence travels with the contents. And in the ordinary case a pane is
+# stripped whenever it is annotated, so without this pass the strip would delete
+# the only record that ever existed of a session that left no banner of its own:
+# a pane killed, or lost to a reboot, exits no more gracefully than that.
+#
+# Which is why the parse is layered. parse_stanzas() reads the rendered shape for
+# the name, source and dates, but only the `resume:` line is required, and
+# anything it cannot make sense of falls through to a second pass that runs the
+# ordinary resume-marker patterns over the same lines. A wording change in the
+# renderer therefore costs a name; it cannot cost a session id, and it cannot
+# fail silently into deleting one.
+
+BLOCK_RESUME_RE = re.compile(r"^resume:[ \t]+(?P<rest>\S.*)$")
+BLOCK_HEAD_RE = re.compile(r"^─[ \t]+(?P<agent>[^\s·]+)(?:[ \t]+·[ \t]+(?P<name>.*))?[ \t]+·[ \t]+ran in this pane")
+BLOCK_WHEN_RE = re.compile(r"(?:last seen|tmux was saved)[ \t]+(?P<when>\d{4}-\d\d-\d\d[ \t]+\d\d:\d\d)")
+BLOCK_SOURCE_RE = re.compile(r"\bid from[ \t]+(?P<source>[^\s(]+)")
+BLOCK_PID_RE = re.compile(r"\bpid[ \t]+(?P<pid>\d{1,12})\b")
+BLOCK_STARTED_RE = re.compile(r"\bstarted[ \t]+(?P<started>\d\d-\d\d[ \t]+\d\d:\d\d)")
+BLOCK_BOUND_RE = re.compile(r"\bbound to[ \t]+(?P<pane>%\d{1,10})@(?P<tag>[0-9a-f]{8})")
+
+
+def split_cd(text):
+    """(cwd, command) for a `cd X && Y` prefix, else ("", text).
+
+    Hand-parsed rather than matched, because shell_quote() may put ` && ` inside
+    the quoted path and a regex would split on the wrong one. It reverses exactly
+    the two forms shell_quote() emits: a bare SAFE_TOKEN_RE token, or a
+    single-quoted string with `'` written as `'\\''`.
+    """
+    if not text.startswith("cd "):
+        return "", text
+    rest = text[3:]
+    if rest.startswith("'"):
+        out, i = [], 1
+        while i < len(rest):
+            if rest[i] != "'":
+                out.append(rest[i])
+                i += 1
+            elif rest.startswith("'\\''", i):
+                out.append("'")
+                i += 4
+            else:
+                i += 1
+                break
+        else:
+            return "", text  # unterminated quote: not a line we wrote
+        cwd, tail = "".join(out), rest[i:]
+    else:
+        cwd, _, remainder = rest.partition(" ")
+        tail = f" {remainder}" if remainder else ""
+    if not tail.startswith(" && "):
+        return "", text
+    return cwd, tail[4:]
+
+
+def block_stamp(text):
+    """The epoch seconds behind `last seen <date>` / `tmux was saved <date>`."""
+    match = BLOCK_WHEN_RE.search(text or "")
+    if not match:
+        return None
+    try:
+        return datetime.datetime.strptime(
+            re.sub(r"[ \t]+", " ", match.group("when")), "%Y-%m-%d %H:%M"
+        ).timestamp()
+    except (ValueError, OSError, OverflowError):
+        return None
+
+
+def parse_stanzas(marked, pane_id="", tag=""):
+    """Rows recovered from our own block lines, given as (line number, text).
+
+    Line numbers are the capture's own, so a head or tail line is only read as
+    belonging to a stanza when it really does sit next to it in the file.
+
+    `pane_id` and `tag` are the pane this capture belongs to and the current
+    server's tag. A stanza that names *this* server but a different pane is text
+    that arrived here rather than history that happened here -- a `--dry-run`
+    preview run in a pane, a stanza copied out of one pane and pasted into
+    another, a `cat` of somebody else's capture file -- and it is dropped whole,
+    including from the fallback pass, rather than recorded against the wrong
+    pane. The block is stripped on the way past either way, so the intruding
+    lines are cleaned out instead of accumulating.
+
+    A stanza carrying no binding, or one from another server generation, cannot
+    be checked and is taken on trust. Those are the two cases the carry-over
+    depends on: blocks written before this field existed, and blocks replayed
+    into a restored pane whose `%N` the new server has since reissued.
+    """
+    by_line = dict(marked)
+    rows, consumed = [], set()
+
+    for lineno, text in marked:
+        resume = BLOCK_RESUME_RE.match(text)
+        if not resume:
+            continue
+        cwd, command = split_cd(resume.group("rest"))
+        hit = next((h for h in extract(command) if h[1]), None)
+        if not hit:
+            continue
+        agent, session_id, _ = hit
+        consumed.add(lineno)
+
+        head, tail = by_line.get(lineno - 1, ""), by_line.get(lineno + 1, "")
+        # The agent comes from the resume verb and not from the head line: the
+        # verb is what `claude --resume` / `codex resume` structurally *is*,
+        # while the head is free text we rendered. The head's copy is only there
+        # to anchor the name capture beside it.
+        head_match = BLOCK_HEAD_RE.match(head)
+        if head_match:
+            consumed.add(lineno - 1)
+        source_match = BLOCK_SOURCE_RE.search(tail)
+        if source_match:
+            consumed.add(lineno + 1)
+        pid_match = BLOCK_PID_RE.search(tail)
+        started_match = BLOCK_STARTED_RE.search(tail)
+
+        bound = BLOCK_BOUND_RE.search(tail)
+        if bound:
+            consumed.add(lineno + 1)
+            if tag and bound.group("tag") == tag and bound.group("pane") != pane_id:
+                # Refused whole, fallback included: every line of the stanza is
+                # marked spent so the second pass cannot read the id back out of
+                # the resume line it just declined.
+                consumed.update({lineno - 1, lineno, lineno + 1})
+                continue
+
+        rows.append(
+            dict(
+                agent=agent,
+                session_id=session_id,
+                # Which pane and server generation the stanza claimed. Transient:
+                # harvest() ranks on it and drops it, and normalise() rebuilds a
+                # record field by field, so it never reaches the sidecar.
+                bound=(bound.group("pane"), bound.group("tag")) if bound else None,
+                name=(head_match.group("name") or "") if head_match else "",
+                cwd=cwd,
+                # The record keeps the source it was written with: it is the same
+                # observation travelling forward on the pane's contents, not a
+                # weaker one, and preserving it is what makes a second pass over
+                # the block we just wrote render identically.
+                source=source_match.group("source") if source_match else SCROLLBACK_SOURCE,
+                pid=int(pid_match.group("pid")) if pid_match else None,
+                started=re.sub(r"[ \t]+", " ", started_match.group("started")) if started_match else "",
+                last_seen=block_stamp(head),
+            )
+        )
+
+    # Fallback. Anything of ours the structured pass did not account for -- a
+    # block written by an older renderer, or by a newer one whose wording has
+    # moved on -- still goes through the ordinary patterns, so the id survives
+    # even when the shape around it does not.
+    known = {row["session_id"] for row in rows}
+    for lineno, text in marked:
+        if lineno in consumed:
+            continue
+        cwd, command = split_cd(text.strip())
+        for agent, session_id, name in extract(command):
+            if not session_id or session_id in known:
+                continue
+            known.add(session_id)
+            rows.append(
+                dict(
+                    agent=agent,
+                    session_id=session_id,
+                    # The fallback reads a line the structured pass could not
+                    # make sense of, so there is no binding to believe.
+                    bound=None,
+                    name=name,
+                    cwd=cwd,
+                    source=SCROLLBACK_SOURCE,
+                    pid=None,
+                    started="",
+                    last_seen=block_stamp(text),
+                )
+            )
+    return rows
+
+
+# ---* Collection *---
+
+
+PANE_KEY_RE = re.compile(r"^[^/'\\:]+:\d+\.\d+$")
+
+
+def usable_pane_key(loc):
+    """Whether a pane id can safely become a content filename.
+
+    tmux-resurrect writes `pane-<session>:<window>.<pane>` with no escaping, and
+    already mishandles some names by itself: a `/` makes its own save write into
+    a directory that does not exist, a `:` in the session name makes the
+    capture-pane target ambiguous so no file is ever produced, and a `'`
+    unbalances the `cat '<file>'` command restore builds, which kills the pane.
+    Those panes go in the sidecar and are otherwise left alone.
+    """
+    return bool(PANE_KEY_RE.match(loc))
+
+
+def live_rows():
+    """agent-panes output, grouped by the pane key resurrect files things under.
+
+    agent-panes exits non-zero on a kernel with no /proc and prints nothing;
+    that is indistinguishable here from "no agents running", and deliberately
+    so -- both mean there is nothing to annotate.
+    """
+    try:
+        out = subprocess.run(
+            [AGENT_PANES, "--json"], capture_output=True, text=True, timeout=AGENT_PANES_TIMEOUT_S
+        )
+    except (OSError, subprocess.SubprocessError):
+        return {}
+    try:
+        rows = json.loads(out.stdout or "[]")
+    except ValueError:
+        return {}
+    panes = {}
+    for row in rows:
+        if isinstance(row, dict) and row.get("pane"):
+            panes.setdefault(row["pane"], []).append(dict(row, live=True))
+    return panes
+
+
+# ---* Harvest: the sessions a pane's own scrollback still remembers *---
+
+
+def archive_id(path):
+    """What identifies the exact archive file a pass read, or None."""
+    try:
+        stat = os.stat(path)
+    except OSError:
+        return None
+    return (stat.st_ino, stat.st_size, stat.st_mtime_ns)
+
+
+def archive_captures(rdir):
+    """loc -> that pane's captured bytes, read without unpacking the archive.
+
+    tmux-resurrect captures with `capture-pane -epJ -S -<history_size>`: the
+    pane's *whole* history, with wrapped lines already rejoined, which is both
+    deeper and better formed than agent-scrollback-ids gets from its own capture.
+    It costs no tmux subprocess at all, and that is the point -- the hook runs
+    inline with the save and freezes the client that triggered it, so a
+    capture-pane per pane is the one thing this must not do.
+
+    Read-only and read separately from inject()'s own pass: a second gunzip of a
+    file this size is a few milliseconds, and threading the harvest through the
+    rewrite would put the sidecar behind the archive's failure paths.
+
+    Returns (captures, identity, why not). The identity is what inject() is later
+    handed, so the rewrite refuses to publish over an archive that is no longer
+    the one these captures were read out of -- otherwise the strip would delete
+    blocks from a file this harvest never saw.
+    """
+    archive = os.path.join(rdir, ARCHIVE_NAME)
+    identity = archive_id(archive)
+    try:
+        with gzip.open(archive, "rb") as fh:
+            raw = fh.read()
+    except (OSError, EOFError, zlib.error) as err:
+        return {}, identity, f"archive unreadable ({type(err).__name__})"
+    # The same truncation test inject() makes. A save running right now leaves a
+    # valid-looking prefix on disk, and half a pane's scrollback harvested as
+    # though it were the whole history is a wrong answer, not a partial one.
+    if len(raw) < 1024 or raw[-1024:].strip(b"\0"):
+        return {}, identity, "archive incomplete"
+    captures = {}
+    try:
+        with tarfile.open(fileobj=io.BytesIO(raw), mode="r:") as tar:
+            for member in tar.getmembers():
+                name = os.path.basename(member.name)
+                # basename, so a session named `a/b` -- which the plugin writes
+                # as a path -- cannot be read as a location, and nothing outside
+                # ./pane_contents/ can be read as a pane.
+                if not member.isfile() or not name.startswith("pane-"):
+                    continue
+                handle = tar.extractfile(member)
+                if handle is not None:
+                    captures[name[len("pane-") :]] = handle.read()
+    except (OSError, EOFError, zlib.error, tarfile.TarError) as err:
+        return {}, identity, f"archive unpack failed ({type(err).__name__})"
+    return captures, identity, ""
+
+
+def by_location(index):
+    """loc -> pane id, dropping any location that two panes both claim.
+
+    A location names one pane at a time, so a collision means the list was read
+    while tmux was renumbering. Guessing there would file one pane's session ids
+    under another pane's name, permanently.
+    """
+    counts = {}
+    for loc in index.values():
+        counts[loc] = counts.get(loc, 0) + 1
+    return {loc: pane_id for pane_id, loc in index.items() if counts[loc] == 1}
+
+
+def split_capture(data):
+    """(our own lines as (line number, text), everything else as one string).
+
+    `marked` is decided by marker_line(), so the lines the harvest reads as ours
+    are exactly the lines the strip is about to remove -- see its docstring for
+    why the two must not drift.
+
+    A line carrying the sentinel *away* from column 0 goes into neither. It is a
+    block that arrived here as text rather than one this pane accumulated -- an
+    indented paste, a `cat` of another pane's capture, a quoted example in a
+    document -- and it is not evidence about this pane either way. Letting it
+    fall through to `plain` would be worse than reading it as ours: the resume
+    line inside it still matches the ordinary patterns, so the ids would be filed
+    against this pane at face value, and being off column 0 the strip would never
+    remove them, so it would re-seed itself on every save.
+    """
+    marked, plain = [], []
+    for lineno, line in enumerate(data.splitlines()):
+        bare, prefix = marker_line(line)
+        text = bare.decode("utf-8", "replace")
+        if prefix is not None:
+            marked.append((lineno, text[len(prefix) :].strip()))
+        elif not any(sentinel in bare for sentinel in MARKER_PREFIXES):
+            plain.append(text)
+    return marked, "\n".join(plain)
+
+
+def saved_locations(rdir):
+    """The pane list tmux-resurrect itself wrote in this save, or None.
+
+    The plugin dumps its state file from the same `list-panes -a` it then files
+    the captures under, and only replaces the `last` symlink when the layout
+    changed -- so `last` always describes the layout the archive was built from.
+
+    Comparing it to the pane list now is what makes reading a capture safe. The
+    captures are named by location, and with `renumber-windows on` a window
+    closing between the plugin's capture and this hook shifts every location
+    after it: the ids read out of `blog:4.1` would then be filed against the pane
+    that used to be `blog:5.1`. As a write that misfiles one block until the next
+    save; as a *record* it would be permanent, so any sign of movement is enough
+    to skip the harvest and wait for the next save 15 minutes later.
+
+    Not comparable by equality, only by subset -- see recover(). `dump_panes`
+    skips panes in grouped sessions while `dump_pane_contents` captures them
+    anyway, so on a server with a grouped session the two lists legitimately
+    differ and an equality test would refuse the harvest for ever, silently.
+    """
+    path = os.path.join(rdir, "last")
+    try:
+        with open(path, errors="ignore") as fh:
+            lines = fh.read().splitlines()
+    except OSError:
+        return None
+    found = set()
+    for line in lines:
+        fields = line.split("\t")
+        # `pane`, session_name, window_index, window_active, window_flags,
+        # pane_index, ... -- the plugin's own pane_format, positional.
+        if len(fields) > 5 and fields[0] == "pane":
+            found.add(f"{fields[1]}:{fields[2]}.{fields[5]}")
+    return found or None
+
+
+# How far into a transcript to look for the directory it was opened in. Codex
+# puts it in the session_meta header on line 1; Claude's first records are
+# mode/permission/bridge entries and the cwd shows up around line 5. Ten is well
+# clear of both and still only a few kilobytes per session.
+TRANSCRIPT_HEAD_LINES = 10
+TRANSCRIPT_LINE_BYTES = 64 * 1024
+
+
+def transcript_cwd(path):
+    """The directory a session was opened in, read from its own transcript.
+
+    This is the part of the resume line that the agents' exit banners leave out
+    and that `claude --resume` cannot do without -- it resolves the id inside the
+    project directory of the current cwd, so a recovered row with no `cd` in
+    front of it produces a command that quietly fails wherever it is pasted.
+    """
+    try:
+        with open(path, errors="ignore") as fh:
+            for _ in range(TRANSCRIPT_HEAD_LINES):
+                line = fh.readline(TRANSCRIPT_LINE_BYTES)
+                if not line:
+                    break
+                try:
+                    record = json.loads(line)
+                except ValueError:
+                    continue
+                if not isinstance(record, dict):
+                    continue
+                payload = record.get("payload")
+                # Codex nests it under session_meta's payload, Claude has it at
+                # the top level of most records.
+                for cwd in (record.get("cwd"), (payload or {}).get("cwd") if isinstance(payload, dict) else None):
+                    if isinstance(cwd, str) and cwd:
+                        return cwd
+    except OSError:
+        pass
+    return ""
+
+
+def enrich(rows):
+    """Give text-recovered rows the two things a banner does not print.
+
+    The project directory, because `cd <cwd> &&` is the part of the resume line
+    the agent's own banner omits and `claude --resume` needs; and a date, taken
+    from when the session's own transcript was last written, so a recovered row
+    sorts against the observed ones instead of falling to the bottom undated.
+
+    Only rows matched in genuine text need this -- one read back out of a block
+    already carries both. The two globs are names only and cost a couple of
+    milliseconds; a file is opened only for a row that actually matched, and then
+    only its first few lines.
+    """
+    todo = [row for row in rows if row.get("source") == SCROLLBACK_SOURCE and row.get("session_id")]
+    if not todo:
+        return
+    paths = {"codex": {}, "claude": {}}
+    try:
+        for path in glob.glob(f"{CODEX_SESSIONS}/*/*/*/rollout-*.jsonl"):
+            match = re.search("(" + UUID + r")\.jsonl$", os.path.basename(path))
+            if match:
+                paths["codex"][match.group(1)] = path
+        for path in glob.glob(f"{CLAUDE_PROJECTS}/*/*.jsonl"):
+            paths["claude"][os.path.basename(path)[:-6]] = path
+    except OSError:
+        return
+    for row in todo:
+        path = paths.get(row["agent"], {}).get(row["session_id"])
+        if not path:
+            continue
+        try:
+            row["last_seen"] = os.stat(path).st_mtime
+        except OSError:
+            pass
+        if not row.get("cwd"):
+            row["cwd"] = transcript_cwd(path)
+
+
+def harvest(captures, loc_to_pane, server="", known_names=None, refused=None):
+    """loc -> rows the archived captures still hold, for panes we can place.
+
+    A capture filed under a location this server no longer has is skipped rather
+    than guessed at: there is no pane to attribute it to, and `renumber-windows
+    on` means the number may since have been handed to an unrelated pane.
+
+    Both passes are capped per pane. A `cat` of a session dump, or a ripgrep over
+    a directory of handoff notes, can put hundreds of `codex resume <uuid>` lines
+    into one pane's scrollback, and every one of them looks exactly like an exit
+    banner; a pane displaying another pane's whole capture can do the same with
+    blocks. The block would elide them behind its own cap anyway, so the bound
+    belongs here, where it also keeps them out of the file.
+
+    What the cap keeps is the *last* ids in the capture, ordered by where they
+    appear in it -- the bottom of a pane's scrollback is what happened most
+    recently. extract() reports hits pattern by pattern rather than in reading
+    order, so the order has to be recovered from the text itself.
+
+    `known_names` is pane id -> the (agent, title) pairs already recorded for
+    that pane, and `refused` the titles a previous save decided it will never
+    resolve. Together they are what keeps the title lookup below from running on
+    every save; see resolve_title() and read_refused().
+    """
+    tag = server_tag(server)
+    known_names = known_names or {}
+    refused = {} if refused is None else refused
+    found = {}
+
+    # Built at most once per save, and only if a pane holds a title nothing has
+    # recorded or refused yet. The sweep is ~0.15 s warm over ~1 GB of
+    # transcripts, against a hook that runs 0.36 s inline with the save and
+    # freezes the client for its duration, so paying it per pane -- 60-odd
+    # times -- is the one thing it must not do.
+    index = []
+
+    def resolve_title(name):
+        """The uuid behind a title Claude printed instead of one, if it is certain.
+
+        `unique=True`: a title is free text, and short ones name dozens of
+        different sessions. The alternative to "no id" here is a `cd` and a
+        `--resume` written into a pane that will be replayed unattended after a
+        reboot, where a wrong id reads exactly like a right one. So a title that
+        names more than one session resolves to nothing and stays the gap the
+        interactive agent-scrollback-ids exists to close.
+
+        A refusal is written down and never revisited. Ambiguity is evidence
+        that expires -- Claude prunes transcripts at 30 days -- so a lookup
+        repeated later would answer confidently where this one would not. See
+        read_refused().
+        """
+        if name in refused:
+            return None
+        if not index:
+            index.append(name_index(unique=True))
+        session_id = index[0].get(name)
+        if not session_id:
+            refused[name] = int(time.time())
+        return session_id
+
+    for loc, data in captures.items():
+        pane_id = loc_to_pane.get(loc)
+        if not pane_id:
+            continue
+        marked, plain = split_capture(data)
+        # MAX_STANZAS, not MAX_HARVEST_PER_PANE: a block this hook wrote can
+        # never hold more stanzas than it prints, so anything past that arrived
+        # as text. Uncapped, a `cat` of the archive into a pane after a restore
+        # would file every pane's stanzas here -- the binding check waves those
+        # through, because a previous server generation is exactly the case it
+        # cannot judge -- and they would then evict the pane's real records from
+        # its own block, which is how a display cap turns into a delete.
+        #
+        # Which is why the cap ranks rather than slices the file. Stanzas the
+        # pane can prove are its own come first (one bound to this server but
+        # another pane was already refused whole inside parse_stanzas, so a
+        # current-tag binding here can only be ours), then the most recently
+        # seen. Taking the tail instead would keep the *oldest*: the renderer
+        # writes newest-first, and the undated fallback rows are appended after
+        # every structured one, so they would outrank all of them.
+        parsed = parse_stanzas(marked, pane_id, tag)
+        parsed.sort(
+            key=lambda row: (
+                bool(tag and row.get("bound") == (pane_id, tag)),
+                row.get("last_seen") or 0,
+            ),
+            reverse=True,
+        )
+        # The cap counts sessions, not lines. parse_stanzas()'s structured pass
+        # appends a row per `resume:` line and does not dedupe, so a block that
+        # reached this pane twice -- two `--dry-run` previews run here, a `cat`
+        # of a capture that already held one -- puts two rows per session in
+        # front of the cap. Ranked, the copies land adjacent (same binding, same
+        # date), so N duplicates evict N distinct ids and the strip then removes
+        # the only evidence those ids had left.
+        deduped, already = [], set()
+        for row in parsed:
+            if row["session_id"] in already:
+                continue
+            already.add(row["session_id"])
+            deduped.append(row)
+        rows = [{k: v for k, v in row.items() if k != "bound"} for row in deduped[:MAX_STANZAS]]
+        seen = {row["session_id"] for row in rows}
+        # Titles this pane's record already accounts for, from the block just
+        # parsed and from the sidecar. Claude's banner is *its* output, not ours,
+        # so the strip never removes it and extract() keeps reporting the same
+        # title on every save for as long as it is in the pane's history --
+        # `seen` cannot suppress that, because it holds uuids and the banner
+        # printed a title. Without this set the index would be rebuilt every 15
+        # minutes forever. (A title over clean()'s 60 characters is stored
+        # truncated and so never matches here; those few keep sweeping.)
+        seen_names = {(row.get("agent"), row.get("name")) for row in rows if row.get("name")}
+        seen_names |= set(known_names.get(pane_id, ()))
+        recovered = []
+        for agent, session_id, name in extract(plain):
+            if not session_id:
+                # Claude prints the session's custom title instead of its uuid
+                # when it has one -- about a third of this user's sessions. The
+                # id is recoverable, from Claude's own transcripts, and only for
+                # a title nothing has recorded for this pane yet.
+                # Compared in the form the record stores, not the form the
+                # banner printed: normalise() truncates a name to 60 characters,
+                # so a longer title would never match what was written down and
+                # would be looked up again on every save for ever.
+                stored = clean(name, 60)
+                if agent != "claude" or (agent, stored) in seen_names:
+                    continue
+                seen_names.add((agent, stored))
+                session_id = resolve_title(name)
+            if not session_id or session_id in seen:
+                continue
+            seen.add(session_id)
+            recovered.append(
+                dict(
+                    agent=agent,
+                    session_id=session_id,
+                    name=name,
+                    cwd="",
+                    source=SCROLLBACK_SOURCE,
+                    pid=None,
+                    started="",
+                    last_seen=None,
+                )
+            )
+        if len(recovered) > MAX_HARVEST_PER_PANE:
+            at = {}
+            for match in re.finditer(UUID, plain):
+                at.setdefault(match.group(0), match.start())
+
+            def where(row):
+                # A uuid resolved from a title never appears as a uuid in the
+                # capture -- the banner printed the title -- so that row is
+                # located by the text it was actually read from. Keyed on the
+                # uuid alone it would sort to -1 and be the first thing the cap
+                # discarded, which is exactly backwards.
+                if row["session_id"] in at:
+                    return at[row["session_id"]]
+                # The title as extract() reports it is unescaped, while the
+                # capture holds Claude's escaped form, so a title containing a
+                # quote or a backslash will not be found. Failing to the end
+                # rather than to -1 keeps such a row instead of making it the
+                # first thing the cap discards: an id resolved from a banner is
+                # better evidence than the flood it is competing with.
+                found = plain.rfind(row["name"]) if row["name"] else -1
+                return found if found >= 0 else len(plain)
+
+            recovered.sort(key=where)
+            recovered = recovered[-MAX_HARVEST_PER_PANE:]
+        rows += recovered
+        if rows:
+            found[loc] = [dict(row, pane_id=pane_id) for row in rows]
+    enrich([row for rows in found.values() for row in rows])
+    return found
+
+
+def fold_sources(live, harvested):
+    """loc -> rows, from the live scan and the harvest together.
+
+    The live scan is filed under the location agent-panes read moments ago and
+    the harvest under the one the plugin filed the capture as, which can differ
+    by a renumber. Both are keyed by pane id downstream, so the two lists are
+    simply concatenated and merge_sidecar() reconciles them.
+    """
+    merged = {loc: list(rows) for loc, rows in live.items()}
+    for loc, rows in harvested.items():
+        merged.setdefault(loc, []).extend(rows)
+    return merged
+
+
+def annotatable(sidecar, index, live_keys, server):
+    """loc -> rows, for every pane whose session record can be placed on a pane.
+
+    Both halves of the answer come from here: a pane with an agent running in it
+    right now, and a pane whose agent has since exited but whose record the
+    sidecar still holds. They are treated identically -- the reader wants the
+    session id either way, and for an agent that was killed rather than exited
+    gracefully this is the only way to get it, since a killed agent prints no
+    parting banner for the scrollback to replay.
+
+    A record is placed by its `%N` pane id, never by the location it was stored
+    under. When that pane id is gone the record is dropped rather than written
+    to its old location: the pane it named either no longer exists, in which case
+    there is no capture to annotate, or has been renumbered onto some other
+    pane's location, in which case writing there would hand one project's
+    session id to an unrelated pane. Dropping costs nothing, because a pane that
+    was annotated before still carries the block in its own scrollback and the
+    capture replays it forward untouched.
+
+    A pane id only means anything within the server that issued it, so a record
+    from an earlier generation is dropped too, however well its number matches.
+    That is the reboot case, and getting it wrong is worse than doing nothing:
+    the new server hands the low ids to restored panes, so a pre-reboot record
+    would be asserted over an unrelated pane -- and because a pane is only ever
+    stripped when it is also being annotated, that false claim would then be
+    permanent. Records with no server recorded at all predate this and are
+    treated the same way.
+    """
+    placed = {}
+    for rows in sidecar.values():
+        for row in rows:
+            if not server or row.get("server") != server:
+                continue
+            pane_id = row.get("pane_id")
+            target = index.get(pane_id) if pane_id else None
+            if target is None:
+                continue
+            # `live` is derived here rather than persisted: a record written
+            # while its agent was running is stale the moment that agent exits,
+            # and a stored flag would keep claiming otherwise for KEEP_DAYS. It
+            # is keyed by session and not merely by pane, because a pane now
+            # carries every session it has held and only one of them is running.
+            placed.setdefault(target, []).append(dict(row, live=record_key(row) in live_keys))
+    return placed
+
+
+# ---* Sidecar *---
+
+
+def sidecar_state(path):
+    """(are these bytes a sidecar?, the records in it).
+
+    Two questions the merge conflates and preserve_unreadable_sidecar() must
+    not: a file that *is* a sidecar and holds nothing, and a file that is not
+    one. The first is the ordinary state of a machine with no agent panes; the
+    second is damage worth keeping. A document with no `panes` mapping at all is
+    not a sidecar however well-formed its JSON is.
+    """
+    try:
+        with open(path) as fh:
+            doc = json.load(fh)
+    except (OSError, ValueError):
+        return False, {}, {}
+    panes = doc.get("panes") if isinstance(doc, dict) else None
+    refused = doc.get("refused_titles") if isinstance(doc, dict) else None
+    return (
+        isinstance(panes, dict),
+        panes if isinstance(panes, dict) else {},
+        refused if isinstance(refused, dict) else {},
+    )
+
+
+def read_sidecar(path):
+    """The records a sidecar holds; empty for one that is missing or damaged.
+
+    Always a dict, because every caller but preserve_unreadable_sidecar() wants
+    to get on with the merge rather than diagnose the file.
+    """
+    return sidecar_state(path)[1]
+
+
+def read_refused(path):
+    """Session titles this hook has decided it will never resolve.
+
+    Kept because the refusal is the perishable half. A title is refused when it
+    names more than one session, and Claude prunes `~/.claude/projects` at 30
+    days while a pane's scrollback and the replayed archive have no such bound.
+    So an N-way ambiguity decays into a confident 1-way answer all by itself:
+    once 37 of the 38 transcripts named `rm` are gone, a fresh lookup resolves
+    `rm` to the survivor and the next save writes its `cd` and `--resume` into
+    every pane still showing `claude --resume "rm"` -- wrong for 37 of them, and
+    indistinguishable from right.
+
+    Writing the refusal down is what stops that. It also stops the ~1 GB
+    transcript sweep re-running on every save for a title that will never
+    resolve: nothing else remembers a lookup that came back empty.
+
+    Not keyed on a pane or a server -- a title is ambiguous everywhere, and this
+    has to outlive the generation that noticed.
+    """
+    return sidecar_state(path)[2]
+
+
+def as_epoch(value):
+    """A stored timestamp, or None. Sidecar files do get edited by hand."""
+    return float(value) if isinstance(value, (int, float)) and not isinstance(value, bool) else None
+
+
+def record_key(row):
+    """What makes two records the same session in the same pane.
+
+    Deliberately not keyed on the location: `renumber-windows on` reassigns
+    session:window.pane the moment a window closes, so the same session is filed
+    under two names within one afternoon.
+
+    It is also what decides which stored record an agent running *right now*
+    corresponds to. A pane holds every session it has ever held, so matching on
+    the pane alone would mark all of them as running.
+    """
+    session_id = row.get("session_id")
+    if session_id:
+        return (row.get("pane_id"), row.get("agent"), session_id)
+    # An unresolved row is still worth a line, but only one: with no id, the
+    # process it names is the only thing that distinguishes it from the next
+    # unresolved row in the same pane.
+    return (row.get("pane_id"), row.get("agent"), "", row.get("pid"), row.get("started"))
+
+
+def normalise(row, now, server):
+    """One record, sanitised and dated, ready to be written down.
+
+    Sanitised on the way in, not on the way out: `list` prints these straight to
+    a terminal, and so will anything else that reads the sidecar.
+    """
+    return dict(
+        agent=clean(row.get("agent"), 12),
+        session_id=clean(row.get("session_id"), 64) or None,
+        name=clean(row.get("name"), 60),
+        cwd=clean(row.get("cwd"), 4096),
+        source=clean(row.get("source"), 20),
+        # pane_id and pid pin a record to a process, which the location key
+        # cannot: `renumber-windows on` reassigns session:window.pane as soon as
+        # a window closes.
+        pane_id=clean(row.get("pane_id"), 12),
+        # Which server issued that pane id. Without it the id is meaningless
+        # after a restart -- see annotatable().
+        server=clean(server, 128),
+        pid=row.get("pid") if isinstance(row.get("pid"), int) else None,
+        started=clean(row.get("started"), 20),
+        # When the agent was seen *running*. Never invented: a row recovered from
+        # text gets the date the text carried, or the transcript's mtime, or
+        # nothing at all -- which the block renders as "ran in this pane earlier"
+        # rather than dating it to a save that merely read about it.
+        last_seen=now if row.get("live") else as_epoch(row.get("last_seen")),
+        # When a save last found any evidence of this record. This is what ages a
+        # record out, not last_seen: a session that ran here months ago is still
+        # worth printing while its banner is in the scrollback, and stops being
+        # worth printing KEEP_DAYS after the scrollback loses it.
+        recorded=now,
+    )
+
+
+def fold(old, new):
+    """Merge two records for the same session, the better source winning fields.
+
+    `.get` throughout: half of what comes in here was read back out of a file
+    that a human can edit, and a merge is not the place to start raising.
+
+    Ties are broken by which record was seen more recently, never by which
+    arrived last. The same session reaches this from the live scan and from the
+    block written for it a save ago, both carrying the same source string -- and
+    the block's copy is a snapshot of an older process. Without the tie-break its
+    stale pid, start time and cwd would overwrite the running one's.
+    """
+
+    def rank(row):
+        return (source_rank(row.get("source")), -(as_epoch(row.get("last_seen")) or 0))
+
+    first, second = (new, old) if rank(new) <= rank(old) else (old, new)
+    row = dict(first)
+    for key, value in second.items():
+        if not row.get(key) and value:
+            row[key] = value
+    row["last_seen"] = max((s for s in (as_epoch(old.get("last_seen")), as_epoch(new.get("last_seen"))) if s), default=None)
+    row["recorded"] = max(as_epoch(old.get("recorded")) or 0, as_epoch(new.get("recorded")) or 0)
+    # The server that most recently vouched for this pane id, not the better
+    # source: an id from a dead generation would keep the record unplaceable
+    # forever, and re-observing it here is precisely what makes it placeable.
+    row["server"] = (new if (as_epoch(new.get("recorded")) or 0) >= (as_epoch(old.get("recorded")) or 0) else old).get("server", "")
+    return row
+
+
+def merge_sidecar(old, panes, now, server="", index=None):
+    """Every session a pane has held, not just the one running when this fired.
+
+    Nothing is dropped for being superseded. A pane holds one agent at a time but
+    many over its life, and the whole point of the record is to name all of them:
+    starting a new session in a pane used to erase the previous one's id at the
+    next save, which capped the file at one session per pane and quietly threw
+    away the id of every session the user had finished with.
+
+    Records are folded by (pane id, agent, session id) rather than by location.
+    The same session arrives from up to three places in one save -- the live
+    scan, its own exit banner in the capture, and the block we wrote for it last
+    time -- and a pane that moved is filed under two locations at once.
+
+    A record whose pane is live on this server is re-filed under that pane's
+    current location, so `list` shows a pane's sessions together instead of
+    scattered across the locations it has occupied.
+
+    Ageing is by `recorded`, the last save that found evidence: a record lives as
+    long as its evidence lives in the pane's scrollback, plus KEEP_DAYS of grace
+    once the scrollback loses it. The pane's own history-limit is the real bound.
+    """
+    cutoff = now - KEEP_DAYS * 86400
+    current = {pane_id: loc for pane_id, loc in (index or {}).items()}
+    folded, located = {}, {}
+
+    def offer(row, loc):
+        key = record_key(row)
+        folded[key] = fold(folded[key], row) if key in folded else row
+        # Only for this generation's pane ids: `%N` restarts with every server,
+        # so an old record's number names a pane it never ran in.
+        target = current.get(row.get("pane_id")) if server and row.get("server") == server else None
+        located[key] = target or located.get(key) or loc
+
+    for loc, records in (old or {}).items():
+        if not isinstance(records, list):
+            continue
+        for record in records:
+            if not isinstance(record, dict):
+                continue
+            record = dict(record)
+            # Files written before `recorded` existed date only from last_seen,
+            # which is what ageing used to key on -- so they age out exactly as
+            # they would have, rather than all at once or never.
+            if record.get("recorded") is None:
+                record["recorded"] = record.get("last_seen")
+            if (as_epoch(record.get("recorded")) or 0) < cutoff:
+                continue
+            offer(record, loc)
+
+    for loc, rows in (panes or {}).items():
+        for row in rows:
+            offer(normalise(row, now, server), loc)
+
+    # A session first seen before its id could be resolved leaves an id-less
+    # record, and the save that finally resolves it writes a second one for the
+    # same process. Two records, two stanzas, one of them saying only that
+    # something ran here -- so the id-less one is absorbed once its process turns
+    # out to be a session already named.
+    identified = {
+        (row.get("pane_id"), row.get("agent"), row.get("pid"), row.get("started"))
+        for row in folded.values()
+        if row.get("session_id") and row.get("pid")
+    }
+    for key in [
+        key
+        for key, row in folded.items()
+        if not row.get("session_id")
+        and (row.get("pane_id"), row.get("agent"), row.get("pid"), row.get("started")) in identified
+    ]:
+        del folded[key]
+
+    merged = {}
+    for key, row in folded.items():
+        merged.setdefault(located[key], []).append(row)
+    for rows in merged.values():
+        rows.sort(key=lambda r: (as_epoch(r.get("last_seen")) or 0, as_epoch(r.get("recorded")) or 0), reverse=True)
+    return merged
+
+
+def write_sidecar(path, panes, now, refused=None):
+    """Publish the record atomically. False means it is not on disk.
+
+    The caller needs that answer: the archive strip deletes blocks whose ids this
+    file is now the only copy of, so a save that could not write here must not go
+    on to rewrite the archive.
+    """
+    # version 2: many records per pane, and `recorded` alongside `last_seen`.
+    doc = dict(version=2, updated=now, generator=os.path.basename(__file__), panes=panes)
+    # Deliberately not aged: a refusal that expires is a refusal that flips back
+    # on exactly the timescale the pruning it defends against runs on. The set is
+    # one short string per ambiguous title ever seen; `purge` is what clears it.
+    if refused:
+        doc["refused_titles"] = refused
+    tmp = f"{path}.{os.getpid()}.tmp"
+    try:
+        with open(tmp, "w") as fh:
+            json.dump(doc, fh, indent=2)
+        os.replace(tmp, path)
+        return True
+    except (OSError, TypeError, ValueError):
+        try:
+            os.remove(tmp)
+        except OSError:
+            pass
+        return False
+
+
+def preserve_unreadable_sidecar(path, rdir):
+    """Move a sidecar we cannot parse aside instead of writing over it.
+
+    The merge cannot tell "no file yet" from "this file is damaged" -- both look
+    like an empty record to it, and it would then publish a fresh file over the
+    damaged one and take every id in it with it. A file that exists, has bytes,
+    and is not a sidecar is the case worth keeping.
+
+    The predicate is "is it a sidecar", never "does it hold anything". A
+    well-formed file whose `panes` are empty is what a machine with no agent
+    panes writes, and treating that as damage renamed it aside on every save.
+    """
+    try:
+        if os.path.getsize(path) <= 0:
+            return
+    except OSError:
+        return
+    if sidecar_state(path)[0]:
+        return
+    kept = os.path.join(os.path.dirname(path), UNREADABLE_PREFIX)
+    # A second damage event must not delete what the first one preserved, and
+    # os.replace would. The suffix keeps it inside the prefix sweep_scratch
+    # exempts and purge collects.
+    if os.path.exists(kept):
+        kept = f"{kept}.{int(time.time())}"
+    try:
+        os.replace(path, kept)
+        log(rdir, f"sidecar did not parse; kept as {os.path.basename(kept)}")
+    except OSError as err:
+        log(rdir, f"sidecar did not parse and could not be kept: {err}")
+
+
+# ---* Archive surgery *---
+
+
+def sweep_scratch(rdir, now):
+    """Remove leftovers a previous run was killed before cleaning up itself."""
+    for name in os.listdir(rdir):
+        # Only this script's own leavings. The lock file shares the scratch
+        # prefix but is live, and a bare `*.tmp` rule would have swept temp files
+        # belonging to tmux-resurrect or to anything else writing here.
+        ours = name.startswith(SCRATCH_PREFIX) or name.startswith(f"{SIDECAR_NAME}.")
+        # The sidecar we kept because it would not parse is the one file in this
+        # namespace that is evidence rather than a leftover. Swept, a damaged
+        # file survives being written over only until the hour is up, which is
+        # the whole of what preserve_unreadable_sidecar() promises. `purge`
+        # removes it; nothing else may.
+        if name == LOCK_NAME or name.startswith(UNREADABLE_PREFIX) or not ours:
+            continue
+        path = os.path.join(rdir, name)
+        try:
+            if now - os.stat(path).st_mtime <= SCRATCH_MAX_AGE_S:
+                continue
+            if os.path.isdir(path):
+                shutil.rmtree(path, ignore_errors=True)
+            else:
+                os.remove(path)
+        except OSError:
+            continue
+
+
+def inject(rdir, blocks, strip_only=False, harvested_from=None):
+    """Rewrite pane_contents.tar.gz with the marker block appended to each pane.
+
+    With strip_only, every pane in the archive is stripped and nothing is
+    appended -- the uninstall path. It runs through exactly the same guards as a
+    save, because it rewrites the same file the same way.
+
+    The archive is rebuilt rather than edited: gzip has no usable append, and a
+    whole-file replace is the only way a concurrent restore never reads half an
+    archive -- more than the plugin itself offers, since its own
+    `tar | gzip > file` truncates the destination in place.
+
+    Reading is the exposed half. A save running concurrently leaves a window in
+    which the archive on disk is a valid-looking prefix, and repacking that
+    prefix would publish a fraction of the panes as a perfectly valid archive.
+    Hence the full parse before unpacking, the member-set check on what we built,
+    and the identity re-check before the rename. None of it is a lock, and no
+    lock would help: the plugin's writer takes none.
+
+    The scratch directory lives inside the resurrect dir so the final rename is a
+    same-filesystem rename(2) rather than a copy.
+    """
+    archive = os.path.join(rdir, ARCHIVE_NAME)
+    # The strip deletes a pane's block, and for a Claude session that block is
+    # the only place its id was ever written. Rewriting an archive other than the
+    # one the harvest read would therefore delete records nobody had read -- so
+    # the identity the harvest saw is required to still hold.
+    if harvested_from is not None and archive_id(archive) != harvested_from:
+        return 0, "archive changed since the harvest"
+    try:
+        before = os.stat(archive)
+        # Decompressed whole before anything is unpacked, which is what makes a
+        # half-written archive detectable: gzip only validates its length and
+        # CRC at the end of the stream. A save running right now leaves exactly
+        # such a file on disk, and repacking the prefix would publish a fraction
+        # of the panes as a perfectly valid archive.
+        with gzip.open(archive, "rb") as fh:
+            raw = fh.read()
+    except (OSError, EOFError, zlib.error):
+        return 0, "archive unreadable"
+    # tar ends in zeroed blocks. Their absence means the stream was cut short
+    # while gzip still managed to close cleanly.
+    if len(raw) < 1024 or raw[-1024:].strip(b"\0"):
+        return 0, "archive incomplete"
+
+    scratch = tempfile.mkdtemp(prefix=SCRATCH_PREFIX, dir=rdir)
+    try:
+        with tarfile.open(fileobj=io.BytesIO(raw), mode="r:") as tar:
+            names = sorted(m.name for m in tar.getmembers())
+            if not names:
+                return 0, "empty archive"
+            try:
+                tar.extractall(scratch, filter="data")
+            except TypeError:
+                # PEP 706 landed in 3.12 and was backported only to 3.11.4 /
+                # 3.10.12 / 3.9.17. Below those the kwarg is a TypeError, which
+                # the caller would turn into one line in a log nobody reads --
+                # the whole in-archive half silently off on Debian 12 or an
+                # unpatched Ubuntu 22.04. The filter is defence in depth here
+                # anyway: this archive is one tmux-resurrect wrote from its own
+                # capture moments ago, not untrusted input.
+                tar.extractall(scratch)
+
+        content_dir = os.path.join(scratch, CONTENT_DIR)
+        if not os.path.isdir(content_dir):
+            return 0, "no pane_contents member"
+
+        if strip_only:
+            # Every captured pane, not just the ones we would have annotated:
+            # the point is to leave nothing behind, including blocks written by
+            # an older version under a location this run no longer resolves.
+            targets = {
+                name[len("pane-") :]: b""
+                for name in os.listdir(content_dir)
+                if name.startswith("pane-")
+            }
+        else:
+            targets = blocks
+
+        written = 0
+        for loc, block in targets.items():
+            path = os.path.join(content_dir, f"pane-{loc}")
+            # Only annotate a capture that already exists. Fabricating one would
+            # flip that pane's restore from a login shell to `cat file; exec
+            # $SHELL`. A pane the plugin declined to capture is one it means to
+            # restore bare, and that decision is not ours to reverse for the sake
+            # of a marker.
+            if not os.path.isfile(path):
+                continue
+            try:
+                with open(path, "rb") as fh:
+                    original = fh.read()
+                data = strip_markers(original)
+                if strip_only and data == original:
+                    # Nothing of ours in this pane; leave its bytes untouched
+                    # rather than rewrite it identically and count it as work.
+                    continue
+                if data and not data.endswith(b"\n"):
+                    data += b"\n"
+                # Written beside the target and renamed over it. Opening the
+                # capture "wb" truncates it at open, before a single byte is
+                # written, so a write that failed part way through would leave a
+                # short file that the rebuild below would then publish as this
+                # pane's saved scrollback -- destroying the very content the
+                # block is meant to be appended to.
+                staged = f"{path}.staged"
+                with open(staged, "wb") as fh:
+                    fh.write(data + block)
+                os.replace(staged, path)
+            except OSError:
+                continue
+            written += 1
+
+        tmp = os.path.join(scratch, "rebuilt.tar.gz")
+        with tarfile.open(tmp, "w:gz") as tar:
+            tar.add(content_dir, arcname=ARCHIVE_MEMBER_DIR)
+        with tarfile.open(tmp, "r:gz") as tar:
+            if sorted(m.name for m in tar.getmembers()) != names:
+                return 0, "rebuilt member set differs"
+
+        if not server_alive():
+            return 0, "tmux server gone"
+        after = os.stat(archive)
+        if (after.st_ino, after.st_size, after.st_mtime_ns) != (
+            before.st_ino,
+            before.st_size,
+            before.st_mtime_ns,
+        ):
+            return 0, "archive changed under us"
+        os.replace(tmp, archive)
+        return written, f"{len(names)} members"
+    finally:
+        shutil.rmtree(scratch, ignore_errors=True)
+
+
+# ---* Commands *---
+
+
+def log(rdir, message):
+    path = os.path.join(rdir, LOG_NAME)
+    try:
+        # Truncated rather than unlinked: silence() has already dup2'd this file
+        # onto stdout and stderr, and a new inode would strand those.
+        if os.path.getsize(path) > LOG_MAX_BYTES:
+            os.truncate(path, 0)
+    except OSError:
+        pass
+    try:
+        with open(path, "a") as fh:
+            fh.write(f"{datetime.datetime.now():%Y-%m-%d %H:%M:%S} {message}\n")
+    except OSError:
+        pass
+
+
+def silence(rdir):
+    """Send stdout and stderr to the log unless a human is watching.
+
+    tmux-resurrect's own save key runs save.sh through `run-shell`, whose stdout
+    is the job pipe: one line of output drops the user's active pane into
+    view-mode and renames the window `[tmux]`. stderr is /dev/null on every
+    trigger path, so the log file is the only place a diagnostic can survive.
+    """
+    if sys.stdout.isatty():
+        return
+    try:
+        handle = open(os.path.join(rdir, LOG_NAME), "a")
+    except OSError:
+        handle = open(os.devnull, "w")
+    os.dup2(handle.fileno(), sys.stdout.fileno())
+    os.dup2(handle.fileno(), sys.stderr.fileno())
+
+
+def collect(now):
+    """What this save knows about the server, before any of it is written down.
+
+    Read together and once: the live scan, the pane index that places records on
+    panes, and the (pane, agent, session) keys that are running right now --
+    which is what separates "running here" from "used to run here" in the block.
+    """
+    display = datetime.datetime.fromtimestamp(now).strftime("%Y-%m-%d %H:%M")
+    panes = live_rows()
+    index = pane_index()
+    live_keys = {record_key(row) for rows in panes.values() for row in rows}
+    # Read here rather than beside inject(), because the harvest needs it too:
+    # with it off the plugin writes no archive, so whatever is on disk is a stale
+    # one from whenever it was last on. Same subprocess either way.
+    capturing = tmux_option("@resurrect-capture-pane-contents", "off") == "on"
+    return panes, index, live_keys, display, server_id(), capturing
+
+
+def recorded_names(sidecar, server):
+    """pane id -> the (agent, title) pairs this server has already recorded there.
+
+    Only this generation's records: a `%N` from an earlier server names a pane
+    this one never issued, so a match would suppress a lookup on the strength of
+    an unrelated pane's history. Records with no title say nothing about titles.
+    """
+    names = {}
+    for rows in (sidecar or {}).values():
+        if not isinstance(rows, list):
+            continue
+        for row in rows:
+            if not isinstance(row, dict) or not row.get("name"):
+                continue
+            if not server or row.get("server") != server:
+                continue
+            names.setdefault(row.get("pane_id"), set()).add((row.get("agent"), row.get("name")))
+    return names
+
+
+def recover(rdir, index, server, capturing=True, sidecar=None, refused=None):
+    """(harvested rows by loc, archive identity, why not) for this save's captures.
+
+    Refused rather than guessed at whenever the pane list has moved since the
+    plugin filed those captures: the captures are named by location, and a
+    location that has shifted would file one pane's session ids permanently
+    against another. Skipping costs one save; the next runs 15 minutes later.
+
+    **A refusal here must stop the injection too**, and the caller is what
+    enforces that. The strip removes a pane's block whenever the pane is
+    annotated, and for a Claude session that block is the only place the id has
+    ever been written -- so stripping without having read it first is not a
+    missed opportunity, it is a delete. Failing closed costs one save's worth of
+    freshness; failing open costs ids that exist nowhere else.
+    """
+    if not rdir:
+        return {}, None, "no resurrect dir"
+    if IMPORT_ERROR:
+        return {}, None, f"harvest skipped: patterns unavailable ({IMPORT_ERROR})"
+    if not capturing:
+        # With @resurrect-capture-pane-contents off the plugin writes no archive,
+        # so whatever is on disk is left over from whenever it was last on. Those
+        # captures describe panes that no longer exist under those names.
+        return {}, None, "harvest skipped: capture-pane-contents off"
+    archive = os.path.join(rdir, ARCHIVE_NAME)
+    try:
+        # The plugin writes its state file before the archive, in the same save.
+        # An archive older than that state file was not produced by this save.
+        if os.path.getmtime(archive) < os.path.getmtime(os.path.join(rdir, "last")):
+            return {}, None, "harvest skipped: archive older than this save's pane list"
+    except OSError as err:
+        return {}, None, f"harvest skipped: cannot date the archive ({type(err).__name__})"
+    saved = saved_locations(rdir)
+    if saved is None:
+        # No list to check against means no way to know the captures still name
+        # the panes they were filed under.
+        return {}, None, "harvest skipped: no saved pane list to check against"
+    # A location the plugin saw and this hook no longer has is the signal: a
+    # window or pane closed in between, and with renumber-windows on every
+    # location after it has shifted onto some other pane. A location that has
+    # merely *appeared* is harmless -- a new pane has no capture to misread -- so
+    # this is a subset test and not an equality one, which also keeps it working
+    # on a server with grouped sessions. See saved_locations().
+    vanished = saved - set(index.values())
+    if vanished:
+        return {}, None, f"harvest skipped: {len(vanished)} pane(s) moved since the capture"
+    captures, identity, why = archive_captures(rdir)
+    if why:
+        return {}, None, f"harvest skipped: {why}"
+    try:
+        harvested = harvest(
+            captures, by_location(index), server, recorded_names(sidecar, server), refused
+        )
+        return harvested, identity, ""
+    except Exception as err:  # noqa: BLE001 - a harvest may only ever cost the harvest
+        # Reading somebody else's terminal output is the one place here that
+        # takes arbitrary input. It must not be able to take the sidecar write
+        # down with it -- and because the caller lets a reason suppress the
+        # strip, failing here also leaves the archive alone.
+        return {}, None, f"harvest failed: {type(err).__name__}: {err}"
+
+
+def cmd_save(argv):
+    dry_run = "--dry-run" in argv or "-n" in argv
+    started = time.monotonic()
+    now = time.time()
+
+    rdir = resurrect_dir()
+    have_dir = os.path.isdir(rdir)
+    panes, index, live_keys, stamp, server, capturing = collect(now)
+
+    if dry_run:
+        sidecar_path = os.path.join(rdir, SIDECAR_NAME)
+        stored = read_sidecar(sidecar_path)
+        # A copy: the preview writes nothing, and a refusal it discovered would
+        # otherwise be lost anyway -- but mutating the caller's dict here would
+        # make a dry-run look like it had done work.
+        harvested, _, why = recover(
+            rdir if have_dir else "", index, server, capturing, stored,
+            dict(read_refused(sidecar_path)),
+        )
+        recovered = sum(len(rows) for rows in harvested.values())
+        fresh = fold_sources(panes, harvested)
+        merged = merge_sidecar(stored, fresh, now, server, index)
+        placed = annotatable(merged, index, live_keys, server)
+        for loc in sorted(placed):
+            mark = "" if usable_pane_key(loc) else "   [skipped: unsafe pane name]"
+            print(f"--- {loc}{mark}", flush=True)
+            # Printed exactly as the hook would write it, sentinel at column 0.
+            # This preview is normally run inside a pane, so it lands in that
+            # pane's own scrollback and the next save reads it back -- and at
+            # column 0 that is the safe way round. Every stanza names the pane it
+            # belongs to, so the ones for other panes are refused, and being at
+            # column 0 they are also stripped, so the preview cleans itself up.
+            # Indenting it would do the opposite: off column 0 the strip never
+            # touches it, and the resume line inside still matches the ordinary
+            # patterns. split_capture() ignores such a line for that reason.
+            sys.stdout.buffer.write(marker_block(placed[loc], stamp))
+            sys.stdout.buffer.flush()
+        live = sum(1 for rows in placed.values() if any(r.get("live") for r in rows))
+        sessions = sum(len(rows) for rows in placed.values())
+        print("\n(each stanza names its own pane, so the ones above for other panes")
+        print(" are refused if this preview is read back out of the pane you ran it in)")
+        print(f"{len(placed)} pane(s) annotatable ({live} live, {len(placed) - live} exited)")
+        print(f"{sessions} session(s) to print; {recovered} recovered from {len(harvested)} capture(s)")
+        if why:
+            print(f"{why}\n-- a real save would write the sidecar and leave the archive alone")
+        print(f"resurrect dir {rdir}")
+        return 0
+
+    if not have_dir:
+        return 0
+    silence(rdir)
+
+    lock = open(os.path.join(rdir, LOCK_NAME), "w")
+    try:
+        # Non-blocking on purpose: two racing saves must not serialise into a
+        # doubled freeze of the client that triggered them. Losing an injection
+        # costs one marker, and the sidecar still carries the ids.
+        fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except OSError:
+        log(rdir, "skip: another run holds the lock")
+        return 0
+
+    try:
+        # Everything from here is inside the handler. main() returns 0 on any
+        # exception so the save is never failed, which means an error raised
+        # outside inject()'s own try -- in sweep, the sidecar write, the merge --
+        # would otherwise vanish completely, leaving a hook that does nothing and
+        # says nothing. This log is the only observability that exists.
+        try:
+            sweep_scratch(rdir, now)
+            # Read before the harvest, not after: the harvest asks it which
+            # session titles this server has already recorded for a pane, and
+            # without that answer it would rebuild Claude's title index on every
+            # save. Preserving a damaged file first is what makes the read
+            # meaningful -- otherwise the harvest would be told "nothing is
+            # recorded" by a file that is merely unreadable.
+            sidecar_path = os.path.join(rdir, SIDECAR_NAME)
+            preserve_unreadable_sidecar(sidecar_path, rdir)
+            previous = read_sidecar(sidecar_path)
+            # Mutated by the harvest as titles turn out to be unresolvable, and
+            # written back below so the decision is made once and for all.
+            refused = read_refused(sidecar_path)
+            # Inside the handler and inside the lock: the harvest is new fallible
+            # work, and outside this it would neither reach the log nor be
+            # serialised against a concurrent save. It is also the slowest thing
+            # here, and a run about to lose the lock should not do it at all.
+            harvested, harvested_from, why_harvest = recover(
+                rdir, index, server, capturing, previous, refused
+            )
+            recovered = sum(len(rows) for rows in harvested.values())
+            if why_harvest:
+                log(rdir, why_harvest)
+
+            fresh = fold_sources(panes, harvested)
+            merged = merge_sidecar(previous, fresh, now, server, index)
+            # Written before the archive is touched, and the archive is not
+            # touched at all if this fails. inject() strips a pane's old block
+            # before appending the new one, and for a Claude session that block
+            # is the only place its id was ever written -- so it has to be
+            # durable here first. A crash in between costs a block that the next
+            # save rewrites, never an id.
+            stored = write_sidecar(sidecar_path, merged, now, refused)
+
+            placed = annotatable(merged, index, live_keys, server)
+            blocks = {
+                loc: marker_block(rows, stamp)
+                for loc, rows in placed.items()
+                if usable_pane_key(loc)
+            }
+            unsafe = len(placed) - len(blocks)
+            live = sum(1 for rows in placed.values() if any(r.get("live") for r in rows))
+            sessions = sum(len(rows) for rows in placed.values())
+            if not blocks:
+                written, why = 0, "no annotatable pane"
+            elif why_harvest:
+                # The strip is a delete. Without a harvest we have not read the
+                # blocks it would remove, so this save writes down what it saw
+                # and leaves the archive exactly as it found it.
+                written, why = 0, "archive left alone: nothing harvested"
+            elif not stored:
+                written, why = 0, "archive left alone: sidecar not written"
+            else:
+                written, why = inject(rdir, blocks, harvested_from=harvested_from)
+            log(
+                rdir,
+                f"panes={len(placed)} live={live} exited={len(placed) - live} "
+                f"sessions={sessions} recovered={recovered} "
+                f"injected={written} unsafe={unsafe} "
+                f"took={time.monotonic() - started:.2f}s ({why})",
+            )
+        except Exception as err:
+            log(rdir, f"failed after {time.monotonic() - started:.2f}s: {type(err).__name__}: {err}")
+    finally:
+        lock.close()
+    return 0
+
+
+def cmd_purge(argv):
+    """Undo: take every block back out of the archive and drop our own files.
+
+    Removing the hook from tmux.conf stops new blocks being written but does
+    nothing about the ones already in the archive, and those replay on every
+    restore from then on, with no way for the reader to tell what is producing
+    them. Uninstalling has to be able to reach them.
+    """
+    dry_run = "--dry-run" in argv or "-n" in argv
+    rdir = resurrect_dir()
+    if not os.path.isdir(rdir):
+        print(f"No resurrect dir at {rdir}", file=sys.stderr)
+        return 1
+
+    stripped = inject(rdir, {}, strip_only=True) if not dry_run else (0, "dry run")
+    print(f"archive: {stripped[1]}, {stripped[0]} pane(s) stripped")
+    # A strip that failed leaves every block in the archive replaying on every
+    # restore from then on, which is the one thing an uninstall exists to stop.
+    # Every success path reports "<n> members"; everything else is a reason it
+    # could not, and exiting 0 there would hide it.
+    archive_failed = not dry_run and not stripped[1].endswith(" members")
+
+    targets = [os.path.join(rdir, name) for name in (SIDECAR_NAME, LOG_NAME, LOCK_NAME)]
+    # sweep_scratch() deliberately leaves these alone, so purge is the only thing
+    # that removes them -- and an uninstall that left a file full of session ids
+    # behind is not one.
+    targets += sorted(glob.glob(os.path.join(rdir, f"{UNREADABLE_PREFIX}*")))
+    # The register cache is written by the session hooks rather than by this
+    # script, but it is part of the same feature and nothing else ever cleans it
+    # up, so an uninstall that left it would leave the feature half-present.
+    cache = os.path.expanduser("~/.cache/agent-panes")
+    targets += sorted(glob.glob(os.path.join(cache, "*.json")))
+
+    for path in targets:
+        if not os.path.exists(path):
+            continue
+        if dry_run:
+            print(f"would remove {path}")
+            continue
+        try:
+            os.remove(path)
+            print(f"removed {path}")
+        except OSError as err:
+            print(f"could not remove {path}: {err}", file=sys.stderr)
+
+    print("\nThis removes what the tooling wrote. It does not unwire it -- while the")
+    print("hooks remain, the next save recreates the sidecar and re-annotates. To")
+    print("finish, drop @resurrect-hook-post-save-all from tmux.conf and the")
+    print("SessionStart/SessionEnd entries from claude/settings.json and")
+    print("codex/hooks.json, then:")
+    print("  tmux set -gu @resurrect-hook-post-save-all")
+    if archive_failed:
+        print(
+            f"\nThe archive was NOT stripped ({stripped[1]}). Every block already in it\n"
+            "keeps replaying on each restore; re-run purge once the reason is gone.",
+            file=sys.stderr,
+        )
+        return 1
+    return 0
+
+
+def cmd_list(argv):
+    path = os.path.join(resurrect_dir(), SIDECAR_NAME)
+    rows = [
+        dict(rec, pane=loc)
+        for loc, records in sorted(read_sidecar(path).items())
+        if isinstance(records, list)
+        for rec in records
+        if isinstance(rec, dict)
+    ]
+
+    if "--json" in argv:
+        print(json.dumps(rows, indent=2))
+        return 0
+
+    if not rows:
+        print(f"No agent sessions recorded yet ({path}).", file=sys.stderr)
+        return 1
+
+    header = f'{"AGENT":<7}{"PANE":<28}{"SESSION ID":<38}{"LAST SEEN":<13}{"SRC":<12}NAME'
+    print(header)
+    print("-" * len(header))
+    for row in rows:
+        # A row recovered from text may have no date at all: it names a session
+        # that ran in that pane, which is not the same as one anyone watched run.
+        seen = as_epoch(row.get("last_seen"))
+        when_seen = datetime.datetime.fromtimestamp(seen).strftime("%m-%d %H:%M") if seen else "-"
+        print(
+            f'{str(row.get("agent") or "?"):<7}{row["pane"][:27]:<28}'
+            f'{str(row.get("session_id") or "-"):<38}{when_seen:<13}'
+            f'{str(row.get("source") or "-"):<12}{str(row.get("name") or "")[:40]}'
+        )
+    panes = len({row["pane"] for row in rows})
+    print(f"\n{len(rows)} recorded session(s) across {panes} pane(s), from {path}")
+    print("LAST SEEN is when the agent was last observed running there, not now;")
+    print(f'"-" means the id was recovered from text, which carries no such time.')
+    return 0
+
+
+def run():
+    argv = sys.argv[1:]
+    if not argv or "-h" in argv or "--help" in argv:
+        # Help is for a human. Printed under `run-shell` it would be the thing
+        # that hijacks the pane, which is the one output this must never make.
+        if sys.stdout.isatty():
+            print(__doc__.strip())
+        return 0
+
+    # The hook's cwd is whatever the client that triggered the save happened to
+    # be in, or the tmux server's own; nothing here may resolve a relative path.
+    os.chdir("/")
+
+    command = argv[0]
+    if command in ("save", "purge"):
+        if "--dry-run" not in argv and "-n" not in argv and not os.environ.get("TMUX"):
+            # Without $TMUX every tmux call resolves against the default server,
+            # so @resurrect-dir silently falls back to the real one and a stray
+            # manual run rewrites an archive belonging to a live session.
+            print(f"agent-panes-resurrect {command} must run inside tmux", file=sys.stderr)
+            return 1
+        return cmd_save(argv[1:]) if command == "save" else cmd_purge(argv[1:])
+    if command == "list":
+        return cmd_list(argv[1:])
+    print(f"Unknown command: {command}", file=sys.stderr)
+    return 2
+
+
+class Overran(Exception):
+    """Raised by the watchdog.
+
+    Deliberately not TimeoutError, which subclasses OSError and would therefore
+    be absorbed by the `except OSError` handlers this file is full of -- the
+    alarm would fire and the run would simply carry on.
+    """
+
+
+def main():
+    """As a save hook this is bookkeeping: never fail, never stall a save.
+
+    tmux-resurrect discards the hook's exit status, so failing loudly is not an
+    option available to us anyway -- but the hook does block the save, and the
+    client that triggered it, for as long as it runs. Hence the alarm.
+    """
+    signal.signal(signal.SIGALRM, lambda *_: (_ for _ in ()).throw(Overran()))
+    signal.alarm(WATCHDOG_S)
+    try:
+        return run()
+    except Exception:
+        return 0
+    finally:
+        signal.alarm(0)
+
+
+if __name__ == "__main__":
+    sys.exit(main())

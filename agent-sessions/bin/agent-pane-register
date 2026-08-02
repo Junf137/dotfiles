@@ -1,0 +1,194 @@
+#!/usr/bin/env python3
+
+# __author__ == Junfeng Lei
+
+"""Hook target: record or erase the tmux-pane -> agent-session binding.
+
+Invoked from a Claude Code SessionStart/SessionEnd hook or the Codex
+session_start/session_end equivalents, with the hook JSON payload on stdin:
+
+    agent-pane-register <claude|codex> <start|end>
+
+Writes ~/.cache/agent-panes/<pane>.json, keyed by tmux's stable %N pane id, which
+is what agent-panes reads back. Alongside the session id the record carries the
+agent pid and its kernel start time, so a record left behind by a session that
+died without firing its end hook can be recognised as stale rather than
+misattributed to whatever agent occupies that pane next.
+
+Exits quietly when TMUX_PANE is unset: the session is not running under tmux and
+there is no pane to bind it to. It exits 0 on every other failure too -- this is
+best-effort bookkeeping running on every session start and end, and it should
+never be the reason a session start reports an error.
+"""
+
+import json
+import os
+import sys
+import time
+
+AGENTS = ("claude", "codex")
+REG = os.path.expanduser("~/.cache/agent-panes")
+
+
+def proc_stat_fields(pid):
+    """Fields of /proc/<pid>/stat from ppid onward, with comm safely stripped."""
+    with open(f"/proc/{pid}/stat") as fh:
+        st = fh.read()
+    return st[st.index("(") + 1 : st.rindex(")")], st[st.rindex(")") + 2 :].split()
+
+
+def is_agent(pid, comm):
+    """Whether a process is the agent itself.
+
+    comm is not always the agent's own name -- background sessions exec the
+    versioned binary directly, so comm reads as e.g. '2.1.220'. The executable
+    path is the reliable signal.
+    """
+    if comm in AGENTS:
+        return True
+    try:
+        exe = os.readlink(f"/proc/{pid}/exe")
+    except OSError:
+        return False
+    return any(f"/{name}" in exe for name in AGENTS)
+
+
+def agent_process():
+    """Nearest ancestor that is the agent itself, with its start time.
+
+    Hooks are spawned below the agent, but not always as its direct child, so
+    getppid() alone is not enough.
+    """
+    pid = os.getppid()
+    for _ in range(12):
+        if pid <= 1:
+            break
+        try:
+            comm, fields = proc_stat_fields(pid)
+        except (OSError, IndexError, ValueError):
+            break
+        if is_agent(pid, comm):
+            return pid, fields[19]
+        pid = int(fields[1])
+    return None, None
+
+
+def prune(reg):
+    """Drop records whose agent process is gone, so dead panes do not linger.
+
+    A record without a usable (pid, proc_start) pair cannot be checked against a
+    live process, so it is removed rather than kept: agent-panes would otherwise
+    have to trust it forever.
+    """
+    for name in os.listdir(reg):
+        if not name.endswith(".json"):
+            continue
+        path = os.path.join(reg, name)
+        try:
+            stamp = os.stat(path).st_mtime_ns
+            with open(path) as fh:
+                rec = json.load(fh)
+        except (OSError, ValueError):
+            continue
+        pid, start = rec.get("pid"), rec.get("proc_start")
+        if pid and start:
+            try:
+                _, fields = proc_stat_fields(pid)
+                if str(fields[19]) == str(start):
+                    continue
+            except (OSError, IndexError, ValueError):
+                pass
+        try:
+            # Re-check mtime: a session that claimed this pane after the read
+            # above must not have its fresh record deleted.
+            if os.stat(path).st_mtime_ns == stamp:
+                os.remove(path)
+        except OSError:
+            pass
+
+
+def run():
+    agent = sys.argv[1] if len(sys.argv) > 1 else "unknown"
+    action = sys.argv[2] if len(sys.argv) > 2 else "start"
+
+    pane = os.environ.get("TMUX_PANE")
+    if not pane:
+        return 0
+
+    os.makedirs(REG, exist_ok=True)
+    path = os.path.join(REG, f'{pane.lstrip("%")}.json')
+
+    if action == "end":
+        try:
+            os.remove(path)
+        except OSError:
+            pass
+        prune(REG)
+        return 0
+
+    # Hooks are handed their payload on a pipe that is closed for us. A tty means
+    # nobody is going to send one, and reading would block until the hook timeout.
+    payload = {}
+    if not sys.stdin.isatty():
+        try:
+            payload = json.load(sys.stdin)
+        except (ValueError, OSError):
+            payload = {}
+    if not isinstance(payload, dict):
+        payload = {}
+
+    session_id = ""
+    for key in ("session_id", "sessionId", "thread_id", "threadId", "conversation_id"):
+        if payload.get(key):
+            session_id = payload[key]
+            break
+
+    pid, proc_start = agent_process()
+    if not pid or not proc_start:
+        # Without the identity pair the record could never be checked against a
+        # live process, so agent-panes would serve it to whatever agent occupies
+        # this pane next. No record is better than an unguardable one.
+        prune(REG)
+        return 0
+
+    record = dict(
+        agent=agent,
+        pane_id=pane,
+        session_id=session_id,
+        # Claude's SessionStart payload spells the title `session_title`; it is
+        # present only once the session has been named.
+        name=payload.get("session_title") or payload.get("thread_name") or "",
+        cwd=payload.get("cwd") or os.getcwd(),
+        transcript=payload.get("transcript_path") or payload.get("rollout_path") or "",
+        pid=pid,
+        proc_start=proc_start,
+        updated=time.time(),
+    )
+
+    # The tmp name carries our pid: two hooks firing for the same pane (parallel
+    # `claude -p` from one pane, say) must not share a scratch file, or the loser
+    # replaces a path its own writer already moved away.
+    tmp = f"{path}.{os.getpid()}.tmp"
+    try:
+        with open(tmp, "w") as fh:
+            json.dump(record, fh)
+        os.replace(tmp, path)  # atomic; a concurrent reader never sees a partial file
+    except OSError:
+        try:
+            os.remove(tmp)
+        except OSError:
+            pass
+    prune(REG)
+    return 0
+
+
+def main():
+    """Bookkeeping only: never fail a session start or end that would otherwise work."""
+    try:
+        return run()
+    except Exception:
+        return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

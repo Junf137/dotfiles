@@ -1,0 +1,216 @@
+#!/usr/bin/env python3
+
+# __author__ == Junfeng Lei
+
+"""Recover agent session ids that exited sessions left behind in tmux scrollback.
+
+Claude Code prints, on exit:
+
+    Resume this session with:
+    claude --resume "<name>"
+
+i.e. by session *name*, not uuid. Names are resolved back to uuids through the
+records Claude writes into its transcripts ({"type":"custom-title",...} and
+{"type":"agent-name",...}) and through its live session registry.
+
+Codex prints one of:
+
+    To continue this session, run codex resume <uuid>
+    To continue this session, run codex resume, then select <name> (<uuid>)
+
+What is reported is what the scrollback *contains*. A resume command sitting in a
+comment, a ripgrep hit or a line of documentation is indistinguishable from a real
+exit banner, so the occasional row comes from text *about* a session rather than a
+session that ran there; the PANE column shows where it was seen.
+
+Usage: agent-scrollback-ids [--json]
+Env:   SCROLLBACK_DEPTH  value passed to `tmux capture-pane -S` (default -20000).
+                         '-' means the full history, which takes minutes across a
+                         server with many long-lived panes.
+"""
+
+import concurrent.futures
+import glob
+import json
+import os
+import re
+import subprocess
+import sys
+
+# The resume-marker patterns and the session-title index are shared with
+# agent-panes-resurrect, which sweeps the same text out of tmux-resurrect's
+# archive and resolves the same titles. Both read another program's output or
+# its on-disk records and rot when it changes them, so there is exactly one copy
+# of each and the unit tests cover it.
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "lib"))
+from agent_ids import UUID, extract  # noqa: E402
+from claude_names import CLAUDE_PROJECTS, name_index  # noqa: E402
+
+DEPTH = os.environ.get("SCROLLBACK_DEPTH", "-20000")
+WORKERS = min(16, (os.cpu_count() or 4) * 2)
+
+# CLAUDE_PROJECTS comes from claude_names, which owns the layout of Claude's own
+# directories along with the records inside them.
+CODEX_SESSIONS = os.path.expanduser("~/.codex/sessions")
+CODEX_INDEX = os.path.expanduser("~/.codex/session_index.jsonl")
+
+# ---* Session-name indexes *---
+
+
+def codex_titles():
+    titles = {}
+    if not os.path.exists(CODEX_INDEX):
+        return titles
+    with open(CODEX_INDEX, errors="ignore") as fh:
+        for line in fh:
+            try:
+                rec = json.loads(line)
+            except ValueError:
+                continue
+            if rec.get("id"):
+                titles[rec["id"]] = rec.get("thread_name") or ""
+    return titles
+
+
+def codex_rollouts():
+    paths = {}
+    for path in glob.glob(f"{CODEX_SESSIONS}/*/*/*/rollout-*.jsonl"):
+        m = re.search(UUID + r"\.jsonl$", path)
+        if m:
+            paths[m.group(0)[:-6]] = path
+    return paths
+
+
+def claude_transcripts():
+    """session id -> transcript path, skipping single-record bridge-session stubs."""
+    paths = {}
+    for path in glob.glob(f"{CLAUDE_PROJECTS}/*/*.jsonl"):
+        sid = os.path.basename(path)[:-6]
+        if not re.fullmatch(UUID, sid):
+            continue
+        try:
+            if os.path.getsize(path) < 512:
+                continue
+        except OSError:
+            continue
+        paths[sid] = path
+    return paths
+
+
+def claude_name_index():
+    """Claude session name -> uuid, most recently touched transcript winning.
+
+    The broad form of the shared index: this tool is interactive and reports
+    what it could not map, so an ambiguous name resolved by recency is a row a
+    reader can judge. The save hook asks the same function for `unique=True`.
+    """
+    return name_index(unique=False)
+
+
+# ---* Scrollback *---
+
+
+def panes():
+    fmt = "#{pane_id}\t#{session_name}:#{window_index}.#{pane_index}\t#{pane_current_path}"
+    try:
+        out = subprocess.run(
+            ["tmux", "list-panes", "-a", "-F", fmt], capture_output=True, text=True
+        ).stdout
+    except FileNotFoundError:
+        return []
+    return [line.split("\t") for line in out.splitlines() if line.count("\t") == 2]
+
+
+def capture(pane_id):
+    try:
+        return subprocess.run(
+            ["tmux", "capture-pane", "-p", "-J", "-S", DEPTH, "-t", pane_id],
+            capture_output=True,
+            text=True,
+        ).stdout
+    except FileNotFoundError:
+        return ""
+
+
+def scan(pane):
+    pane_id, loc, path = pane
+    return [(agent, pane_id, loc, path, sid, name) for agent, sid, name in extract(capture(pane_id))]
+
+
+def main():
+    if "-h" in sys.argv or "--help" in sys.argv:
+        print(__doc__.strip())
+        return 0
+
+    pane_list = panes()
+    if not pane_list:
+        print("No tmux panes found (is a tmux server running?).", file=sys.stderr)
+        return 1
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=WORKERS) as pool:
+        hits = [hit for group in pool.map(scan, pane_list) for hit in group]
+
+    codex_paths = codex_rollouts()
+    claude_paths = claude_transcripts()
+    titles = codex_titles()
+    names = claude_name_index() if any(h[0] == "claude" and not h[4] for h in hits) else {}
+
+    rows, seen = [], set()
+    for agent, pane_id, loc, path, sid, name in hits:
+        if not sid and agent == "claude":
+            sid = names.get(name)
+        if not sid:
+            # A name we cannot map is still worth reporting; it is resumable as-is.
+            key = (loc, agent, name)
+            if key in seen:
+                continue
+            seen.add(key)
+            rows.append(
+                dict(agent=agent, pane=loc, pane_id=pane_id, session_id=None, name=name,
+                     cwd=path, transcript="", transcript_found=False)
+            )
+            continue
+
+        key = (loc, sid)
+        if key in seen:
+            continue
+        seen.add(key)
+        transcript = claude_paths.get(sid, "") if agent == "claude" else codex_paths.get(sid, "")
+        rows.append(
+            dict(
+                agent=agent,
+                pane=loc,
+                pane_id=pane_id,
+                session_id=sid,
+                name=name or titles.get(sid, ""),
+                cwd=path,
+                transcript=transcript,
+                # Whether a transcript file exists on disk -- not whether the
+                # session is still running, which scrollback cannot tell us.
+                transcript_found=bool(transcript),
+            )
+        )
+
+    rows.sort(key=lambda r: (r["pane"], r["agent"]))
+
+    if "--json" in sys.argv:
+        print(json.dumps(rows, indent=2))
+        return 0
+
+    header = f'{"AGENT":<7}{"PANE":<28}{"SESSION ID":<38}{"FILE":<6}NAME'
+    print(header)
+    print("-" * max(len(header), 96))
+    for row in rows:
+        print(
+            f'{row["agent"]:<7}{row["pane"][:27]:<28}{str(row["session_id"] or "-"):<38}'
+            f'{"yes" if row["transcript_found"] else "gone":<6}{row["name"][:44]}'
+        )
+
+    unresolved = sum(1 for r in rows if not r["session_id"])
+    note = f", {unresolved} name(s) unresolved" if unresolved else ""
+    print(f"\n{len(rows)} session id(s) recovered from scrollback (depth {DEPTH}){note}")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

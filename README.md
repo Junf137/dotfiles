@@ -11,6 +11,9 @@ This repository contains my personal dotfiles for various applications and tools
 - Custom oh-my-zsh themes
 - tmuxp session configurations
 - Claude and Codex agent skills via the private `agent-skills` submodule
+- `agent-sessions/` — maps running Claude/Codex sessions to their tmux pane, and carries
+  each pane's session id across a reboot so the restored pane prints what ran there and
+  how to resume it (nothing is restarted). See `agent-sessions/README.md`
 
 ## Usage
 

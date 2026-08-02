@@ -17,6 +17,30 @@
     "type": "command",
     "command": "bash /home/junf/.claude/statusline-command.sh"
   },
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$HOME/Documents/dotfiles/agent-sessions/bin/agent-pane-register claude start",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$HOME/Documents/dotfiles/agent-sessions/bin/agent-pane-register claude end",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  },
   "enabledPlugins": {
     "clangd-lsp@claude-plugins-official": true
   },

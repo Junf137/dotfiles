@@ -1,0 +1,432 @@
+#!/usr/bin/env python3
+
+# __author__ == Junfeng Lei
+
+"""Map running Claude Code / Codex sessions to the tmux pane they live in.
+
+Every agent is anchored to a pane through TMUX_PANE in /proc/<pid>/environ, which
+holds tmux's stable %N pane id. Note that #{pane_pid} is the pane's *shell*, not
+the agent -- the agent is a descendant of it.
+
+Session ids are resolved through a tier list, best source first:
+
+    hook      pane registry written by agent-pane-register (exact)
+    sessions  Claude's own live registry, ~/.claude/sessions/<pid>.json (exact)
+    env       CLAUDE_CODE_SESSION_ID in a child process environment (exact)
+    cmdline   `codex resume <uuid>` in /proc/<pid>/cmdline (exact)
+    fd        an open rollout file, used by Codex app-server sessions (exact)
+    meta~Ns   Codex rollout session_meta matched on cwd + start time (inferred)
+    btime~Ns  Claude transcript birth time nearest the process start (inferred)
+
+Usage: agent-panes [--json]
+"""
+
+import datetime
+import glob
+import json
+import os
+import re
+import subprocess
+import sys
+import time
+
+HZ = os.sysconf("SC_CLK_TCK")
+BOOT = time.time() - float(open("/proc/uptime").read().split()[0])
+REG = os.path.expanduser("~/.cache/agent-panes")
+CLAUDE_PROJECTS = os.path.expanduser("~/.claude/projects")
+CLAUDE_SESSIONS = os.path.expanduser("~/.claude/sessions")
+CODEX_SESSIONS = os.path.expanduser("~/.codex/sessions")
+CODEX_INDEX = os.path.expanduser("~/.codex/session_index.jsonl")
+
+UUID = r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"
+ROLLOUT_RE = re.compile(r"rollout-(\d{4}-\d\d-\d\d)T(\d\d)-(\d\d)-(\d\d)-(" + UUID + r")\.jsonl$")
+
+# Widest gap tolerated between a process start and an inferred session artifact.
+INFER_WINDOW_S = 900
+
+AGENTS = ("claude", "codex")
+EXACT_SOURCES = ("hook", "sessions", "env", "cmdline", "fd")
+
+# Subcommands that run the agent binary without holding an interactive session.
+HELPER_SUBCOMMANDS = ("daemon", "mcp", "app-server", "proxy", "bg-pty-host", "bg-spare")
+
+
+def proc_stat_fields(pid):
+    """Return /proc/<pid>/stat fields from ppid onward, comm safely stripped."""
+    st = open(f"/proc/{pid}/stat").read()
+    return st[st.rindex(")") + 2 :].split()
+
+
+def pstart(pid):
+    """Wall-clock start time of a process, in epoch seconds."""
+    return BOOT + int(proc_stat_fields(pid)[19]) / HZ
+
+
+def starttime_ticks(pid):
+    """Raw starttime in clock ticks; identifies a pid across pid reuse."""
+    try:
+        return proc_stat_fields(pid)[19]
+    except (OSError, IndexError):
+        return None
+
+
+def environ(pid):
+    try:
+        with open(f"/proc/{pid}/environ") as fh:
+            return dict(kv.split("=", 1) for kv in fh.read().split("\0") if "=" in kv)
+    except OSError:
+        return {}
+
+
+def cmdline(pid):
+    try:
+        return open(f"/proc/{pid}/cmdline").read().split("\0")
+    except OSError:
+        return []
+
+
+def agent_kind(pid, comm):
+    """Which agent a process is, if any.
+
+    comm is not always the agent's own name: background sessions exec the
+    versioned binary directly, so comm reads as e.g. '2.1.220'. The executable
+    path is the reliable signal -- matched on a whole path segment or the
+    basename, since a bare substring also catches siblings that merely share the
+    prefix, such as codex's `bin/codex-code-mode-host`.
+    """
+    if comm in AGENTS:
+        return comm
+    try:
+        exe = os.readlink(f"/proc/{pid}/exe")
+    except OSError:
+        return ""
+    base = os.path.basename(exe)
+    return next((name for name in AGENTS if base == name or f"/{name}/" in exe), "")
+
+
+def is_session(pid):
+    """Filter out helper processes that share the agent binary but hold no session.
+
+    The subcommand is not always a separate argument: the daemon rewrites argv[0]
+    to embed it, as in `claude bg-pty-host --bg-pty-host <sock>`. Nor is it always
+    the first non-flag word -- `codex -c features.code_mode_host=true app-server`
+    puts a flag's value there -- so every non-flag word is tested, not just the
+    first.
+    """
+    argv = cmdline(pid)
+    if not argv:
+        return True
+    words = argv[0].split()[1:] + [a for a in argv[1:] if a and not a.startswith("-")]
+    return not any(word in HELPER_SUBCOMMANDS for word in words)
+
+
+def descendants(pid, kids, out=None):
+    out = out if out is not None else []
+    for child in kids.get(pid, []):
+        out.append(child)
+        descendants(child, kids, out)
+    return out
+
+
+def btime(path):
+    """File birth time; ~= agent start time, and unlike mtime it survives resume."""
+    try:
+        return os.stat(path).st_birthtime
+    except AttributeError:
+        pass
+    except OSError:
+        return None
+    out = subprocess.run(["stat", "-c", "%W", path], capture_output=True, text=True).stdout.strip()
+    return int(out) if out.isdigit() and out != "0" else None
+
+
+# ---* Hook registry (written by agent-pane-register) *---
+
+
+def resolve_hook(pid, pane_id):
+    """Read the record this pane's session-start hook wrote, if it is still valid.
+
+    A session killed hard never fires its end hook, so the record it left behind
+    has to be checked against the live process before it is believed -- otherwise
+    the next agent to occupy the pane inherits the dead session's id.
+    """
+    try:
+        with open(os.path.join(REG, f'{pane_id.lstrip("%")}.json')) as fh:
+            rec = json.load(fh)
+    except (OSError, ValueError):
+        return None, ""
+    if not rec.get("session_id") or rec.get("pane_id") != pane_id:
+        return None, ""
+    # The identity pair is required, not merely checked when present: a record
+    # that cannot be tied to this exact process is exactly the stale record this
+    # guard exists to reject.
+    if not rec.get("pid") or rec["pid"] != pid:
+        return None, ""
+    if str(rec.get("proc_start")) != str(starttime_ticks(pid)):
+        return None, ""
+    return rec["session_id"], rec.get("name") or ""
+
+
+# ---* Claude Code *---
+
+
+def claude_dir(cwd):
+    """Claude Code slugifies the cwd: every non-alphanumeric char becomes '-'."""
+    return os.path.join(CLAUDE_PROJECTS, re.sub(r"[^a-zA-Z0-9]", "-", cwd))
+
+
+def claude_registry(pid):
+    """Claude keeps a live pid -> session map; procStart guards against pid reuse."""
+    try:
+        with open(os.path.join(CLAUDE_SESSIONS, f"{pid}.json")) as fh:
+            rec = json.load(fh)
+    except (OSError, ValueError):
+        return None, ""
+    if str(rec.get("procStart")) != str(starttime_ticks(pid)):
+        return None, ""
+    return rec.get("sessionId"), rec.get("name") or ""
+
+
+def resolve_claude(pid, cwd, start):
+    sid, name = claude_registry(pid)
+    if sid:
+        return sid, "sessions", name
+
+    # CLAUDE_CODE_SESSION_ID is injected into every child Claude spawns, so it is
+    # only visible while a tool call is actually running.
+    for child in descendants(pid, KIDS):
+        sid = environ(child).get("CLAUDE_CODE_SESSION_ID")
+        if sid:
+            return sid, "env", ""
+
+    best = None
+    for path in glob.glob(claude_dir(cwd) + "/*.jsonl"):
+        born = btime(path)
+        if born is None:
+            continue
+        delta = abs(born - start)
+        if best is None or delta < best[0]:
+            best = (delta, path)
+    if best and best[0] < INFER_WINDOW_S:
+        return os.path.basename(best[1])[:-6], f"btime~{int(best[0])}s", ""
+    return None, "unknown", ""
+
+
+# ---* Codex *---
+
+
+def codex_titles():
+    titles = {}
+    if not os.path.exists(CODEX_INDEX):
+        return titles
+    with open(CODEX_INDEX, errors="ignore") as fh:
+        for line in fh:
+            try:
+                rec = json.loads(line)
+            except ValueError:
+                continue
+            if rec.get("id"):
+                titles[rec["id"]] = rec.get("thread_name") or ""
+    return titles
+
+
+def codex_rollouts():
+    """Rollout path -> (session_id, start epoch). The filename stamp is local time."""
+    out = {}
+    for path in glob.glob(f"{CODEX_SESSIONS}/*/*/*/rollout-*.jsonl"):
+        m = ROLLOUT_RE.search(path)
+        if not m:
+            continue
+        try:
+            day = datetime.date.fromisoformat(m.group(1))
+        except ValueError:
+            continue
+        stamp = time.mktime(
+            (day.year, day.month, day.day, int(m.group(2)), int(m.group(3)), int(m.group(4)), 0, 0, -1)
+        )
+        out[path] = (m.group(5), stamp)
+    return out
+
+
+def rollout_cwd(path):
+    """Read the session_meta header without pulling in the whole transcript."""
+    try:
+        with open(path, errors="ignore") as fh:
+            rec = json.loads(fh.readline())
+    except (OSError, ValueError):
+        return None
+    payload = rec.get("payload") or {}
+    return payload.get("cwd")
+
+
+def resolve_codex(pid, cwd, start):
+    argv = cmdline(pid)
+    if "resume" in argv:
+        for arg in argv[argv.index("resume") + 1 :]:
+            if re.fullmatch(UUID, arg):
+                return arg, "cmdline", ""
+
+    # App-server style sessions keep the rollout file open; TUI sessions do not.
+    try:
+        for fd in os.listdir(f"/proc/{pid}/fd"):
+            target = os.readlink(f"/proc/{pid}/fd/{fd}")
+            m = re.search(r"rollout-.*?-(" + UUID + r")\.jsonl", target)
+            if m:
+                return m.group(1), "fd", ""
+    except OSError:
+        pass
+
+    # Fall back to the rollout whose recorded start is nearest this process, and
+    # only accept it when the rollout was opened in the same directory.
+    best = None
+    for path, (sid, stamp) in ROLLOUTS.items():
+        delta = abs(stamp - start)
+        if delta >= INFER_WINDOW_S or (best is not None and delta >= best[0]):
+            continue
+        if rollout_cwd(path) != cwd:
+            continue
+        best = (delta, sid)
+    if best:
+        return best[1], f"meta~{int(best[0])}s", ""
+    return None, "unknown", ""
+
+
+# ---* Collection *---
+
+
+def process_table():
+    kids, comm = {}, {}
+    for entry in os.listdir("/proc"):
+        if not entry.isdigit():
+            continue
+        try:
+            st = open(f"/proc/{entry}/stat").read()
+        except OSError:
+            continue
+        comm[int(entry)] = st[st.index("(") + 1 : st.rindex(")")]
+        kids.setdefault(int(st[st.rindex(")") + 2 :].split()[1]), []).append(int(entry))
+    return kids, comm
+
+
+def pane_table():
+    fmt = "\t".join(
+        [
+            "#{pane_id}",
+            "#{session_name}:#{window_index}.#{pane_index}",
+            "#{window_name}",
+            "#{pane_pid}",
+            "#{pane_current_path}",
+        ]
+    )
+    try:
+        out = subprocess.run(
+            ["tmux", "list-panes", "-a", "-F", fmt], capture_output=True, text=True
+        ).stdout
+    except FileNotFoundError:
+        return {}
+    panes = {}
+    for line in out.splitlines():
+        fields = line.split("\t")
+        if len(fields) != 5:
+            continue
+        panes[fields[0]] = dict(
+            pane_id=fields[0],
+            loc=fields[1],
+            window=fields[2],
+            pane_pid=int(fields[3]),
+            path=fields[4],
+        )
+    return panes
+
+
+def collect(panes):
+    rows, seen = [], set()
+    for pane in panes.values():
+        for pid in [pane["pane_pid"]] + descendants(pane["pane_pid"], KIDS):
+            if pid in seen:
+                continue
+            agent = agent_kind(pid, COMM.get(pid, ""))
+            if not agent or not is_session(pid):
+                continue
+            # TMUX_PANE is the anchor, and it must agree with the pane we reached
+            # this process through. Requiring it -- rather than only rejecting a
+            # mismatch -- also excludes background agents, which the daemon spawns
+            # under whichever pane it happens to live in but which occupy no pane
+            # of their own.
+            if environ(pid).get("TMUX_PANE") != pane["pane_id"]:
+                continue
+            seen.add(pid)
+            try:
+                cwd = os.readlink(f"/proc/{pid}/cwd")
+                start = pstart(pid)
+            except OSError:
+                continue
+
+            sid, name = resolve_hook(pid, pane["pane_id"])
+            source = "hook"
+            if not sid:
+                resolver = resolve_claude if agent == "claude" else resolve_codex
+                sid, source, name = resolver(pid, cwd, start)
+            # Hook payloads carry no session name, so fill it in from whichever
+            # index the agent maintains.
+            if not name:
+                name = (
+                    claude_registry(pid)[1]
+                    if agent == "claude"
+                    else CODEX_TITLES.get(sid or "", "")
+                )
+
+            rows.append(
+                dict(
+                    agent=agent,
+                    pane=pane["loc"],
+                    pane_id=pane["pane_id"],
+                    window=pane["window"],
+                    pid=pid,
+                    cwd=cwd,
+                    session_id=sid,
+                    name=name,
+                    source=source,
+                    started=datetime.datetime.fromtimestamp(start).strftime("%m-%d %H:%M"),
+                )
+            )
+    return rows
+
+
+KIDS, COMM = process_table()
+ROLLOUTS = codex_rollouts()
+CODEX_TITLES = codex_titles()
+
+
+def main():
+    if "-h" in sys.argv or "--help" in sys.argv:
+        print(__doc__.strip())
+        return 0
+
+    panes = pane_table()
+    if not panes:
+        print("No tmux panes found (is a tmux server running?).", file=sys.stderr)
+        return 1
+
+    rows = collect(panes)
+    if "--json" in sys.argv:
+        print(json.dumps(rows, indent=2))
+        return 0
+
+    header = f'{"AGENT":<7}{"PANE":<28}{"PID":<9}{"STARTED":<13}{"SESSION ID":<38}{"SRC":<12}{"NAME":<28}CWD'
+    print(header)
+    print("-" * len(header))
+    for row in sorted(rows, key=lambda r: (r["agent"], r["pane"])):
+        print(
+            f'{row["agent"]:<7}{row["pane"][:27]:<28}{row["pid"]:<9}{row["started"]:<13}'
+            f'{str(row["session_id"] or "-"):<38}{row["source"]:<12}{row["name"][:27]:<28}{row["cwd"]}'
+        )
+
+    resolved = sum(1 for r in rows if r["session_id"])
+    exact = sum(1 for r in rows if r["source"] in EXACT_SOURCES)
+    print(f"\n{resolved}/{len(rows)} session id(s) resolved ({exact} exact)")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

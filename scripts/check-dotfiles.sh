@@ -52,6 +52,7 @@ check_bash_syntax() {
         lib/link_manifest.sh
         lib/shell_paths.sh
         scripts/check-dotfiles.sh
+        agent-sessions/check.sh
         utils/add_path
         utils/kill_ps
         utils/file_count
@@ -61,7 +62,7 @@ check_bash_syntax() {
         utils/color_pwd
         utils/view-image
         utils/gwtlink
-        utils/claude-sessions
+        agent-sessions/bin/claude-sessions
         claude/statusline-command.sh
     )
 
@@ -106,11 +107,48 @@ check_json() {
     local file
     local files=(
         claude/settings.json
+        codex/hooks.json
     )
 
     cd "$REPO_ROOT" || return 1
     for file in "${files[@]}"; do
         jq empty "$file" || status=1
+    done
+
+    return "$status"
+}
+
+check_hook_wiring() {
+    local status=0
+    local file
+    local event
+    local target
+    local files=(
+        claude/settings.json
+        codex/hooks.json
+    )
+
+    cd "$REPO_ROOT" || return 1
+    for file in "${files[@]}"; do
+        for event in SessionStart SessionEnd; do
+            if [ "$(jq -r --arg e "$event" '(.hooks[$e] // []) | length' "$file")" -eq 0 ]; then
+                printf 'Missing %s hook: %s\n' "$event" "$file" >&2
+                status=1
+            fi
+        done
+
+        # A hook whose target has been renamed or moved fails silently in both
+        # agents, so resolve each command back to a real executable.
+        while read -r target; do
+            [ -n "$target" ] || continue
+            target="${target//\$HOME/$HOME}"
+            if [ -x "$target" ]; then
+                printf 'OK hook target: %s -> %s\n' "$file" "$target"
+            else
+                printf 'Hook target not executable: %s -> %s\n' "$file" "$target" >&2
+                status=1
+            fi
+        done < <(jq -r '[.hooks[]?[]?.hooks[]?.command // empty] | .[] | split(" ")[0]' "$file")
     done
 
     return "$status"
@@ -131,6 +169,7 @@ check_shfmt() {
         lib/link_manifest.sh \
         lib/shell_paths.sh \
         scripts/check-dotfiles.sh \
+        agent-sessions/check.sh \
         utils/add_path \
         utils/kill_ps \
         utils/file_count \
@@ -140,7 +179,7 @@ check_shfmt() {
         utils/color_pwd \
         utils/view-image \
         utils/gwtlink \
-        utils/claude-sessions \
+        agent-sessions/bin/claude-sessions \
         claude/statusline-command.sh
 }
 
@@ -154,6 +193,7 @@ check_shellcheck() {
         lib/link_manifest.sh \
         lib/shell_paths.sh \
         scripts/check-dotfiles.sh \
+        agent-sessions/check.sh \
         utils/add_path \
         utils/kill_ps \
         utils/file_count \
@@ -163,7 +203,7 @@ check_shellcheck() {
         utils/color_pwd \
         utils/view-image \
         utils/gwtlink \
-        utils/claude-sessions \
+        agent-sessions/bin/claude-sessions \
         claude/statusline-command.sh
 }
 
@@ -280,6 +320,7 @@ check_agent_config_presence() {
         claude/statusline-command.sh
         codex/AGENTS.md
         codex/config.toml
+        codex/hooks.json
     )
 
     cd "$REPO_ROOT" || return 1
@@ -297,7 +338,9 @@ check_agent_config_presence() {
 
 run_required "bash syntax" check_bash_syntax
 run_optional zsh "zsh syntax" check_zsh_syntax
+run_required "agent sessions" "$REPO_ROOT/agent-sessions/check.sh"
 run_optional jq "json syntax" check_json
+run_optional jq "agent hook wiring" check_hook_wiring
 run_optional taplo "toml syntax" check_toml
 run_optional shfmt "shell formatting" check_shfmt
 run_optional shellcheck "shellcheck" check_shellcheck

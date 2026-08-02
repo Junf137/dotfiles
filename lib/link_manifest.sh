@@ -49,6 +49,7 @@ load_link_manifest() {
 
     _link_manifest_add "$DOT_FILES/codex/AGENTS.md" "$HOME/.codex/AGENTS.md" required "Codex global instructions"
     _link_manifest_add "$DOT_FILES/codex/config.toml" "$HOME/.codex/config.toml" required "Codex config"
+    _link_manifest_add "$DOT_FILES/codex/hooks.json" "$HOME/.codex/hooks.json" required "Codex hooks"
     _link_manifest_add "$DOT_FILES/agent-skills/codex" "$HOME/.agents/skills" required "Codex skills"
 
     _link_manifest_add "$DOT_FILES/nvim/markdownlint.jsonc" "$HOME/.markdownlint.jsonc" required "markdownlint"

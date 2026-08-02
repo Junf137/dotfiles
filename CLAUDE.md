@@ -14,6 +14,10 @@ Personal dotfiles for **Junfeng Lei** (`junf137@outlook.com`). Manages shell, ed
 
 ```
 dotfiles/
+├── agent-sessions/         # Claude/Codex session <-> tmux pane tooling (see its README.md)
+│   ├── bin/                # agent-panes, agent-pane-register, agent-panes-resurrect, ...
+│   ├── lib/                # agent_ids.py (resume-marker patterns) + claude_names.py (title -> uuid)
+│   └── tests/              # test-agent-tools.py
 ├── alacritty/              # Alacritty terminal emulator configs
 │   └── alacritty-default/  # Symlinked to ~/.config/alacritty
 ├── agent-skills/           # Git submodule: Junf137/agent-skills
@@ -25,7 +29,8 @@ dotfiles/
 │   └── statusline-command.sh  # Custom statusLine script (symlinked to ~/.claude/statusline-command.sh)
 ├── codex/                  # Global OpenAI Codex configuration (symlinked to ~/.codex/)
 │   ├── AGENTS.md           # Global Codex agent instructions (symlinked to ~/.codex/AGENTS.md)
-│   └── config.toml         # Codex config (symlinked to ~/.codex/config.toml)
+│   ├── config.toml         # Codex config (symlinked to ~/.codex/config.toml)
+│   └── hooks.json          # Codex session hooks (symlinked to ~/.codex/hooks.json)
 ├── msg/                    # ASCII art welcome messages
 │   ├── msg_enjoy_your_day  # Bootstrap banner
 │   └── msg_shell_welcome   # Shell startup messages
@@ -43,7 +48,6 @@ dotfiles/
 ├── utils/                  # Custom shell utility scripts
 │   ├── add_path            # PATH management function
 │   ├── clip                # SSH/tmux-aware clipboard copy (OSC 52 fallback)
-│   ├── claude-sessions     # List running Claude Code sessions
 │   ├── color_pwd           # Colored PWD display
 │   ├── cowsay_fortune      # Random ASCII art + fortune
 │   ├── file_count          # Count files per subdirectory
@@ -93,6 +97,7 @@ dotfiles/
 | `claude/statusline-command.sh`          | `~/.claude/statusline-command.sh`   |
 | `codex/AGENTS.md`                       | `~/.codex/AGENTS.md`                |
 | `codex/config.toml`                     | `~/.codex/config.toml`              |
+| `codex/hooks.json`                      | `~/.codex/hooks.json`               |
 | `tmpfiles/handoffs.conf`                | `~/.config/user-tmpfiles.d/handoffs.conf` |
 | `~/Pictures/Background`                 | `~/.config/wezterm/backdrops`        |
 
@@ -122,9 +127,42 @@ After cloning, initialize with: `git submodule update --init --recursive`
 
 ### Tmux
 - **Prefix**: `Alt+A` (not default Ctrl+B)
-- **Theme**: Catppuccin Macchiato
+- **Theme**: Catppuccin Mocha (`@catppuccin_flavor`)
 - **Key features**: Vi mode, mouse support, 100K history, TPM plugin manager
 - **Session management**: tmuxp with layout in `tmuxp/regular.yaml`
+- **Save/restore**: tmux-resurrect (`@resurrect-capture-pane-contents on`) plus
+  tmux-continuum (`@continuum-restore on`, autosave every 15 min). The
+  `@resurrect-hook-post-save-all` hook runs `agent-sessions/bin/agent-panes-resurrect` —
+  see `agent-sessions/README.md`
+- **Restore geometry**: `@resurrect-hook-post-restore-all` runs
+  `utils/tmux-refit-windows`. Resurrect replays each window's saved `window_layout`
+  with `select-layout`, which sizes the layout's cells *without* resizing the window,
+  so a layout saved under a big client and restored under a smaller one leaves panes
+  larger than the window and the shell prompt below the visible bottom. tmux re-lays a
+  window out only when its size changes, so nothing heals it afterwards. The script
+  refits those windows and **never resizes one** — `resize-window -A`/`-a`/`-x`/`-y`
+  all pin `window-size manual`, and on a detached session `-A` resolves to
+  `default-size` 80x24 and permanently truncates that pane's restored scrollback
+
+### Agent Session Mapping & Resurrect Carry-over
+Maps running Claude/Codex sessions to their tmux pane, records **every** session a pane
+has held — live, exited, or only remembered by that pane's scrollback — and carries them
+across a reboot so the restored pane prints what ran there and how to resume it.
+
+**Before touching anything under `agent-sessions/`, read `agent-sessions/README.md` in
+full.** It records constraints that must not be re-derived: save ordering, why the hook
+must be silent, the `$TMUX` guard, why stripping is load-bearing, the `#`-prefixed
+column-0 sentinel, placement by `%N` rather than by location, field sanitisation, the
+Codex hook gotchas, and — since the save hook now reads its own block back as input —
+harvest-before-strip, the one predicate that decides what is ours, the `bound to
+%N@server` stanza binding, why a per-pane cap must rank rather than slice, why the
+dry-run preview is printed at column 0 rather than indented, and why a moved pane
+list refuses the harvest outright. All of it was established empirically against
+tmux-resurrect `cff343cf`, codex-cli 0.146 and Claude Code 2.1.220.
+
+Wiring lives outside that directory in three places — `tmux.conf`
+(`@resurrect-hook-post-save-all`), `claude/settings.json` and `codex/hooks.json` — and
+all three are absolute paths that must change atomically with the scripts they name.
 
 ### FZF Integration
 - **Trigger**: `~~` (not default `**`)
@@ -133,8 +171,12 @@ After cloning, initialize with: `git submodule update --init --recursive`
 - **Keybindings**: Ctrl-T (files), Ctrl-R (history), Alt-C (directories)
 
 ### Design Theme
-- **Catppuccin** color scheme throughout (Macchiato variant by default)
-- Consistent across Alacritty, Tmux, and terminal configs
+- **Catppuccin** color scheme throughout, but the flavour is per-tool: Alacritty is
+  Macchiato (`alacritty/alacritty-default/alacritty.toml`), Tmux is Mocha
+  (`@catppuccin_flavor` in `tmux.conf`), and WezTerm uses a lightly altered Mocha
+  (`wezterm/wezterm-config/colors/custom.lua`)
+- This is why anything written into a pane for later replay — see
+  `agent-sessions/README.md` — sticks to ANSI-16 rather than a hardcoded flavour palette
 
 ## Scripts & Commands
 
@@ -163,16 +205,33 @@ After cloning, initialize with: `git submodule update --init --recursive`
 ```bash
 ./scripts/check-dotfiles.sh
 ```
-- Runs non-destructive syntax, manifest, welcome corpus, and agent config checks
-- Uses optional tools (`zsh`, `jq`, `taplo`, `shfmt`, `shellcheck`) when available
+- Runs non-destructive syntax (bash, zsh, python, JSON, TOML), manifest, welcome corpus,
+  agent config, hook wiring, executable-bit, and resume-marker pattern checks
+- Uses optional tools (`zsh`, `python3`, `jq`, `taplo`, `shfmt`, `shellcheck`) when available
+- The hook wiring check resolves every `command` in `claude/settings.json` and
+  `codex/hooks.json` back to a real executable, so renaming a hook target fails here
+  instead of silently disabling the hook
+- The tmux hook wiring checks do the same for `@resurrect-hook-post-save-all` and
+  `@resurrect-hook-post-restore-all` in `tmux.conf`, which need it more: tmux-resurrect
+  discards both a hook's exit status and its stderr, so a renamed target is a completely
+  silent no-op. Both compare the *live* tmux option against `tmux.conf`, catching a conf
+  edited but never sourced; the save one also asserts the six tmux-resurrect internals
+  the carry-over depends on, and the restore one runs `tmux-refit-windows --dry-run`,
+  which is the only routine exercise a restore-only hook gets
+- The agent-session checks live in `agent-sessions/check.sh`, dispatched from here as a
+  single entry and runnable standalone. Re-run after upgrading Claude or Codex — see
+  `agent-sessions/README.md`. Its Python syntax check also runs a flat name-binding
+  pass: a dropped `import` is invisible to `ast.parse` and turns the save hook into a
+  silent no-op, which has happened once
 
 ### Utility Scripts (in utils/)
 | Script            | Purpose                                             |
 |-------------------|-----------------------------------------------------|
 | `rfv`             | Ripgrep + FZF + Vim: interactive search-and-open    |
 | `kill_ps`         | FZF-based interactive process killer                |
-| `claude-sessions` | List running Claude Code sessions with details      |
+| `agent-sessions/bin/*` | Claude/Codex session <-> pane tooling — see `agent-sessions/README.md` |
 | `clip`            | Copy stdin to the clipboard; picks tmux/OSC 52/native transport so it works over SSH without hanging |
+| `tmux-refit-windows` | Refit windows whose layout is a different size from the window; `@resurrect-hook-post-restore-all` target, `--dry-run` to preview |
 | `shell_welcome`   | Display random ASCII art welcome on shell start     |
 | `cowsay_fortune`  | Random cowsay/cowthink with fortune quotes          |
 | `color_pwd`       | Print colored working directory                     |

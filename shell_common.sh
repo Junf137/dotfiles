@@ -17,6 +17,7 @@ else
 fi
 
 add_path "$DOT_FILES/utils"
+add_path "$DOT_FILES/agent-sessions/bin"
 add_path "/usr/local/bin"
 add_path "$HOME/.local/bin"
 

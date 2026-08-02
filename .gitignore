@@ -5,6 +5,11 @@ logs/
 # ignore temporary file created by vim
 *.swp
 
+# python bytecode — the agent-sessions tools are imported by their test suite,
+# which materializes these next to executables that sit on PATH
+__pycache__/
+*.pyc
+
 # ignore all files in .vscode
 .vscode/
 .cursor/

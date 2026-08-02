@@ -1,0 +1,28 @@
+{
+  "description": "Bind each Codex session to the tmux pane it runs in; read back by agent-sessions/bin/agent-panes.",
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/home/junf/Documents/dotfiles/agent-sessions/bin/agent-pane-register codex start",
+            "statusMessage": "Recording tmux pane binding",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/home/junf/Documents/dotfiles/agent-sessions/bin/agent-pane-register codex end",
+            "timeout": 3
+          }
+        ]
+      }
+    ]
+  }
+}
