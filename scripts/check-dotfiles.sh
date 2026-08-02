@@ -61,7 +61,6 @@ check_bash_syntax() {
         utils/shell_welcome
         utils/color_pwd
         utils/view-image
-        utils/gwtlink
         utils/tmux-refit-windows
         agent-sessions/bin/claude-sessions
         claude/statusline-command.sh
@@ -233,7 +232,6 @@ check_shfmt() {
         utils/shell_welcome \
         utils/color_pwd \
         utils/view-image \
-        utils/gwtlink \
         agent-sessions/bin/claude-sessions \
         claude/statusline-command.sh
 }
@@ -257,7 +255,6 @@ check_shellcheck() {
         utils/shell_welcome \
         utils/color_pwd \
         utils/view-image \
-        utils/gwtlink \
         agent-sessions/bin/claude-sessions \
         claude/statusline-command.sh
 }
