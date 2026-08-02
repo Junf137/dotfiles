@@ -141,8 +141,10 @@ After cloning, initialize with: `git submodule update --init --recursive`
   larger than the window and the shell prompt below the visible bottom. tmux re-lays a
   window out only when its size changes, so nothing heals it afterwards. The script
   refits those windows and **never resizes one** — `resize-window -A`/`-a`/`-x`/`-y`
-  all pin `window-size manual`, and on a detached session `-A` resolves to
-  `default-size` 80x24 and permanently truncates that pane's restored scrollback
+  all pin `window-size manual` and nothing unpins it, so the window stops following
+  the client for good; on a detached session `-A` additionally resolves to
+  `default-size` 80x24. History survives that (tmux 3.7b reflows on resize rather
+  than truncating — measured), but the pane stays 80 columns until someone notices
 
 ### Agent Session Mapping & Resurrect Carry-over
 Maps running Claude/Codex sessions to their tmux pane, records **every** session a pane

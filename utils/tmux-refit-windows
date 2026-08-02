@@ -1,0 +1,146 @@
+#!/usr/bin/env bash
+
+# __author__ == Junfeng Lei
+
+# Re-fit windows whose layout is a different size from the window itself.
+#
+# tmux-resurrect saves `#{window_layout}` verbatim and replays it at restore with
+# `select-layout` (restore.sh:291). select-layout applies the saved layout's cell
+# sizes to the window without resizing the window to match, so a layout saved
+# while a 256x68 client was attached, restored under a 201x61 one, leaves a
+# 256x68 pane inside a 201x61 window. Only the top-left 201x61 of it is drawn:
+# the shell prompt ends up below the visible bottom and ~55 columns are off the
+# right, and the pane still works, which is what makes it so confusing.
+#
+# It does not heal by itself. tmux re-lays a window out only when its *size*
+# changes, and the window's size is already correct -- so attaching a client,
+# switching to the window and resizing it back and forth all leave it alone.
+#
+# This is the SINGLE-PANE case, and it is the one that bites. `select-layout`
+# resizes the window to the layout it parsed only when that layout has more than
+# one cell, so a one-cell layout leaves the window where it was and the
+# divergence stands. A multi-pane window instead comes back *oversized* -- window
+# bigger than the client, layout and window agreeing -- which this script
+# deliberately leaves alone: the window's size is then a claim about a client,
+# not about a layout, and tmux repairs it the next time that window is selected.
+#
+# Measured against tmux 3.7b and tmux-resurrect cff343cf.
+#
+#   tmux-refit-windows [--dry-run]
+#
+# Wired to @resurrect-hook-post-restore-all in tmux.conf. Safe to run by hand at
+# any time; it is a no-op on a server with nothing to fix.
+
+set -uo pipefail
+
+# ---* Why it never resizes a window *---
+#
+# `resize-window -A` (and -a, and -x/-y) set the window-level `window-size`
+# option to `manual`, which pins the window out of the automatic sizing the rest
+# of the server uses -- and nothing ever unpins it, so that window stops
+# following the client for good. That is the bug this script was written to
+# undo: a window left pinned at 201x61 under a 256x69 client draws its content
+# in the top-left corner and the terminal's background everywhere else.
+#
+# Worse, -A means "the largest client of the sessions holding this window", and
+# at restore exactly one session has a client -- so for every *detached* session
+# it resolves to `default-size`, 80x24. That is not silent data loss: tmux 3.7b
+# reflows history on a horizontal resize, and a 250-column line shrunk to 80 and
+# grown back to 256 comes back whole (measured). It is still an 80-column pane
+# pinned there until somebody notices, which has happened here once.
+#
+# So the window's own current size is the target: -x/-y with the values tmux
+# already reports. That is a no-op as a resize and is only ever asked for to make
+# tmux re-lay the panes out inside it, and the `-u window-size` immediately after
+# drops the manual pin -x/-y sets. The two are sent as one tmux command list so
+# there is no moment at which a window is left pinned.
+
+dry_run=0
+case "${1:-}" in
+    --dry-run | -n) dry_run=1 ;;
+    "") ;;
+    *)
+        printf 'usage: %s [--dry-run]\n' "${0##*/}" >&2
+        exit 2
+        ;;
+esac
+
+command -v tmux >/dev/null 2>&1 || exit 0
+tmux has-session >/dev/null 2>&1 || exit 0
+
+log_dir="${XDG_STATE_HOME:-$HOME/.local/state}"
+log_file="$log_dir/tmux-refit-windows.log"
+
+# The same silence rule as the save hook, and for the same reason: a manual
+# `prefix + C-r` runs restore.sh through `run-shell`, whose stdout is the job
+# pipe, so one printed line drops the active pane into view-mode and renames the
+# window `[tmux]`. resurrect also discards the hook's exit status entirely
+# (helpers.sh:143 is a bare `eval`), so this log is the only observability there
+# is -- which is why every path that does something reaches it.
+if [ ! -t 1 ] && [ "$dry_run" -eq 0 ]; then
+    mkdir -p "$log_dir" 2>/dev/null || true
+    # An unwritable state dir must not turn this into the leak it exists to
+    # prevent. bash does not exit on a failed `exec` redirection -- `execfail` is
+    # off and it carries on with stdout still attached -- so the target is proved
+    # writable first and /dev/null taken when it is not.
+    { : >>"$log_file"; } 2>/dev/null || log_file=/dev/null
+    exec >>"$log_file" 2>&1
+fi
+
+fixed=0
+scanned=0
+report=()
+seen=" "
+
+# `window_layout`'s first cell is the root: "<checksum>,<W>x<H>,0,0,...".
+while IFS=$'\t' read -r id name width height layout; do
+    [ -n "$id" ] || continue
+    # `list-windows -a` lists a grouped session's shared windows once per
+    # session, under the same `@N`. Refitting one twice is harmless but counting
+    # it twice makes the log lie about how much was wrong.
+    case "$seen" in
+        *" $id "*) continue ;;
+    esac
+    seen="$seen$id "
+    scanned=$((scanned + 1))
+    geometry="${layout#*,}"
+    geometry="${geometry%%,*}"
+    [ "$geometry" = "${width}x${height}" ] && continue
+
+    report+=("$name ($id): layout $geometry in a ${width}x${height} window")
+    if [ "$dry_run" -eq 1 ]; then
+        continue
+    fi
+    # One command list: a failure between the two would leave the window pinned
+    # to manual sizing, which is the bug this script exists to undo. stderr is
+    # kept -- it has already been pointed at the log, and a window that vanished
+    # between the list and here is the one thing worth seeing.
+    if tmux resize-window -t "$id" -x "$width" -y "$height" \; \
+        set-window-option -t "$id" -u window-size; then
+        fixed=$((fixed + 1))
+    fi
+done < <(
+    tmux list-windows -a -F \
+        '#{window_id}	#{session_name}:#{window_index}	#{window_width}	#{window_height}	#{window_layout}' \
+        2>/dev/null
+)
+
+if [ "$dry_run" -eq 1 ]; then
+    if [ "${#report[@]}" -eq 0 ]; then
+        printf 'all %d window(s) already fit their layout\n' "$scanned"
+    else
+        printf 'would refit %d of %d window(s):\n' "${#report[@]}" "$scanned"
+        printf '  %s\n' "${report[@]}"
+    fi
+    exit 0
+fi
+
+# Nothing to say when there was nothing to do: this runs on every restore, and a
+# line per restore would bury the ones that matter.
+if [ "$fixed" -gt 0 ] || [ "${#report[@]}" -gt 0 ]; then
+    printf '%s refit %d of %d mismatched window(s) (%d scanned)\n' \
+        "$(date '+%Y-%m-%d %H:%M:%S')" "$fixed" "${#report[@]}" "$scanned"
+    printf '  %s\n' "${report[@]}"
+fi
+
+exit 0

@@ -62,6 +62,7 @@ check_bash_syntax() {
         utils/color_pwd
         utils/view-image
         utils/gwtlink
+        utils/tmux-refit-windows
         agent-sessions/bin/claude-sessions
         claude/statusline-command.sh
     )
@@ -150,6 +151,60 @@ check_hook_wiring() {
             fi
         done < <(jq -r '[.hooks[]?[]?.hooks[]?.command // empty] | .[] | split(" ")[0]' "$file")
     done
+
+    return "$status"
+}
+
+check_tmux_restore_hook() {
+    local status=0 value target live
+
+    cd "$REPO_ROOT" || return 1
+
+    # tmux-resurrect eval's its hooks and discards both the exit status and the
+    # stderr (helpers.sh:143), so a hook naming a renamed script is a silent
+    # no-op that nothing reports until the geometry is wrong after a reboot --
+    # which is months of restores away. The save hook's equivalent check lives in
+    # agent-sessions/check.sh, next to the script it names; this one is here
+    # because utils/tmux-refit-windows belongs to no feature directory.
+    value="$(sed -n "s/^[[:space:]]*set -g @resurrect-hook-post-restore-all[[:space:]]*'\(.*\)'[[:space:]]*$/\1/p" tmux.conf)"
+    if [ -z "$value" ]; then
+        printf 'Missing @resurrect-hook-post-restore-all in tmux.conf\n' >&2
+        return 1
+    fi
+
+    target="${value%% *}"
+    target="${target//\$HOME/$HOME}"
+    if [ ! -x "$target" ]; then
+        printf 'tmux restore hook target not executable: %s\n' "$target" >&2
+        status=1
+    elif [ "$target" != "$REPO_ROOT/utils/tmux-refit-windows" ]; then
+        # A warning, not a failure: the hook value has to be a literal path, so a
+        # worktree legitimately checks a tree the live server does not point at.
+        printf 'WARN tmux restore hook points at another checkout: %s\n' "$target"
+    else
+        printf 'OK tmux restore hook target: %s\n' "$target"
+    fi
+
+    # The live value is the one that actually runs, so a conf edited but never
+    # sourced is caught here rather than at the next reboot.
+    if [ -n "${TMUX:-}" ]; then
+        live="$(tmux show-option -gqv @resurrect-hook-post-restore-all 2>/dev/null)"
+        if [ "$live" != "$value" ]; then
+            printf 'live tmux restore hook differs from tmux.conf\n  live: %s\n  conf: %s\n' \
+                "$live" "$value" >&2
+            printf 'run: tmux source-file ~/.tmux.conf\n' >&2
+            status=1
+        else
+            printf 'OK tmux restore hook is live on the running server\n'
+        fi
+    fi
+
+    # The hook only ever runs at restore, so this is the only routine exercise it
+    # gets. --dry-run reads the live server and writes nothing.
+    if [ -x "$target" ] && [ -n "${TMUX:-}" ] && ! "$target" --dry-run >/dev/null 2>&1; then
+        printf 'tmux restore hook fails against the running server: %s --dry-run\n' "$target" >&2
+        status=1
+    fi
 
     return "$status"
 }
@@ -341,6 +396,7 @@ run_optional zsh "zsh syntax" check_zsh_syntax
 run_required "agent sessions" "$REPO_ROOT/agent-sessions/check.sh"
 run_optional jq "json syntax" check_json
 run_optional jq "agent hook wiring" check_hook_wiring
+run_required "tmux restore hook wiring" check_tmux_restore_hook
 run_optional taplo "toml syntax" check_toml
 run_optional shfmt "shell formatting" check_shfmt
 run_optional shellcheck "shellcheck" check_shellcheck
