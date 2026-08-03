@@ -135,12 +135,22 @@ if [ "$dry_run" -eq 1 ]; then
     exit 0
 fi
 
-# Nothing to say when there was nothing to do: this runs on every restore, and a
-# line per restore would bury the ones that matter.
+# One line on every run, the quiet one included. Staying silent when there was
+# nothing to do reads as tidiness but costs the only question the log can answer:
+# an empty file cannot distinguish "ran, found nothing" from "never fired", and a
+# restore-only hook whose exit status and stderr tmux-resurrect both discard has
+# no other observable. That ambiguity is exactly how a silent no-op hides -- the
+# Codex hook in agent-sessions/README.md sat dead for as long as it did because
+# "installed and active" was mistaken for "had an effect". Burying the
+# interesting lines is not a real risk here: this fires once per restore, and the
+# per-window detail is still printed only when something was actually wrong.
 if [ "$fixed" -gt 0 ] || [ "${#report[@]}" -gt 0 ]; then
     printf '%s refit %d of %d mismatched window(s) (%d scanned)\n' \
         "$(date '+%Y-%m-%d %H:%M:%S')" "$fixed" "${#report[@]}" "$scanned"
     printf '  %s\n' "${report[@]}"
+else
+    printf '%s no refit needed (%d window(s) scanned)\n' \
+        "$(date '+%Y-%m-%d %H:%M:%S')" "$scanned"
 fi
 
 exit 0
