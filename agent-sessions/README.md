@@ -112,8 +112,14 @@ until re-approved in the TUI. Nothing warns; the session just falls back to the 
   resumed and `/clear`ed sessions.
 - **Codex session IDs** come from `codex resume <uuid>` in `/proc/<pid>/cmdline` when
   present, otherwise from matching a rollout's `session_meta` header (`cwd` plus start
-  time) under `~/.codex/sessions/`. Codex has no live per-PID registry, so hooks are
-  what make it exact.
+  time) under `~/.codex/sessions/`. Codex has no live per-PID registry, and its hooks
+  cannot supply one either — see *The Codex hook cannot bind a pane* below — so those
+  two tiers are the whole of it for a live process. `cmdline` is exact; the
+  `session_meta` match keys on the process's **start** time, so it can only ever name
+  the session a process started with. A process that goes on to hold a second session
+  (a `/new`) keeps being reported as its first, which mislabels *which* of a pane's
+  sessions was live at a save. It loses neither: the second one's own exit banner and
+  this script's block both record it.
 - **Hooks** call `agent-pane-register`, which writes `~/.cache/agent-panes/<pane>.json`.
   Records carry the agent PID and its kernel start time so a session that died without
   firing its end hook is detected as stale instead of being attributed to the next agent
@@ -121,7 +127,8 @@ until re-approved in the TUI. Nothing warns; the session just falls back to the 
 - **The hook cache is live-only.** `agent-pane-register end` deletes the record and
   prunes any whose process is gone. It is not, and cannot be, a source of history —
   that is what the resurrect sidecar is for.
-- **Codex hook gotchas**, all verified against codex-cli 0.146 via `hooks/list`:
+- **Codex hook gotchas**, all verified against codex-cli 0.146 via `hooks/list` — which
+  reports *discovery*, never execution:
   the config file is `~/.codex/hooks.json` — a file at `~/.codex/hooks/hooks.json` is
   silently ignored, with no warning even if malformed. Event keys are PascalCase
   (`SessionStart`/`SessionEnd`). The timeout key is `timeout`, in seconds; unknown keys
@@ -134,7 +141,24 @@ until re-approved in the TUI. Nothing warns; the session just falls back to the 
   not execute until approved in the TUI ("Hooks need review" → "Trust all and
   continue"). Approving writes a `[hooks.state]` table into `~/.codex/config.toml`,
   which is a symlink into this repo — the same way Codex already writes `[projects]`
-  trust levels there.
+  trust levels there. Trust is necessary and not sufficient; see the next point.
+- **The Codex hook cannot bind a pane, and the interactive TUI is why.** Measured on
+  codex-cli 0.146.0: an interactive session does not run the hook itself, it hands it
+  to the shared `app-server` daemon, which is started once at login *outside* tmux. The
+  hook process therefore inherits neither `TMUX_PANE` nor `TMUX`, and
+  `agent-pane-register` returns at its first check. Nothing fails and no record is
+  written. `codex exec` runs its session in-process, so the hook works there — the only
+  reason that code path is not dead. The payload is no help either: it carries
+  `session_id`, `transcript_path`, `cwd`, `hook_event_name`, `model`, `permission_mode`
+  and `source`, and the environment only `CODEX_HOME`, `CODEX_REMOTE_PAYLOAD` and the
+  `SSH_*` pair — nothing naming a terminal, a tty or the originating process, and one
+  daemon serves every session on the machine. `SessionStart` also fires on the **first
+  prompt submission**, not at TUI launch.
+- **What that costs, exactly.** Nothing is lost — 0 of 122 codex records here are
+  `hook`-sourced (102 `scrollback`, 12 `meta~0s`, 8 `cmdline`) and every id was still
+  carried across two restarts. What is lost is precision: without the hook, a live
+  codex session is only ever as good as the `session_meta` start-time match above.
+  Claude is unaffected; it runs its hooks in-process, below the agent, inside the pane.
 - **Claude `SessionEnd` needs an explicit `timeout`**: without one it gets only a ~1.5 s
   shutdown budget and may be killed mid-write.
 - **Do not** rely on open file descriptors: both agents open→append→close their
@@ -444,6 +468,15 @@ tools' terminal output and on-disk records and rot silently when either changes,
 marker rendering, stripping, parsing and pane-placement in `agent-panes-resurrect`, and
 the shared imports — which are guarded, so a broken one degrades to "no harvest" and this
 is the only place it would be noticed.
+
+**One thing no check can reach: whether a hook had any effect.** `check_hook_wiring`
+resolves each `command` to a real executable, and Codex's own Hooks TUI reports the
+handler as installed and active — neither says the handler did anything, and believing
+otherwise is exactly what hid the app-server finding above. The cache file is the only
+observable, so after upgrading Codex, start a session in a pane and check that
+`~/.cache/agent-panes/<pane number>.json` appears within a second. For Claude the same
+test applies and currently passes; for the interactive Codex TUI it is expected to fail
+until upstream runs hooks in the session's own process or puts a terminal in the payload.
 
 The syntax check also runs a flat name-binding pass over every Python file here. It is
 deliberately scope-insensitive, so it never reports a shadowing or a
