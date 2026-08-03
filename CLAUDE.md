@@ -15,7 +15,7 @@ Personal dotfiles for **Junfeng Lei** (`junf137@outlook.com`). Manages shell, ed
 ```
 dotfiles/
 ├── agent-sessions/         # Claude/Codex session <-> tmux pane tooling (see its README.md)
-│   ├── bin/                # agent-panes, agent-pane-register, agent-panes-resurrect, ...
+│   ├── bin/                # agent-panes, agent-pane-register, agent-panes-resurrect, agent-resume, ...
 │   ├── lib/                # agent_ids.py (resume-marker patterns) + claude_names.py (title -> uuid)
 │   └── tests/              # test-agent-tools.py
 ├── alacritty/              # Alacritty terminal emulator configs
@@ -150,6 +150,8 @@ After cloning, initialize with: `git submodule update --init --recursive`
 Maps running Claude/Codex sessions to their tmux pane, records **every** session a pane
 has held — live, exited, or only remembered by that pane's scrollback — and carries them
 across a reboot so the restored pane prints what ran there and how to resume it.
+`agent-resume` is the consuming end: run in any pane, it clears the screen and resumes
+that pane's session *only* where exactly one maps to it, and offers no way to name one.
 
 **Before touching anything under `agent-sessions/`, read `agent-sessions/README.md` in
 full.** It records constraints that must not be re-derived: save ordering, why the hook
@@ -158,8 +160,10 @@ column-0 sentinel, placement by `%N` rather than by location, field sanitisation
 Codex hook gotchas, and — since the save hook now reads its own block back as input —
 harvest-before-strip, the one predicate that decides what is ours, the `bound to
 %N@server` stanza binding, why a per-pane cap must rank rather than slice, why the
-dry-run preview is printed at column 0 rather than indented, and why a moved pane
-list refuses the harvest outright. All of it was established empirically against
+dry-run preview is printed at column 0 rather than indented, why a moved pane
+list refuses the harvest outright, and — for `agent-resume` — why it borrows the block
+parsing rather than copying it, why its clear stops at `ESC[2J`, and why nothing
+selects a candidate. All of it was established empirically against
 tmux-resurrect `cff343cf`, codex-cli 0.146 and Claude Code 2.1.220.
 
 Wiring lives outside that directory in three places — `tmux.conf`

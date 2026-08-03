@@ -1,0 +1,667 @@
+#!/usr/bin/env python3
+
+# __author__ == Junfeng Lei
+
+"""Resume the Claude Code / Codex session that belongs to this tmux pane.
+
+Run it in any pane. If exactly one agent session maps to that pane -- and only
+then -- the pane is cleared and that session is resumed in place, in the
+directory it was opened in:
+
+    claude --dangerously-skip-permissions --resume <uuid>
+    codex resume <uuid> --yolo
+
+There is deliberately no way to start a session this could not map on its own.
+If the pane maps to none, or to more than one, nothing is run: `--list` prints
+the candidates with the command each would need, and pasting one is a decision a
+person made rather than a guess this tool got away with. A wrong id resumes
+somebody else's conversation and reads exactly like a right one until it is too
+late, so every doubt is spent on refusing:
+
+  * an id that is not a well-formed uuid is not a candidate;
+  * a session whose transcript is no longer on disk cannot be resumed, so it is
+    listed but never chosen;
+  * a stanza in this pane's scrollback that claims this server but a different
+    pane is text that arrived here, not history that happened here, and is
+    dropped whole;
+  * two candidates are two candidates, however much better one of them looks.
+
+Three sources answer "which sessions has this pane held", each covering what the
+others cannot:
+
+  * the resurrect sidecar, `agent_sessions.json` -- every session a save ever saw
+    running here, filtered to records this tmux server issued the `%N` for. A
+    record stamped with an older generation names whatever pane held that number
+    then, not this one;
+  * this pane's own scrollback -- the block agent-panes-resurrect injected (which
+    is what carries ids across a reboot, since the restored pane replays it) plus
+    whatever exit banner the agent itself printed. This is the only source in the
+    window between a restore and the first save after it, and the only one for a
+    session that started and exited between two saves;
+  * the hook cache, `~/.cache/agent-panes/<pane>.json` -- live-only and pruned,
+    but between an agent being *killed* and the next save it is the sole place
+    that session's id exists, and killing an agent while keeping its pane is the
+    case this whole family of tools is built around.
+
+A candidate whose transcript is no longer on disk cannot be resumed -- Claude
+prunes ~/.claude/projects at 30 days -- so it is shown but never chosen. That is
+also what makes "one and only one" answerable more often than the raw history
+would suggest.
+
+The block-reading is agent-panes-resurrect's own marker_line()/parse_stanzas(),
+imported rather than reimplemented: they carry the rules deciding which stanzas a
+pane may claim as its own, and a second copy would drift exactly where drift is
+silent.
+
+Usage: agent-resume [-n|--dry-run] [-l|--list] [--pane %N] [--force]
+Env:   SCROLLBACK_DEPTH  value passed to `tmux capture-pane -S` (default '-',
+                         the pane's whole history; one pane, so it is cheap).
+"""
+
+import glob
+import importlib.machinery
+import importlib.util
+import json
+import os
+import re
+import subprocess
+import sys
+import time
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+
+# What resuming actually runs. Spelled out as literal argv rather than composed,
+# because these are dangerous flags and the reader should be able to see exactly
+# what they are without following a builder. Passed to execvp as a list, so no
+# field is ever handed to a shell.
+RESUME_ARGV = {
+    "claude": ("claude", "--dangerously-skip-permissions", "--resume", "{sid}"),
+    "codex": ("codex", "resume", "{sid}", "--yolo"),
+}
+
+# One pane, one capture, so the default is the whole history rather than
+# agent-scrollback-ids' 20k -- that tool pays the cost once per pane on a server
+# with dozens of them. The env var is shared so setting it once means the same
+# thing to both.
+DEPTH = os.environ.get("SCROLLBACK_DEPTH") or "-"
+
+TMUX_TIMEOUT_S = 5
+
+
+def load(name):
+    """Import a sibling tool as a module.
+
+    Deliberately *not* guarded, unlike the same import inside the save hook. The
+    hook must survive a broken import because tmux-resurrect discards its exit
+    status and a dead hook would be completely silent; this is an interactive
+    command whose entire job is the imported parsing, so a failure here has to be
+    said out loud.
+    """
+    path = os.path.join(HERE, name)
+    loader = importlib.machinery.SourceFileLoader(name.replace("-", "_"), path)
+    spec = importlib.util.spec_from_loader(loader.name, loader)
+    module = importlib.util.module_from_spec(spec)
+    loader.exec_module(module)
+    return module
+
+
+RESURRECT = load("agent-panes-resurrect")
+REGISTER = load("agent-pane-register")
+
+UUID_RE = re.compile(RESURRECT.UUID)
+
+
+# ---* Where a pane's sessions come from *---
+
+
+def server_started():
+    """This tmux server's start time in epoch seconds, or None."""
+    parts = (os.environ.get("TMUX") or "").split(",")
+    if len(parts) < 2:
+        return None
+    try:
+        with open(f"/proc/{int(parts[1])}/stat") as fh:
+            stat = fh.read()
+        # Field 22, counted from after comm -- parenthesised, and may itself
+        # contain spaces, so the string cannot be split on naively.
+        ticks = int(stat[stat.rindex(")") + 2 :].split()[19])
+        with open("/proc/uptime") as fh:
+            boot = time.time() - float(fh.read().split()[0])
+    except (OSError, ValueError, IndexError):
+        return None
+    return boot + ticks / os.sysconf("SC_CLK_TCK")
+
+
+def sidecar_rows(pane, server):
+    """Sidecar records for this pane, from this server generation only.
+
+    `%N` is a per-server counter that restarts at 0 while the sidecar
+    deliberately outlives the server by KEEP_DAYS, so a record carrying an older
+    server id names whichever pane inherited that number, not this one. Nothing
+    is lost by dropping them: a restored pane replays its own block, and
+    capture_rows() reads that back.
+    """
+    path = os.path.join(RESURRECT.resurrect_dir(), RESURRECT.SIDECAR_NAME)
+    rows = []
+    for records in RESURRECT.read_sidecar(path).values():
+        if not isinstance(records, list):
+            continue
+        for record in records:
+            if not isinstance(record, dict):
+                continue
+            if record.get("pane_id") == pane and record.get("server") == server:
+                rows.append(dict(record, origin="sidecar"))
+    return rows
+
+
+def capture(pane):
+    """This pane's scrollback, as bytes.
+
+    `-epJ` matches what tmux-resurrect archives, and each flag is load-bearing:
+    `-J` rejoins wrapped lines, without which a resume line wider than the pane
+    splits its uuid across two rows and matches nothing, and `-e` keeps the
+    escapes so the marker predicate sees the same shape it was written to match.
+    """
+    try:
+        out = subprocess.run(
+            ["tmux", "capture-pane", "-epJ", "-S", DEPTH, "-t", pane],
+            capture_output=True,
+            timeout=TMUX_TIMEOUT_S,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return b""
+    return out.stdout if out.returncode == 0 else b""
+
+
+def capture_rows(pane, server):
+    """Sessions this pane's own scrollback still remembers.
+
+    Two passes over one capture, exactly as the save hook's harvest does it: our
+    injected block through parse_stanzas(), which refuses a stanza claiming this
+    server but another pane, and the remaining text through the shared
+    resume-marker patterns, which is where an agent's own exit banner is found.
+
+    Both passes are capped the way the harvest caps them, with its constants. A
+    `cat` of a session dump, a ripgrep over a directory of handoff notes, or a
+    restored pane displaying the archive itself puts hundreds of resume commands
+    into one pane's history, every one of them indistinguishable from a banner.
+    Here that only costs a screenful and a refusal rather than a permanent
+    record -- but the two tools disagreeing about what a pane holds would be
+    worse than either bound.
+    """
+    tag = RESURRECT.server_tag(server)
+    marked, plain = RESURRECT.split_capture(capture(pane))
+    parsed = RESURRECT.parse_stanzas(marked, pane, tag)
+    # A block this hook wrote can never hold more stanzas than it prints, so
+    # anything past MAX_STANZAS arrived as text. Ranked, never sliced: stanzas
+    # the pane can prove are its own first (one bound to this server but another
+    # pane was already refused whole inside parse_stanzas), then the most
+    # recently seen. Duplicates are dropped before the cap, or N copies of one
+    # stanza would evict N distinct ids.
+    parsed.sort(
+        key=lambda row: (bool(tag and row.get("bound") == (pane, tag)), row.get("last_seen") or 0),
+        reverse=True,
+    )
+    rows, seen = [], set()
+    for row in parsed:
+        # `seen` grows past the cap on purpose: a session the cap dropped is still
+        # one this block named, and letting the text pass re-add it as a bare
+        # `scrollback` row would spend the cap and then undo it.
+        if row["session_id"] in seen:
+            continue
+        seen.add(row["session_id"])
+        if len(rows) < RESURRECT.MAX_STANZAS:
+            # Transient: parse_stanzas() reports which pane and generation a
+            # stanza claimed so the ranking above can use it. Nothing downstream
+            # needs it.
+            rows.append({key: value for key, value in row.items() if key != "bound"})
+
+    index = []
+
+    def resolve_title(name):
+        """The uuid behind a title Claude printed instead of one, if it is certain.
+
+        A third of this machine's sessions carry a custom title, and Claude's exit
+        banner prints that rather than the uuid. `unique=True` because titles are
+        free text: one that names more than one session resolves to nothing rather
+        than to a coin flip, which is the same refusal the save hook makes and for
+        the same reason.
+        """
+        if not index:
+            index.append(RESURRECT.name_index(unique=True))
+        return index[0].get(name)
+
+    recovered = []
+    for agent, session_id, name in RESURRECT.extract(plain):
+        if not session_id and agent == "claude" and name:
+            session_id = resolve_title(name)
+        if not session_id or session_id in seen:
+            continue
+        seen.add(session_id)
+        recovered.append(
+            dict(
+                agent=agent,
+                session_id=session_id,
+                name=name,
+                cwd="",
+                source=RESURRECT.SCROLLBACK_SOURCE,
+                pid=None,
+                started="",
+                last_seen=None,
+            )
+        )
+    if len(recovered) > RESURRECT.MAX_HARVEST_PER_PANE:
+        # Keep the *last* ids in the capture: the bottom of a pane's scrollback
+        # is what happened there most recently. extract() reports hits pattern by
+        # pattern rather than in reading order, so the order has to be recovered
+        # from the text. A uuid resolved from a title never appears as a uuid --
+        # the banner printed the title -- so that row is located by what it was
+        # actually read from, and an unfindable one falls to the end rather than
+        # to -1, where it would be the first thing discarded.
+        at = {}
+        for match in re.finditer(RESURRECT.UUID, plain):
+            at.setdefault(match.group(0), match.start())
+
+        def where(row):
+            if row["session_id"] in at:
+                return at[row["session_id"]]
+            found = plain.rfind(row["name"]) if row["name"] else -1
+            return found if found >= 0 else len(plain)
+
+        recovered.sort(key=where)
+        recovered = recovered[-RESURRECT.MAX_HARVEST_PER_PANE :]
+
+    return [dict(row, origin="scrollback") for row in rows + recovered]
+
+
+def cache_row(pane, since):
+    """The record this pane's session-start hook wrote, if it is this server's.
+
+    The cache is keyed by pane number with no server stamp -- it is live-only, so
+    it never needed one -- which means a record written before a reboot would be
+    read against whichever restored pane inherited its number. `updated`
+    predating this server's own start is what rejects that, and without a usable
+    server start time the source is skipped rather than trusted.
+
+    A record whose process is gone is kept rather than pruned: that is a killed
+    agent, which is precisely the session worth resuming here. One whose process
+    is still there is kept too, and marked, since a `--pane` pointing elsewhere
+    can reach a pane that really does have an agent in it.
+    """
+    if since is None:
+        return []
+    path = os.path.join(REGISTER.REG, f'{pane.lstrip("%")}.json')
+    try:
+        with open(path) as fh:
+            record = json.load(fh)
+    except (OSError, ValueError):
+        return []
+    if not isinstance(record, dict) or record.get("pane_id") != pane:
+        return []
+    if not record.get("session_id") or (RESURRECT.as_epoch(record.get("updated")) or 0) < since:
+        return []
+    return [
+        dict(
+            agent=record.get("agent") or "",
+            session_id=record["session_id"],
+            name=record.get("name") or "",
+            cwd=record.get("cwd") or "",
+            source="hook",
+            pid=record.get("pid"),
+            started="",
+            last_seen=RESURRECT.as_epoch(record.get("updated")),
+            live=alive(record.get("pid"), record.get("proc_start")),
+            origin="cache",
+        )
+    ]
+
+
+def alive(pid, proc_start):
+    """Whether that exact process is still running.
+
+    The start time is in the test because a pid alone is reused, and a reused pid
+    reported as the agent still running is the one error that would stop this
+    offering the session a kill left behind.
+    """
+    if not pid or not proc_start:
+        return False
+    try:
+        with open(f"/proc/{int(pid)}/stat") as fh:
+            stat = fh.read()
+        return str(stat[stat.rindex(")") + 2 :].split()[19]) == str(proc_start)
+    except (OSError, ValueError, IndexError):
+        return False
+
+
+# ---* Folding them into one answer *---
+
+
+def merge(rows):
+    """One row per (agent, session id), each field from its best attestation.
+
+    The same session legitimately arrives from all three sources -- the sidecar
+    knows its cwd, the block knows when it was last seen, the banner knows only
+    that it was here -- so this is a merge rather than a first-wins.
+    """
+    out = {}
+    for row in rows:
+        agent, session_id = row.get("agent"), row.get("session_id")
+        if not agent or not session_id:
+            continue
+        best = out.get((agent, session_id))
+        if best is None:
+            out[(agent, session_id)] = dict(row, origins={row.get("origin", "?")})
+            continue
+        if RESURRECT.source_rank(row.get("source")) < RESURRECT.source_rank(best.get("source")):
+            best["source"] = row.get("source")
+        for field in ("name", "cwd", "started", "pid"):
+            if not best.get(field) and row.get(field):
+                best[field] = row[field]
+        if (RESURRECT.as_epoch(row.get("last_seen")) or 0) > (RESURRECT.as_epoch(best.get("last_seen")) or 0):
+            best["last_seen"] = row.get("last_seen")
+        best["live"] = bool(best.get("live") or row.get("live"))
+        best["origins"].add(row.get("origin", "?"))
+    return list(out.values())
+
+
+def transcript_index():
+    """agent -> session id -> transcript path, by name only.
+
+    The same two globs enrich() uses, so what this calls resumable and what the
+    save hook calls datable can never disagree. Names only: a couple of
+    milliseconds over ~2000 files.
+    """
+    index = {"claude": {}, "codex": {}}
+    try:
+        for path in glob.glob(f"{RESURRECT.CLAUDE_PROJECTS}/*/*.jsonl"):
+            index["claude"][os.path.basename(path)[:-6]] = path
+        for path in glob.glob(f"{RESURRECT.CODEX_SESSIONS}/*/*/*/rollout-*.jsonl"):
+            match = re.search("(" + RESURRECT.UUID + r")\.jsonl$", os.path.basename(path))
+            if match:
+                index["codex"][match.group(1)] = path
+    except OSError:
+        pass
+    return index
+
+
+def resolve(rows):
+    """Mark each row resumable or not, and give it the cwd its resume needs.
+
+    A session id with no transcript behind it cannot be resumed: both agents
+    answer `--resume` out of those files, and Claude prunes its own at 30 days.
+    Such a row is still shown -- it is true history, and being told the session
+    has aged out is better than being told nothing -- but it is never chosen and
+    never counted, so a pane holding one of those and one live id still answers
+    "exactly one".
+    """
+    index = transcript_index()
+    for row in rows:
+        path = index.get(row["agent"], {}).get(row["session_id"], "")
+        row["transcript"] = path
+        row["gone"] = not path
+        if not path:
+            continue
+        if not row.get("cwd"):
+            # The one thing an exit banner never prints, and `claude --resume`
+            # resolves its id inside the project dir of the current directory.
+            row["cwd"] = RESURRECT.transcript_cwd(path)
+        if not RESURRECT.as_epoch(row.get("last_seen")):
+            # Only ever a fallback: a sidecar date is when an agent was *observed*
+            # running here, which a transcript mtime is not. But a row read out of
+            # a bare banner has no date at all, and undated it sorts below every
+            # other candidate however recent it really is.
+            try:
+                row["last_seen"] = os.stat(path).st_mtime
+            except OSError:
+                pass
+    return rows
+
+
+def candidates(rows):
+    """The rows that could be resumed at all.
+
+    An agent this tool has no command for, or an id that is not a well-formed
+    uuid, is not a candidate -- not a candidate that then loses. Both agents name
+    sessions by uuid, so anything else came out of text that merely looked like a
+    resume line.
+    """
+    return [
+        row for row in rows
+        if row["agent"] in RESUME_ARGV and UUID_RE.fullmatch(row["session_id"] or "")
+    ]
+
+
+def choose(rows):
+    """(the row to resume, verdict). The rule, isolated so it can be asserted.
+
+    One resumable candidate is a mapping; two is a guess, and a guess resumes
+    somebody else's conversation while looking exactly like the right answer.
+    Rows whose transcript is gone are not resumable and so cannot make a pane
+    ambiguous -- nor can they be chosen by being the only one left.
+    """
+    options = [row for row in rows if not row["gone"]]
+    if len(options) == 1:
+        return options[0], "one"
+    return None, "none" if not options else "many"
+
+
+def order(rows):
+    """Resumable first, then whatever ran here most recently."""
+    return sorted(
+        rows,
+        key=lambda row: (
+            not row["gone"],
+            bool(row.get("live")),
+            RESURRECT.as_epoch(row.get("last_seen")) or 0,
+        ),
+        reverse=True,
+    )
+
+
+# ---* Output *---
+
+
+def stamp(row):
+    seen = RESURRECT.as_epoch(row.get("last_seen"))
+    if not seen:
+        return "-"
+    return time.strftime("%m-%d %H:%M", time.localtime(seen))
+
+
+def note(row):
+    if row["gone"]:
+        return "  (transcript gone)"
+    return "  (still running)" if row.get("live") else ""
+
+
+def show(rows, pane, where, stream=sys.stdout):
+    """The candidate table.
+
+    Written to stderr on every path but `--list`, so that `agent-resume -n`
+    stays a single pipeable line and a refusal's evidence does not end up in
+    whatever the caller was capturing.
+    """
+    out = [f"{pane} has held {len(rows)} agent session(s) — {where}", ""]
+    header = f'{"#":<4}{"AGENT":<8}{"SESSION ID":<38}{"LAST SEEN":<13}{"SRC":<12}NAME'
+    out += [header, "-" * len(header)]
+    for number, row in enumerate(rows, 1):
+        out.append(
+            f'{number:<4}{row["agent"]:<8}{row["session_id"]:<38}{stamp(row):<13}'
+            f'{str(row.get("source") or "?"):<12}{str(row.get("name") or "")[:32]}{note(row)}'.rstrip()
+        )
+    print("\n".join(out) + "\n", file=stream)
+
+
+def command_line(row):
+    """The `cd X && agent ...` the reader can copy, as one shell-safe string."""
+    quote = RESURRECT.shell_quote
+    words = " ".join(quote(word) for word in argv_for(row))
+    return f"cd {quote(row['cwd'])} && {words}" if row.get("cwd") else words
+
+
+def argv_for(row):
+    return [word.format(sid=row["session_id"]) for word in RESUME_ARGV[row["agent"]]]
+
+
+# ---* Entry point *---
+
+
+def parse_args(argv):
+    """(options, error). Hand-parsed: four flags, and argparse's own -h output
+    would replace a docstring that is the tool's only documentation.
+
+    There is no flag naming a session, by number or by id. Anything that selects
+    one is a way to start a session this tool could not map by itself, which is
+    the single thing it is not allowed to do -- `--list` prints the commands, and
+    pasting one puts the decision back where it belongs.
+    """
+    opts = dict(pane="", dry_run=False, listing=False, force=False)
+    rest = list(argv)
+    while rest:
+        arg = rest.pop(0)
+        if arg in ("-n", "--dry-run"):
+            opts["dry_run"] = True
+        elif arg in ("-l", "--list"):
+            opts["listing"] = True
+        elif arg == "--force":
+            opts["force"] = True
+        elif arg == "--pane":
+            if not rest:
+                return opts, "--pane needs a pane id"
+            opts["pane"] = rest.pop(0)
+        elif arg.startswith("--pane="):
+            opts["pane"] = arg.split("=", 1)[1]
+        else:
+            return opts, f"unknown argument: {arg}"
+    if opts["pane"] and not opts["pane"].startswith("%"):
+        opts["pane"] = "%" + opts["pane"].lstrip("%")
+    return opts, ""
+
+
+def fail(message):
+    print(f"agent-resume: {message}", file=sys.stderr)
+
+
+# Cursor home, then erase the display. Deliberately *not* the `ESC[3J` that
+# `clear` also sends on most terminfo entries: tmux answers that one by dropping
+# the pane's scrollback, and that scrollback is a source this family reads. For a
+# session that started and exited between two saves the banner sitting there is
+# the only record of it that exists, and nothing has folded it into the sidecar
+# yet. Clearing the screen costs nothing; clearing the history could cost an id.
+CLEAR = "\x1b[H\x1b[2J"
+
+
+def clear_pane():
+    """Wipe the visible screen, so the session starts on a clean pane.
+
+    A restored pane opens showing whatever it was replaying -- the old contents,
+    the injected block, the previous agent's parting banner -- and resuming under
+    all of it starts the new session halfway down a screen of stale text.
+    """
+    if sys.stdout.isatty():
+        sys.stdout.write(CLEAR)
+        sys.stdout.flush()
+
+
+def run(argv):
+    opts, error = parse_args(argv)
+    if error:
+        fail(error)
+        fail("usage: agent-resume [-n|--dry-run] [-l|--list] [--pane %N] [--force]")
+        return 3
+
+    # Without $TMUX every tmux call resolves against the *default* server, so the
+    # capture, the pane list and @resurrect-dir would all answer for a session
+    # this one has nothing to do with.
+    if not os.environ.get("TMUX"):
+        fail("not inside tmux; there is no pane to map")
+        return 3
+    if RESURRECT.IMPORT_ERROR:
+        # Without the shared patterns extract() matches nothing and the whole
+        # scrollback source silently disappears, which here would read as "this
+        # pane never held a session".
+        fail(f"shared resume-marker patterns unavailable: {RESURRECT.IMPORT_ERROR}")
+        return 3
+
+    pane = opts["pane"] or os.environ.get("TMUX_PANE") or ""
+    if not pane:
+        fail("TMUX_PANE is unset; pass --pane %N")
+        return 3
+
+    server = RESURRECT.server_id()
+    rows = order(
+        resolve(
+            candidates(
+                merge(
+                    sidecar_rows(pane, server)
+                    + capture_rows(pane, server)
+                    + cache_row(pane, server_started())
+                )
+            )
+        )
+    )
+
+    where = "sidecar, scrollback and hook cache"
+    if opts["listing"]:
+        if not rows:
+            print(f"{pane} has held no agent session this tool can see — {where}")
+            return 1
+        show(rows, pane, where)
+        for number, row in enumerate(rows, 1):
+            print(f"{number}. {command_line(row)}")
+        return 0
+
+    # Start a session only where the pane maps to one, confidently and by itself.
+    chosen, verdict = choose(rows)
+    if verdict != "one":
+        if rows:
+            show(rows, pane, where, sys.stderr)
+        if verdict == "none":
+            fail(f"no resumable agent session maps to {pane}")
+            print("  agent-scrollback-ids sweeps every pane, and offers a best guess", file=sys.stderr)
+            print("  where this refuses to.", file=sys.stderr)
+            return 1
+        fail(f"{pane} maps to more than one resumable session; refusing to guess")
+        print("  agent-resume --list prints the command for each; paste the one you meant.", file=sys.stderr)
+        return 2
+
+    line = command_line(chosen)
+    if opts["dry_run"]:
+        print(line)
+        return 0
+
+    # Running inside an agent's own shell tool is the one context where the pane
+    # mapping is right and resuming is still wrong: it would start a second agent
+    # inside the first one's tool call, on a terminal that is not a terminal.
+    agent_pid, _ = REGISTER.agent_process()
+    if agent_pid and not opts["force"]:
+        fail(f"an agent is already running above this shell (pid {agent_pid})")
+        print("  --dry-run prints the command instead; --force runs it anyway.", file=sys.stderr)
+        return 3
+
+    argv_out = argv_for(chosen)
+    if chosen.get("cwd") and not os.path.isdir(chosen["cwd"]):
+        fail(f"recorded directory is gone, resuming from here: {chosen['cwd']}")
+        chosen["cwd"] = ""
+        line = command_line(chosen)
+    clear_pane()
+    # After the clear, so the one line the pane keeps says what is about to run.
+    print(f"agent-resume: {line}", file=sys.stderr)
+    if chosen.get("cwd"):
+        os.chdir(chosen["cwd"])
+    try:
+        os.execvp(argv_out[0], argv_out)
+    except OSError as err:
+        fail(f"cannot run {argv_out[0]}: {err}")
+        return 3
+
+
+def main():
+    if "-h" in sys.argv[1:] or "--help" in sys.argv[1:]:
+        print(__doc__.strip())
+        return 0
+    return run(sys.argv[1:])
+
+
+if __name__ == "__main__":
+    sys.exit(main())

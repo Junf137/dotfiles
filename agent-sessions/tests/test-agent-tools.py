@@ -32,6 +32,7 @@ import time
 BIN = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "bin")
 TOOL = os.path.join(BIN, "agent-scrollback-ids")
 RESURRECT_TOOL = os.path.join(BIN, "agent-panes-resurrect")
+RESUME_TOOL = os.path.join(BIN, "agent-resume")
 
 UUID = "1a03df5b-6a91-49de-927c-6920a34539c2"
 CODEX_UUID = "019f60f4-3809-76d1-a643-024fc3db3eec"
@@ -962,6 +963,115 @@ def title_index_cases(tool):
     return cases
 
 
+def resume_cases(tool):
+    """agent-resume: the rule that decides whether a session may be started.
+
+    Everything else in that tool reads something; this is the part that acts. It
+    starts an agent with a `--dangerously-skip-permissions` / `--yolo` flag on it,
+    in a directory it chose, from evidence that includes free text a pane merely
+    happened to display -- so the interesting cases are all refusals.
+    """
+    cases = []
+
+    def add(label, ok):
+        cases.append((label, bool(ok)))
+
+    def row(session_id, agent="codex", gone=False, **extra):
+        return dict(agent=agent, session_id=session_id, gone=gone, **extra)
+
+    live = row("019f85e8-b749-7101-9771-beee8b588342")
+    other = row("019fb1f2-ce78-7af1-9dcc-886ddda58500")
+    dead = row("019fc38b-75f6-7541-996a-8fb29cfc1375", gone=True)
+
+    # The rule itself.
+    add("one resumable candidate is chosen", tool["choose"]([live]) == (live, "one"))
+    add("two resumable candidates refuse", tool["choose"]([live, other])[1] == "many")
+    add("no candidates refuse", tool["choose"]([])[1] == "none")
+    add("only unresumable candidates refuse", tool["choose"]([dead])[1] == "none")
+    # A session Claude has already pruned cannot be resumed, so it must neither
+    # win by being the last one left nor block the one that can.
+    add("a gone candidate does not make a pane ambiguous", tool["choose"]([live, dead]) == (live, "one"))
+
+    # What is allowed to be a candidate at all. Both agents name sessions by
+    # uuid, so anything else came out of text that only looked like a resume line.
+    add("a non-uuid id is not a candidate", tool["candidates"]([row("cleanup-worktree-script")]) == [])
+    add("an unknown agent is not a candidate", tool["candidates"]([row(UUID, agent="aider")]) == [])
+    add("an empty id is not a candidate", tool["candidates"]([row("")]) == [])
+    add("a well-formed row is a candidate", len(tool["candidates"]([live])) == 1)
+
+    # The commands, spelled out here as well as in the tool, so that changing
+    # either one alone fails rather than silently resuming without the flag.
+    add(
+        "claude command",
+        tool["argv_for"](dict(agent="claude", session_id=UUID))
+        == ["claude", "--dangerously-skip-permissions", "--resume", UUID],
+    )
+    add(
+        "codex command",
+        tool["argv_for"](dict(agent="codex", session_id=CODEX_UUID))
+        == ["codex", "resume", CODEX_UUID, "--yolo"],
+    )
+
+    # The cd is what `claude --resume` needs and no exit banner prints; the
+    # quoting is what keeps a directory with a space in it from becoming two
+    # arguments when the line is copied out of the pane and pasted.
+    quoted = tool["command_line"](dict(agent="codex", session_id=CODEX_UUID, cwd="/home/junf/tmp dir"))
+    add("cwd is prefixed as a cd", quoted.startswith("cd '/home/junf/tmp dir' && "))
+    add("no cwd means no cd", not tool["command_line"](dict(agent="codex", session_id=CODEX_UUID, cwd="")).startswith("cd "))
+
+    # tmux answers ESC[3J by dropping the pane's history, and for a session that
+    # started and exited between two saves that history is the only record there
+    # is. The clear must not reach it.
+    add("the clear leaves scrollback alone", "\x1b[3J" not in tool["CLEAR"] and "\x1b[2J" in tool["CLEAR"])
+
+    # No argument may name a session: anything that selects one is a way to start
+    # a session the tool could not map by itself.
+    add("a bare number is not an argument", tool["parse_args"](["1"])[1] != "")
+    add("--pane normalises to %N", tool["parse_args"](["--pane", "7"])[0]["pane"] == "%7")
+    add("--pane keeps an explicit %N", tool["parse_args"](["--pane=%13"])[0]["pane"] == "%13")
+    add("an unknown flag is refused", tool["parse_args"](["--resume-anyway"])[1] != "")
+
+    # The same session arrives from several sources; the merge has to keep the
+    # best-attested version of each field rather than whichever arrived first.
+    merged = tool["merge"](
+        [
+            dict(agent="codex", session_id=CODEX_UUID, source="scrollback", cwd="", name="", last_seen=None, origin="scrollback"),
+            dict(agent="codex", session_id=CODEX_UUID, source="cmdline", cwd="/repo", name="build", last_seen=100.0, origin="sidecar"),
+        ]
+    )
+    add("one row per session across sources", len(merged) == 1)
+    add("the merge keeps the better source", merged[0]["source"] == "cmdline")
+    add("the merge keeps the cwd", merged[0]["cwd"] == "/repo")
+    add("the merge keeps the date", merged[0]["last_seen"] == 100.0)
+    add("the merge records both origins", merged[0]["origins"] == {"scrollback", "sidecar"})
+
+    # The hook cache is keyed by pane number with no server stamp, so a record
+    # written before a reboot would otherwise be read against whichever restored
+    # pane inherited that number.
+    with tempfile.TemporaryDirectory() as tmp:
+        register = tool["REGISTER"]
+        previous = register.REG
+        register.REG = tmp
+        try:
+            record = dict(
+                agent="claude", pane_id="%3", session_id=UUID, name="", cwd="/repo",
+                pid=1, proc_start=2, updated=1000.0,
+            )
+            with open(os.path.join(tmp, "3.json"), "w") as fh:
+                json.dump(record, fh)
+            add("a cache record from this server is read", len(tool["cache_row"]("%3", 900.0)) == 1)
+            add("one predating the server is dropped", tool["cache_row"]("%3", 1100.0) == [])
+            add("no server start time means no cache source", tool["cache_row"]("%3", None) == [])
+            add("a record naming another pane is dropped", tool["cache_row"]("%4", 900.0) == [])
+            with open(os.path.join(tmp, "3.json"), "w") as fh:
+                json.dump(dict(record, session_id=""), fh)
+            add("a record with no session id is dropped", tool["cache_row"]("%3", 900.0) == [])
+        finally:
+            register.REG = previous
+
+    return cases
+
+
 def archive_cases(tool):
     """inject() and the guards that decide whether it may run at all.
 
@@ -1172,7 +1282,19 @@ def main():
             print(f"FAIL  marker  {label}")
 
     passed = len(cases) - (failures - marker_failures)
-    print(f"\n{passed}/{len(cases)} resurrect marker cases passed")
+    print(f"\n{passed}/{len(cases)} resurrect marker cases passed\n")
+
+    resume = resume_cases(load_tool(RESUME_TOOL))
+    resume_failures = failures
+    for label, ok in resume:
+        if ok:
+            print(f"PASS  resume  {label}")
+        else:
+            failures += 1
+            print(f"FAIL  resume  {label}")
+
+    passed = len(resume) - (failures - resume_failures)
+    print(f"\n{passed}/{len(resume)} agent-resume cases passed")
     return 1 if failures else 0
 
 

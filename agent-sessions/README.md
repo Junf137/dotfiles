@@ -10,6 +10,7 @@ agent-sessions/
 │   ├── agent-panes            # map every running session to session:window.pane
 │   ├── agent-pane-register    # session-hook target: bind a pane to a session id
 │   ├── agent-panes-resurrect  # tmux-resurrect save hook + sidecar + purge
+│   ├── agent-resume           # resume this pane's session, if it has exactly one
 │   ├── agent-scrollback-ids   # recover ids from exited agents' scrollback, by hand
 │   └── claude-sessions        # list running Claude Code sessions with details
 ├── lib/
@@ -396,6 +397,53 @@ of every Claude session that ever ran there.
   agent panes — `restore_pane_process` uses `send-keys`, and neither `node` nor `codex`
   is in the default list — which is why the block survives above whatever restore types.
 
+## Resuming: `agent-resume`
+
+Everything above *records*. `agent-resume` is the one thing here that acts on the
+record: run it in any pane and, if exactly one agent session maps to that pane, it
+clears the screen and resumes that session in the directory it was opened in —
+`claude --dangerously-skip-permissions --resume <uuid>` or `codex resume <uuid> --yolo`.
+It reads three sources and never writes to any of them.
+
+| Source | Covers what the others cannot |
+|---|---|
+| the sidecar, filtered to this server's own `%N` | every session a save saw running here |
+| this pane's scrollback: our block, then the agents' own banners | the window between a restore and the first save after it, and a session that started and exited between two saves |
+| the hook cache, `~/.cache/agent-panes/<pane>.json` | a **killed** agent, between the kill and the next save — the only place that id exists |
+
+- **It starts a session only where the pane maps to one, and there is no flag that
+  names one.** Anything selecting a candidate would be a way to start a session the
+  tool could not map by itself, which is the single thing it must not do — a wrong id
+  resumes somebody else's conversation and reads exactly like a right one. `--list`
+  prints the command for each candidate instead, so choosing is a person's act.
+  Exit status carries the verdict: `0` resumed, `1` nothing resumable here, `2`
+  ambiguous, `3` refused to run at all.
+- **A candidate whose transcript is gone is listed but never chosen**, and never makes
+  a pane ambiguous either. Both agents resolve `--resume` out of those files and Claude
+  prunes its own at 30 days, so an id with nothing behind it is not a candidate that
+  loses — it is not a candidate. That is also what makes "exactly one" answerable as
+  often as it is: measured here, 53 of 66 panes.
+- **The clear is `ESC[H ESC[2J` and deliberately not `ESC[3J`.** tmux answers the third
+  by dropping the pane's history, and that history is a source this tool reads: for a
+  session that started and exited between two saves, the banner sitting in it is the
+  only record there is and nothing has folded it into the sidecar yet. Clearing the
+  screen costs nothing; clearing the history could cost an id. `clear(1)` sends both on
+  most terminfo entries, which is worth knowing before reaching for it.
+- **It refuses to run from inside an agent's own shell tool.** `agent-pane-register`'s
+  ancestor walk is what detects it. This is the one context where the pane mapping is
+  right and resuming is still wrong — it would start a second agent inside the first
+  one's tool call, on a terminal that is not one. `--dry-run` prints the command
+  instead; `--force` overrides.
+- **The block parsing is borrowed, not copied.** `marker_line()`, `parse_stanzas()` and
+  `split_capture()` come from `agent-panes-resurrect` by importing it, so the stanza
+  binding rules — a stanza claiming this server but another pane is text that arrived
+  here, and is dropped whole — apply identically. The per-pane caps are borrowed for
+  the same reason: they only cost a screenful here rather than a permanent record, but
+  the two tools disagreeing about what a pane holds would be worse than either bound.
+  `check_borrowed_names` resolves every borrowed attribute for real, because a rename
+  in the lender leaves this importing cleanly and raising `AttributeError` on the one
+  path that starts a session.
+
 ## Commands
 
 | Command | Purpose |
@@ -404,6 +452,7 @@ of every Claude session that ever ran there.
 | `agent-panes-resurrect save [--dry-run]` | the hook target; silent by design |
 | `agent-panes-resurrect list [--json]` | read the sidecar |
 | `agent-panes-resurrect purge [--dry-run]` | remove every block, sidecar, log |
+| `agent-resume [-n] [-l] [--pane %N]` | resume this pane's session, if it has exactly one |
 | `agent-scrollback-ids` | recover ids exited agents printed into scrollback |
 | `claude-sessions` | list running Claude Code sessions with details |
 
@@ -449,7 +498,7 @@ an hour is not one; `purge` is what removes it.
 | `AGENT_SESSIONS_KEEP_DAYS` | how long a record survives after the last save that found evidence of it (30) |
 | `AGENT_SESSIONS_MAX_STANZAS` | most sessions printed in one pane's block (6); the rest stay in the sidecar |
 | `NO_COLOR` | render the block without SGR |
-| `SCROLLBACK_DEPTH` | how far back `agent-scrollback-ids` searches |
+| `SCROLLBACK_DEPTH` | how far back `agent-scrollback-ids` and `agent-resume` search. The two defaults differ on purpose: `-20000` for the sweep, which pays it once per pane across a whole server, and the pane's whole history (`-`) for the one pane `agent-resume` reads |
 
 ## Tests
 
@@ -465,9 +514,16 @@ does not cover everything about this feature: resolving the hook `command` strin
 `claude-sessions` is linted by the parent's generic bash/shfmt/shellcheck lists. **Re-run after upgrading Claude or
 Codex**: it covers the resume-marker patterns and the title index, which read those
 tools' terminal output and on-disk records and rot silently when either changes, plus the
-marker rendering, stripping, parsing and pane-placement in `agent-panes-resurrect`, and
-the shared imports — which are guarded, so a broken one degrades to "no harvest" and this
-is the only place it would be noticed.
+marker rendering, stripping, parsing and pane-placement in `agent-panes-resurrect`, the
+rule and the two commands in `agent-resume`, and the shared imports — which are guarded,
+so a broken one degrades to "no harvest" and this is the only place it would be noticed.
+
+`agent-resume`'s two commands are spelled out in the tests as well as in the tool, so
+changing one alone fails rather than quietly resuming without the flag it was asked for.
+What the tests cannot reach is the exec itself. Put a script named `claude` or `codex`
+on `PATH` ahead of the real one, echoing its argv and `$PWD`, and run `agent-resume` in a
+pane on a throwaway server (`tmux -L test`, with `@resurrect-dir` pointed somewhere
+scratch) — that exercises the clear, the `chdir` and the argv end to end for nothing.
 
 **One thing no check can reach: whether a hook had any effect.** `check_hook_wiring`
 resolves each `command` to a real executable, and Codex's own Hooks TUI reports the

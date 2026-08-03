@@ -66,6 +66,7 @@ check_python_syntax() {
         agent-sessions/bin/agent-panes \
         agent-sessions/bin/agent-pane-register \
         agent-sessions/bin/agent-panes-resurrect \
+        agent-sessions/bin/agent-resume \
         agent-sessions/bin/agent-scrollback-ids \
         agent-sessions/lib/agent_ids.py \
         agent-sessions/lib/claude_names.py \
@@ -127,6 +128,7 @@ check_executable_bits() {
         agent-sessions/bin/agent-panes
         agent-sessions/bin/agent-pane-register
         agent-sessions/bin/agent-panes-resurrect
+        agent-sessions/bin/agent-resume
         agent-sessions/bin/agent-scrollback-ids
         agent-sessions/bin/claude-sessions
         agent-sessions/tests/test-agent-tools.py
@@ -198,6 +200,52 @@ for path in sys.argv[1:]:
     else:
         print(f"OK {path} shares the resume-marker patterns and the title index")
 
+sys.exit(status)
+PY
+}
+
+check_borrowed_names() {
+    # agent-resume borrows the block parsing from agent-panes-resurrect and the
+    # ancestor walk from agent-pane-register rather than keeping a second copy --
+    # marker_line() and parse_stanzas() carry the rules deciding which stanzas a
+    # pane may claim, and a copy would drift exactly where drift is silent.
+    #
+    # The cost is that every borrowed name is an attribute lookup resolved at
+    # call time. Renaming one inside the lender leaves agent-resume importing
+    # cleanly, passing the name-binding pass, and then raising AttributeError on
+    # the one path that starts a session. This resolves each of them for real.
+    cd "$REPO_ROOT" || return 1
+
+    python3 - agent-sessions/bin/agent-resume <<'PY'
+import ast
+import os
+import sys
+
+path = sys.argv[1]
+with open(path) as handle:
+    source = handle.read()
+
+namespace = {"__file__": os.path.abspath(path)}
+try:
+    exec(compile(source.split("if __name__ ==")[0], path, "exec"), namespace)  # noqa: S102
+except Exception as err:
+    print(f"{path}: module body raised {type(err).__name__}: {err}", file=sys.stderr)
+    sys.exit(1)
+
+status = 0
+wanted = {}
+for node in ast.walk(ast.parse(source, filename=path)):
+    if isinstance(node, ast.Attribute) and isinstance(node.value, ast.Name):
+        if node.value.id in ("RESURRECT", "REGISTER"):
+            wanted.setdefault((node.value.id, node.attr), node.lineno)
+
+for (module, attr), lineno in sorted(wanted.items(), key=lambda item: item[1]):
+    if not hasattr(namespace[module], attr):
+        print(f"{path}:{lineno}: {module} has no {attr!r}", file=sys.stderr)
+        status = 1
+
+if not status:
+    print(f"OK {len(wanted)} borrowed name(s) resolve")
 sys.exit(status)
 PY
 }
@@ -318,6 +366,7 @@ check_tool_tests() {
 
 run_optional python3 "agent-sessions python syntax" check_python_syntax
 run_optional python3 "agent-sessions shared patterns" check_shared_module
+run_optional python3 "agent-resume borrowed names" check_borrowed_names
 run_required "agent-sessions executable bits" check_executable_bits
 run_required "tmux resurrect hook wiring" check_tmux_hook_wiring
 run_required "tmux resurrect plugin contract" check_resurrect_plugin_contract
