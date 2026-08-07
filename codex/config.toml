@@ -19,7 +19,7 @@ memories = true
 goals = true
 
 [tui]
-status_line = ["project-name", "thread-title", "git-branch", "model-with-reasoning", "context-used", "five-hour-limit", "weekly-limit"]
+status_line = ["thread-title", "git-branch", "model-with-reasoning", "context-used", "five-hour-limit", "weekly-limit"]
 session_picker_view = "comfortable"
 status_line_use_colors = true
 
