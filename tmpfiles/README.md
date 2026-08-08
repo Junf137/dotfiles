@@ -2,6 +2,18 @@
 
 Context for `handoffs.conf`, the only file in this directory.
 
+> **Linux only.** systemd-tmpfiles does not exist on macOS, so everything below applies
+> to the Linux box alone. `lib/link_manifest.sh` gates this file to `uname -s = Linux`
+> and links `launchd/com.junf.prune-handoffs.plist` instead on a Mac — same policy
+> (create `~/hf`, prune entries untouched for 10 days), run by a launchd user agent
+> rather than a systemd timer. That plist documents its own one-time
+> `launchctl bootstrap` step in a comment at the top.
+>
+> Note also that the `mktemp` line quoted below does not work on macOS: BSD `mktemp`
+> only substitutes *trailing* `X`s, so `handoff-XXXXXX.md` is taken literally and the
+> second `/handoff` fails with `File exists`. That command lives in the `agent-skills`
+> submodule and has to be fixed there.
+
 ## What it is for
 
 The `handoff` agent skill (`agent-skills/{claude,codex}/handoff/SKILL.md`) writes documents with:
