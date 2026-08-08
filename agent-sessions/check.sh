@@ -214,6 +214,12 @@ check_borrowed_names() {
     # call time. Renaming one inside the lender leaves agent-resume importing
     # cleanly, passing the name-binding pass, and then raising AttributeError on
     # the one path that starts a session. This resolves each of them for real.
+    #
+    # procinfo is in the list for the same reason even though it is imported
+    # rather than borrowed: agent-resume is the one tool no check can run, so an
+    # attribute lookup is all there is to resolve. The walk is one level deep, so
+    # a name must be reached as `MODULE.name` -- writing it as
+    # `REGISTER.procinfo.name` would put it back out of sight.
     cd "$REPO_ROOT" || return 1
 
     python3 - agent-sessions/bin/agent-resume <<'PY'
@@ -236,7 +242,7 @@ status = 0
 wanted = {}
 for node in ast.walk(ast.parse(source, filename=path)):
     if isinstance(node, ast.Attribute) and isinstance(node.value, ast.Name):
-        if node.value.id in ("RESURRECT", "REGISTER"):
+        if node.value.id in ("RESURRECT", "REGISTER", "procinfo"):
             wanted.setdefault((node.value.id, node.attr), node.lineno)
 
 for (module, attr), lineno in sorted(wanted.items(), key=lambda item: item[1]):
@@ -364,6 +370,43 @@ check_tool_tests() {
     ./agent-sessions/tests/test-agent-tools.py
 }
 
+check_tool_smoke() {
+    # Everything above this line inspects the tools without starting them:
+    # ast.parse, a name-binding pass, an -x test. None of that notices a tool
+    # that dies at import -- which is exactly how the /proc reads went
+    # unnoticed on macOS while the checks reported OK. So actually run the one
+    # that reads processes, and parse what it prints.
+    #
+    # agent-panes is the right probe: every process fact the family depends on
+    # is exercised by producing its table, and every other Python tool that
+    # reads processes imports the same module, so one run covers the import for
+    # all of them. (claude-sessions is bash and agent-scrollback-ids does not
+    # read processes, so neither is covered here.) agent-resume must never be
+    # smoke-tested this way -- with a single candidate it clears the pane and
+    # execs the agent.
+    local out
+    cd "$REPO_ROOT" || return 1
+
+    if ! out="$(./agent-sessions/bin/agent-panes --json 2>&1)"; then
+        # No tmux server is a legitimate exit 1, not a broken tool.
+        if printf '%s' "$out" | grep -q 'No tmux panes found'; then
+            printf 'SKIP: no tmux server running\n'
+            return 0
+        fi
+        printf '%s\n' "$out" >&2
+        return 1
+    fi
+
+    local rows
+    rows="$(printf '%s' "$out" |
+        python3 -c 'import json, sys; rows = json.load(sys.stdin); print(len(rows) if isinstance(rows, list) else "")')"
+    if [ -z "$rows" ]; then
+        printf 'agent-panes --json did not produce a JSON list\n' >&2
+        return 1
+    fi
+    printf 'OK agent-panes runs and emits JSON (%s row(s))\n' "$rows"
+}
+
 run_optional python3 "agent-sessions python syntax" check_python_syntax
 run_optional python3 "agent-sessions shared patterns" check_shared_module
 run_optional python3 "agent-resume borrowed names" check_borrowed_names
@@ -371,6 +414,7 @@ run_required "agent-sessions executable bits" check_executable_bits
 run_required "tmux resurrect hook wiring" check_tmux_hook_wiring
 run_required "tmux resurrect plugin contract" check_resurrect_plugin_contract
 run_optional python3 "agent resume-marker patterns" check_tool_tests
+run_optional python3 "agent-sessions tools run" check_tool_smoke
 
 if [ "$failures" -gt 0 ]; then
     printf '\n%d agent-sessions check(s) failed.\n' "$failures" >&2
