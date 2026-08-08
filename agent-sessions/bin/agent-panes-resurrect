@@ -126,6 +126,7 @@ AGENT_PANES = os.path.join(HERE, "agent-panes")
 # is survivable; losing the whole save hook without a word is not.
 sys.path.insert(0, os.path.join(os.path.dirname(HERE), "lib"))
 try:
+    import procinfo  # noqa: E402
     from agent_ids import UUID, extract  # noqa: E402
     from claude_names import name_index  # noqa: E402
 
@@ -133,6 +134,7 @@ try:
 except Exception as err:  # noqa: BLE001 - reported through the log, never raised
     UUID = r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"
     IMPORT_ERROR = f"{type(err).__name__}: {err}"
+    procinfo = None
 
     def extract(_text):
         return []
@@ -146,6 +148,16 @@ CODEX_SESSIONS = os.path.expanduser("~/.codex/sessions")
 ARCHIVE_NAME = "pane_contents.tar.gz"
 ARCHIVE_MEMBER_DIR = "./pane_contents"
 CONTENT_DIR = "pane_contents"
+# A note for the next person to meet a macOS tar: some of them serialise a
+# file's xattrs as a sibling `._<name>` archive member, which would break the
+# rebuilt-member-set comparison below -- `./._pane_contents` sits *beside*
+# ./pane_contents and so cannot be reproduced by tar.add(content_dir), and
+# inject() would then return "rebuilt member set differs" on every save, doing
+# all its work and publishing nothing. Measured not to happen here: the
+# `tar cf - -C <dir> ./pane_contents/` that tmux-resurrect runs is bsdtar 3.5.3,
+# which stores xattrs as pax LIBARCHIVE.xattr.* headers instead, and emits no
+# such member even for a file carrying a resource fork or under
+# `--mac-metadata`. GNU tar emits none either. So no filtering is needed.
 SIDECAR_NAME = "agent_sessions.json"
 # A sidecar that would not parse, kept rather than written over. Named with a
 # prefix rather than an exact name so sweep_scratch() and purge agree about it
@@ -373,14 +385,12 @@ def server_id():
     if len(parts) < 2:
         return ""
     sock, pid = parts[0], parts[1]
-    try:
-        with open(f"/proc/{int(pid)}/stat") as fh:
-            stat = fh.read()
-        # Field 22, counted from after comm -- which is parenthesised and may
-        # itself contain spaces, so it cannot be split on naively.
-        start = stat[stat.rindex(")") + 2 :].split()[19]
-    except (OSError, ValueError, IndexError):
-        start = "?"
+    start = "?"
+    if procinfo is not None:
+        try:
+            start = procinfo.start_token(int(pid)) or "?"
+        except (TypeError, ValueError):
+            start = "?"
     return f"{sock}:{pid}:{start}"
 
 
@@ -397,16 +407,23 @@ def server_alive():
     parts = (os.environ.get("TMUX") or "").split(",")
     if len(parts) < 2 or not os.path.exists(parts[0]):
         return False
-    try:
-        with open(f"/proc/{int(parts[1])}/comm") as fh:
-            # `tmux: server`, and `tmux: server ()` for one started with a
-            # command -- never a bare `tmux`, which is the client. comm is
-            # capped at 15 characters, so only the prefix is dependable.
-            return fh.read().strip().startswith("tmux")
-    except (OSError, ValueError):
-        # No /proc, or an unparseable $TMUX: fall back to the socket test rather
-        # than refusing to publish on a platform where the pid cannot be checked.
+    if procinfo is None:
+        # The import failed: fall back to the socket test rather than refusing
+        # to publish over a check we cannot make.
         return True
+    try:
+        # Linux reads `tmux: server`, and `tmux: server ()` for one started with
+        # a command; macOS reports the exec name, so a bare `tmux` there. Only
+        # the `tmux` prefix is dependable across the two, and it does not have to
+        # tell a server from a client: the pid comes from $TMUX, which always
+        # names the server.
+        comm = procinfo.comm(int(parts[1]))
+    except (TypeError, ValueError):
+        return True
+    # An unreadable pid reads as "" on both kernels. That is the dead-server
+    # case on Linux, but on macOS it is also every process the caller does not
+    # own -- so an empty comm falls back rather than vetoing the publish.
+    return comm.startswith("tmux") if comm else True
 
 
 # ---* The injected block *---
@@ -814,9 +831,10 @@ def usable_pane_key(loc):
 def live_rows():
     """agent-panes output, grouped by the pane key resurrect files things under.
 
-    agent-panes exits non-zero on a kernel with no /proc and prints nothing;
-    that is indistinguishable here from "no agents running", and deliberately
-    so -- both mean there is nothing to annotate.
+    agent-panes exits non-zero when there is no tmux server, or on a kernel
+    procinfo has no backend for, and prints nothing; that is indistinguishable
+    here from "no agents running", and deliberately so -- both mean there is
+    nothing to annotate.
     """
     try:
         out = subprocess.run(

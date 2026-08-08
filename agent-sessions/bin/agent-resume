@@ -70,6 +70,13 @@ import time
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 
+# Imported directly rather than reached through the lender below. What is
+# borrowed from those two is their *parsing rules*, which must not drift; the
+# platform layer is not theirs to re-export, and going through them would hide
+# these calls from check.sh's borrowed-name pass.
+sys.path.insert(0, os.path.join(os.path.dirname(HERE), "lib"))
+import procinfo  # noqa: E402
+
 # What resuming actually runs. Spelled out as literal argv rather than composed,
 # because these are dangerous flags and the reader should be able to see exactly
 # what they are without following a builder. Passed to execvp as a list, so no
@@ -120,16 +127,9 @@ def server_started():
     if len(parts) < 2:
         return None
     try:
-        with open(f"/proc/{int(parts[1])}/stat") as fh:
-            stat = fh.read()
-        # Field 22, counted from after comm -- parenthesised, and may itself
-        # contain spaces, so the string cannot be split on naively.
-        ticks = int(stat[stat.rindex(")") + 2 :].split()[19])
-        with open("/proc/uptime") as fh:
-            boot = time.time() - float(fh.read().split()[0])
-    except (OSError, ValueError, IndexError):
+        return procinfo.start_epoch(int(parts[1]))
+    except (TypeError, ValueError):
         return None
-    return boot + ticks / os.sysconf("SC_CLK_TCK")
 
 
 def sidecar_rows(pane, server):
@@ -326,10 +326,8 @@ def alive(pid, proc_start):
     if not pid or not proc_start:
         return False
     try:
-        with open(f"/proc/{int(pid)}/stat") as fh:
-            stat = fh.read()
-        return str(stat[stat.rindex(")") + 2 :].split()[19]) == str(proc_start)
-    except (OSError, ValueError, IndexError):
+        return str(procinfo.start_token(int(pid))) == str(proc_start)
+    except (TypeError, ValueError):
         return False
 
 

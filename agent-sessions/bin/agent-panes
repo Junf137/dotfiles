@@ -4,7 +4,7 @@
 
 """Map running Claude Code / Codex sessions to the tmux pane they live in.
 
-Every agent is anchored to a pane through TMUX_PANE in /proc/<pid>/environ, which
+Every agent is anchored to a pane through TMUX_PANE in its environment, which
 holds tmux's stable %N pane id. Note that #{pane_pid} is the pane's *shell*, not
 the agent -- the agent is a descendant of it.
 
@@ -13,10 +13,13 @@ Session ids are resolved through a tier list, best source first:
     hook      pane registry written by agent-pane-register (exact)
     sessions  Claude's own live registry, ~/.claude/sessions/<pid>.json (exact)
     env       CLAUDE_CODE_SESSION_ID in a child process environment (exact)
-    cmdline   `codex resume <uuid>` in /proc/<pid>/cmdline (exact)
+    cmdline   `codex resume <uuid>` in the process argv (exact)
     fd        an open rollout file, used by Codex app-server sessions (exact)
     meta~Ns   Codex rollout session_meta matched on cwd + start time (inferred)
     btime~Ns  Claude transcript birth time nearest the process start (inferred)
+
+Reading a process is procinfo's job: /proc on Linux, libproc and sysctl on
+macOS. Nothing below this line knows which kernel it is on.
 
 Usage: agent-panes [--json]
 """
@@ -30,8 +33,10 @@ import subprocess
 import sys
 import time
 
-HZ = os.sysconf("SC_CLK_TCK")
-BOOT = time.time() - float(open("/proc/uptime").read().split()[0])
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "lib"))
+import procinfo  # noqa: E402
+
+BOOT = procinfo.boot_time()
 REG = os.path.expanduser("~/.cache/agent-panes")
 CLAUDE_PROJECTS = os.path.expanduser("~/.claude/projects")
 CLAUDE_SESSIONS = os.path.expanduser("~/.claude/sessions")
@@ -51,54 +56,30 @@ EXACT_SOURCES = ("hook", "sessions", "env", "cmdline", "fd")
 HELPER_SUBCOMMANDS = ("daemon", "mcp", "app-server", "proxy", "bg-pty-host", "bg-spare")
 
 
-def proc_stat_fields(pid):
-    """Return /proc/<pid>/stat fields from ppid onward, comm safely stripped."""
-    st = open(f"/proc/{pid}/stat").read()
-    return st[st.rindex(")") + 2 :].split()
-
-
 def pstart(pid):
     """Wall-clock start time of a process, in epoch seconds."""
-    return BOOT + int(proc_stat_fields(pid)[19]) / HZ
+    return procinfo.start_epoch(pid, BOOT)
 
 
-def starttime_ticks(pid):
-    """Raw starttime in clock ticks; identifies a pid across pid reuse."""
-    try:
-        return proc_stat_fields(pid)[19]
-    except (OSError, IndexError):
-        return None
-
-
-def environ(pid):
-    try:
-        with open(f"/proc/{pid}/environ") as fh:
-            return dict(kv.split("=", 1) for kv in fh.read().split("\0") if "=" in kv)
-    except OSError:
-        return {}
-
-
-def cmdline(pid):
-    try:
-        return open(f"/proc/{pid}/cmdline").read().split("\0")
-    except OSError:
-        return []
+environ = procinfo.environ
+cmdline = procinfo.cmdline
 
 
 def agent_kind(pid, comm):
     """Which agent a process is, if any.
 
     comm is not always the agent's own name: background sessions exec the
-    versioned binary directly, so comm reads as e.g. '2.1.220'. The executable
-    path is the reliable signal -- matched on a whole path segment or the
-    basename, since a bare substring also catches siblings that merely share the
-    prefix, such as codex's `bin/codex-code-mode-host`.
+    versioned binary directly, so comm reads as e.g. '2.1.220' -- which is what
+    an installed Claude reads as on macOS as a matter of course, since it is
+    exec'd straight out of ~/.local/share/claude/versions/. The executable path
+    is the reliable signal -- matched on a whole path segment or the basename,
+    since a bare substring also catches siblings that merely share the prefix,
+    such as codex's `bin/codex-code-mode-host`.
     """
     if comm in AGENTS:
         return comm
-    try:
-        exe = os.readlink(f"/proc/{pid}/exe")
-    except OSError:
+    exe = procinfo.exe(pid)
+    if not exe:
         return ""
     base = os.path.basename(exe)
     return next((name for name in AGENTS if base == name or f"/{name}/" in exe), "")
@@ -162,7 +143,7 @@ def resolve_hook(pid, pane_id):
     # guard exists to reject.
     if not rec.get("pid") or rec["pid"] != pid:
         return None, ""
-    if str(rec.get("proc_start")) != str(starttime_ticks(pid)):
+    if str(rec.get("proc_start")) != str(procinfo.start_token(pid)):
         return None, ""
     return rec["session_id"], rec.get("name") or ""
 
@@ -176,13 +157,17 @@ def claude_dir(cwd):
 
 
 def claude_registry(pid):
-    """Claude keeps a live pid -> session map; procStart guards against pid reuse."""
+    """Claude keeps a live pid -> session map; procStart guards against pid reuse.
+
+    Claude writes procStart in the kernel's own terms, so what it is compared
+    against differs per platform; procinfo owns that.
+    """
     try:
         with open(os.path.join(CLAUDE_SESSIONS, f"{pid}.json")) as fh:
             rec = json.load(fh)
     except (OSError, ValueError):
         return None, ""
-    if str(rec.get("procStart")) != str(starttime_ticks(pid)):
+    if not procinfo.claude_proc_start_matches(pid, rec.get("procStart")):
         return None, ""
     return rec.get("sessionId"), rec.get("name") or ""
 
@@ -267,14 +252,10 @@ def resolve_codex(pid, cwd, start):
                 return arg, "cmdline", ""
 
     # App-server style sessions keep the rollout file open; TUI sessions do not.
-    try:
-        for fd in os.listdir(f"/proc/{pid}/fd"):
-            target = os.readlink(f"/proc/{pid}/fd/{fd}")
-            m = re.search(r"rollout-.*?-(" + UUID + r")\.jsonl", target)
-            if m:
-                return m.group(1), "fd", ""
-    except OSError:
-        pass
+    for target in procinfo.open_files(pid):
+        m = re.search(r"rollout-.*?-(" + UUID + r")\.jsonl", target)
+        if m:
+            return m.group(1), "fd", ""
 
     # Fall back to the rollout whose recorded start is nearest this process, and
     # only accept it when the rollout was opened in the same directory.
@@ -292,20 +273,6 @@ def resolve_codex(pid, cwd, start):
 
 
 # ---* Collection *---
-
-
-def process_table():
-    kids, comm = {}, {}
-    for entry in os.listdir("/proc"):
-        if not entry.isdigit():
-            continue
-        try:
-            st = open(f"/proc/{entry}/stat").read()
-        except OSError:
-            continue
-        comm[int(entry)] = st[st.index("(") + 1 : st.rindex(")")]
-        kids.setdefault(int(st[st.rindex(")") + 2 :].split()[1]), []).append(int(entry))
-    return kids, comm
 
 
 def pane_table():
@@ -356,10 +323,9 @@ def collect(panes):
             if environ(pid).get("TMUX_PANE") != pane["pane_id"]:
                 continue
             seen.add(pid)
-            try:
-                cwd = os.readlink(f"/proc/{pid}/cwd")
-                start = pstart(pid)
-            except OSError:
+            cwd = procinfo.cwd(pid)
+            start = pstart(pid)
+            if cwd is None or start is None:
                 continue
 
             sid, name = resolve_hook(pid, pane["pane_id"])
@@ -393,7 +359,7 @@ def collect(panes):
     return rows
 
 
-KIDS, COMM = process_table()
+KIDS, COMM = procinfo.process_table()
 ROLLOUTS = codex_rollouts()
 CODEX_TITLES = codex_titles()
 
