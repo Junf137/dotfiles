@@ -60,14 +60,29 @@ if $NO_COLOR; then
     RESET=""
 fi
 
-OS_NAME=$(uname -s)
-if [ "$OS_NAME" != "Linux" ]; then
-    echo "Detailed Claude session inspection uses Linux /proc and is not supported on $OS_NAME."
-    echo ""
-    echo "Running Claude processes:"
-    ps -axo pid,etime,%cpu,rss,command 2>/dev/null | awk '/[c]laude/ {print}'
-    exit 0
-fi
+# Controlling terminal of a pid, as a /dev path. `ps -o tty=` prints it without
+# the /dev prefix and spells it differently per kernel -- `pts/3` on Linux,
+# `ttys003` on macOS -- but both agree with what `tty` reports once prefixed,
+# which is what the current-session marker compares against.
+proc_tty() {
+    local t
+    t=$(ps -o tty= -p "$1" 2>/dev/null | tr -d '[:space:]')
+    case "$t" in
+        '' | '?' | '??' | '-') echo "" ;;
+        /dev/*) echo "$t" ;;
+        *) echo "/dev/$t" ;;
+    esac
+}
+
+# Working directory of a pid. Linux keeps it a readlink away; macOS has no
+# /proc, and lsof is the only reader of it that ships with the system.
+proc_cwd() {
+    if [ -e "/proc/$1/cwd" ]; then
+        readlink "/proc/$1/cwd" 2>/dev/null
+    else
+        lsof -a -p "$1" -d cwd -Fn 2>/dev/null | sed -n 's/^n//p' | head -1
+    fi
+}
 
 # Get terminal width
 TERM_WIDTH=$(tput cols 2>/dev/null || echo 80)
@@ -77,8 +92,14 @@ TERM_WIDTH=$(tput cols 2>/dev/null || echo 80)
 # Get current tty to highlight current session
 CURRENT_TTY=$(tty 2>/dev/null)
 
-# Get all Claude PIDs
-CLAUDE_PIDS=$(pgrep -x claude 2>/dev/null)
+# Get all Claude PIDs.
+#
+# Not `pgrep -x claude`: BSD pgrep omits its own ancestors, so on macOS that
+# silently skips the one session you are sitting in -- the very session this
+# marks as current. ps sees all of them on both kernels; the basename strip is
+# for macOS, which prints argv[0] here rather than the kernel's comm.
+CLAUDE_PIDS=$(ps -axo pid=,comm= 2>/dev/null |
+    awk '{ name = $NF; sub(/.*\//, "", name); if (name == "claude") print $1 }')
 
 if [ -z "$CLAUDE_PIDS" ]; then
     echo "No Claude Code sessions found."
@@ -145,10 +166,10 @@ SESSION_COUNT=0
 TOTAL_MEM=0
 
 for pid in $CLAUDE_PIDS; do
-    [ ! -d "/proc/$pid" ] && continue
+    kill -0 "$pid" 2>/dev/null || continue
 
     # Get TTY
-    tty_path=$(readlink /proc/$pid/fd/0 2>/dev/null)
+    tty_path=$(proc_tty "$pid")
     tty_name=$(echo "$tty_path" | sed 's|/dev/||')
 
     # Check if current
@@ -156,7 +177,7 @@ for pid in $CLAUDE_PIDS; do
     [ "$tty_path" = "$CURRENT_TTY" ] && is_current="*"
 
     # Get working directory
-    cwd=$(readlink /proc/$pid/cwd 2>/dev/null)
+    cwd=$(proc_cwd "$pid")
     cwd_short=$(echo "$cwd" | sed "s|^$HOME|~|")
 
     # Get process stats

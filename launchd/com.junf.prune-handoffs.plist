@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  macOS counterpart of tmpfiles/handoffs.conf.
+
+  Same policy, different scheduler: keep ~/hf present and prune entries 10 days
+  after they were last touched. systemd-tmpfiles does not exist here, so a
+  launchd user agent runs the equivalent instead.
+
+  The `d` rule in handoffs.conf means "create the directory, then age out its
+  contents", and systemd-tmpfiles only deletes when atime, mtime AND ctime are
+  all older than the age. That is why all three tests are here rather than
+  -mtime alone. -mindepth 1 keeps ~/hf itself, matching `d`.
+
+  Note for editors: this is XML, so a double hyphen cannot appear anywhere
+  inside a comment. The shell files in this repo use one as an em-dash; here it
+  makes the file unparseable, and `plutil -lint` does not catch it.
+
+  RunAtLoad plus a 24h StartInterval mirrors the daily systemd-tmpfiles-clean
+  timer. This agent runs one find and exits; it opens no window and starts no
+  application.
+
+  Installed by bootstrap.sh as a symlink into ~/Library/LaunchAgents. launchd
+  does not pick it up until it is loaded once:
+
+      launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.junf.prune-handoffs.plist
+
+  Preview what it would remove, without deleting anything:
+
+      find "$HOME/hf" -mindepth 1 -atime +10 -mtime +10 -ctime +10 -print
+
+  To stop it:
+
+      launchctl bootout gui/$(id -u)/com.junf.prune-handoffs
+-->
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.junf.prune-handoffs</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/sh</string>
+        <string>-c</string>
+        <string>mkdir -p "$HOME/hf" &amp;&amp; chmod 0755 "$HOME/hf" &amp;&amp; exec /usr/bin/find "$HOME/hf" -mindepth 1 -atime +10 -mtime +10 -ctime +10 -delete</string>
+    </array>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>StartInterval</key>
+    <integer>86400</integer>
+    <key>ProcessType</key>
+    <string>Background</string>
+    <key>LowPriorityIO</key>
+    <true/>
+</dict>
+</plist>

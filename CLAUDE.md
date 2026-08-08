@@ -16,7 +16,8 @@ Personal dotfiles for **Junfeng Lei** (`junf137@outlook.com`). Manages shell, ed
 dotfiles/
 ├── agent-sessions/         # Claude/Codex session <-> tmux pane tooling (see its README.md)
 │   ├── bin/                # agent-panes, agent-pane-register, agent-panes-resurrect, agent-resume, ...
-│   ├── lib/                # agent_ids.py (resume-marker patterns) + claude_names.py (title -> uuid)
+│   ├── lib/                # agent_ids.py (resume-marker patterns), claude_names.py (title -> uuid),
+│   │                       #   procinfo.py (process facts: /proc on Linux, libproc+sysctl on macOS)
 │   └── tests/              # test-agent-tools.py
 ├── alacritty/              # Alacritty terminal emulator configs
 │   └── alacritty-default/  # Symlinked to ~/.config/alacritty
@@ -38,7 +39,8 @@ dotfiles/
 │   └── nvim-kickstart/     # Git submodule: Junf137/kickstart.nvim
 ├── omz_themes/
 │   └── ys_customized.zsh-theme  # Custom Oh My ZSH theme
-├── tmpfiles/               # systemd-tmpfiles rules
+├── launchd/                # macOS LaunchAgents (handoff pruning; the tmpfiles counterpart)
+├── tmpfiles/               # systemd-tmpfiles rules (Linux)
 │   ├── handoffs.conf       # Prunes ~/hf handoff docs after 10 days (symlinked to ~/.config/user-tmpfiles.d/)
 │   └── README.md           # Trigger chain, age semantics, on/off, and removal steps
 ├── tmux/
@@ -98,7 +100,8 @@ dotfiles/
 | `codex/AGENTS.md`                       | `~/.codex/AGENTS.md`                |
 | `codex/config.toml`                     | `~/.codex/config.toml`              |
 | `codex/hooks.json`                      | `~/.codex/hooks.json`               |
-| `tmpfiles/handoffs.conf`                | `~/.config/user-tmpfiles.d/handoffs.conf` |
+| `tmpfiles/handoffs.conf`                | `~/.config/user-tmpfiles.d/handoffs.conf` (Linux only) |
+| `launchd/com.junf.prune-handoffs.plist` | `~/Library/LaunchAgents/com.junf.prune-handoffs.plist` (macOS only) |
 | `~/Pictures/Background`                 | `~/.config/wezterm/backdrops`        |
 
 ## Git Submodules
@@ -134,6 +137,13 @@ After cloning, initialize with: `git submodule update --init --recursive`
   tmux-continuum (`@continuum-restore on`, autosave every 15 min). The
   `@resurrect-hook-post-save-all` hook runs `agent-sessions/bin/agent-panes-resurrect` —
   see `agent-sessions/README.md`
+- **Boot start**: `@continuum-boot` is set per-platform through `if-shell`, and must
+  stay that way. It is one option over two unrelated mechanisms, and continuum tests
+  `is_osx` *before* `is_systemd`, so the systemd branch is unreachable on a Mac. `'on'`
+  there does not enable a unit — it writes `~/Library/LaunchAgents/Tmux.Start.plist`,
+  which AppleScripts Terminal.app open at every login and full-screens it. So it is
+  `'on'` on Linux (where it enables the hand-written `tmux.service`) and `'off'` on
+  macOS, where `'off'` additionally deletes that plist if one was ever written
 - **Restore geometry**: `@resurrect-hook-post-restore-all` runs
   `utils/tmux-refit-windows`. Resurrect replays each window's saved `window_layout`
   with `select-layout`, which sizes the layout's cells *without* resizing the window,

@@ -12,6 +12,19 @@ _link_manifest_add() {
     LINK_LABELS+=("${4:-$2}")
 }
 
+# Requirement tier for an entry that only means anything on one kernel: it is
+# `required` there and `skip` everywhere else. Callers treat `skip` as "not
+# applicable on this platform" -- not linked, not warned about, and reported as
+# a skip rather than an OK, so a Linux-only rule cannot read as installed on a
+# Mac. Keeps one manifest for both machines instead of branching the repo.
+_link_manifest_tier_for() {
+    if [ "$(uname -s)" = "$1" ]; then
+        printf 'required'
+    else
+        printf 'skip'
+    fi
+}
+
 load_link_manifest() {
     if [ -z "${DOT_FILES:-}" ]; then
         echo "DOT_FILES must be set before loading link manifest" >&2
@@ -54,7 +67,13 @@ load_link_manifest() {
 
     _link_manifest_add "$DOT_FILES/nvim/markdownlint.jsonc" "$HOME/.markdownlint.jsonc" required "markdownlint"
 
-    _link_manifest_add "$DOT_FILES/tmpfiles/handoffs.conf" "$HOME/.config/user-tmpfiles.d/handoffs.conf" required "handoff cleanup rules"
+    # Handoff pruning is the same policy through two different schedulers:
+    # systemd-tmpfiles on Linux, a launchd agent on macOS. Neither exists on the
+    # other platform, so each is gated to its own.
+    _link_manifest_add "$DOT_FILES/tmpfiles/handoffs.conf" "$HOME/.config/user-tmpfiles.d/handoffs.conf" \
+        "$(_link_manifest_tier_for Linux)" "handoff cleanup rules (systemd-tmpfiles)"
+    _link_manifest_add "$DOT_FILES/launchd/com.junf.prune-handoffs.plist" "$HOME/Library/LaunchAgents/com.junf.prune-handoffs.plist" \
+        "$(_link_manifest_tier_for Darwin)" "handoff cleanup agent (launchd)"
 
     # External, user-managed image directory. It is useful when present but should
     # not block bootstrap checks on a fresh machine.

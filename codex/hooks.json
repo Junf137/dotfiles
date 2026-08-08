@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/home/junf/Documents/dotfiles/agent-sessions/bin/agent-pane-register codex start",
+            "command": "$HOME/Documents/dotfiles/agent-sessions/bin/agent-pane-register codex start",
             "statusMessage": "Recording tmux pane binding",
             "timeout": 10
           }
@@ -18,7 +18,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/home/junf/Documents/dotfiles/agent-sessions/bin/agent-pane-register codex end",
+            "command": "$HOME/Documents/dotfiles/agent-sessions/bin/agent-pane-register codex end",
             "timeout": 3
           }
         ]

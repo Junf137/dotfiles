@@ -15,15 +15,23 @@ agent-sessions/
 │   └── claude-sessions        # list running Claude Code sessions with details
 ├── lib/
 │   ├── agent_ids.py           # the resume-marker patterns, shared by two of the above
-│   └── claude_names.py        # session title -> uuid, from Claude's own transcripts
+│   ├── claude_names.py        # session title -> uuid, from Claude's own transcripts
+│   └── procinfo.py            # process facts: /proc on Linux, libproc+sysctl on macOS
 ├── tests/
 │   └── test-agent-tools.py    # resume-marker patterns + marker render/strip/parse
 ├── check.sh                   # checks for this directory; also run by check-dotfiles.sh
 └── README.md                  # this file
 ```
 
-Neither file in `lib/` is a tool. Both read something another program produced —
-`agent_ids.py` the patterns matching Claude's and Codex's terminal output,
+`procinfo.py` is the platform layer for the Python tools: the only one of them that
+knows whether this is Linux or macOS, and they all read processes through it.
+Two others hold kernel knowledge of their own: `claude-sessions` is bash and probes
+for itself (`/proc` when present, `ps`/`lsof` otherwise), and
+`agent-panes-resurrect` knows about bsdtar's AppleDouble members. See *Requirements*.
+
+Neither of the other two files in `lib/` is a tool either. Both read something
+another program produced — `agent_ids.py` the patterns matching Claude's and
+Codex's terminal output,
 `claude_names.py` the records Claude writes into its own transcripts — and both
 rot silently the next time either changes. So there is exactly one copy of each
 for `tests/` to cover: `agent-scrollback-ids` sweeps live panes, and
@@ -67,9 +75,29 @@ Run `./scripts/check-dotfiles.sh` after touching any of it.
 
 ### Requirements
 
-- **Linux.** `agent-panes` reads `/proc/uptime` at import and exits non-zero on a
-  kernel without `/proc`. On macOS the whole family is inert; it is not gated by a
-  `Darwin` check because there is nothing to fall back to.
+- **Linux or macOS.** Every process fact these tools need goes through
+  `lib/procinfo.py`, which reads `/proc` on Linux and libproc + `sysctl` on macOS.
+  No Python file above that module knows which kernel it is on, and the Linux path
+  is the same `/proc` code it always was.
+
+  The macOS side is not a degraded mode — all seven resolver tiers work — but two
+  facts are worth recording because they are not obvious:
+
+  - `KERN_PROCARGS2` returns a process's exec path, `argv` **and** `environ` in one
+    read, which is what makes `TMUX_PANE` (the anchor the whole mapping rests on)
+    readable at all. It works for the calling user's own processes with no
+    privileges; another user's process is unreadable, exactly as `/proc` hides it.
+  - Claude writes `procStart` in its live registry in the kernel's own terms, and
+    those differ: clock ticks since boot on Linux, and on macOS the process start
+    time formatted `%a %b %e %H:%M:%S %Y` **in UTC** (e.g. `Fri Aug  7 01:25:44
+    2026`). `procinfo.claude_proc_start_matches` owns that difference. It compares
+    parsed instants rather than text, because the guard failing closed would
+    silently cost the exact `sessions` tier rather than announce itself.
+
+  `comm` is truncated to 15 characters on both kernels, and on macOS an installed
+  Claude reads as its version (`2.1.223`) because it is exec'd straight out of
+  `~/.local/share/claude/versions/` — so the executable path, not `comm`, is what
+  identifies an agent. That was already true for Linux background sessions.
 - **Python ≥ 3.9.** The only version-sensitive call, `extractall(filter=)`, falls back
   when the kwarg is unsupported (it arrived in 3.12, backported to 3.11.4 / 3.10.12 /
   3.9.17), so an older interpreter loses nothing.
@@ -90,11 +118,12 @@ already inside `pane_contents.tar.gz` keep replaying on every restore.
 | `codex/hooks.json` | `SessionStart` / `SessionEnd` | runs `agent-pane-register codex` |
 | `shell_common.sh` | `add_path` | puts `bin/` on `PATH` |
 
-The first three are absolute paths — tmux and Codex cannot derive one — so a clone
-anywhere other than `~/Documents/dotfiles` needs them updated; only `shell_common.sh`
-derives its path from `$DOT_FILES`. `check_tmux_hook_wiring` hard-fails when the tmux
-hook target does not exist, and warns (rather than fails) when it points at a different
-checkout, so the check stays usable from a worktree.
+The first three name `$HOME/Documents/dotfiles/...` — tmux, Claude and Codex all expand
+`$HOME` (the Codex case is measured; see *Codex hook gotchas*), but none of them can
+derive the repo's location, so a clone anywhere else needs them updated. Only
+`shell_common.sh` derives its path from `$DOT_FILES`. `check_tmux_hook_wiring`
+hard-fails when the tmux hook target does not exist, and warns (rather than fails)
+when it points at a different checkout, so the check stays usable from a worktree.
 
 **Editing `codex/hooks.json` revokes Codex's hook trust.** `[hooks.state]` in
 `codex/config.toml` stores a content hash of each handler that covers the `command`
@@ -104,14 +133,16 @@ until re-approved in the TUI. Nothing warns; the session just falls back to the 
 
 ## Session mapping
 
-- **Anchor**: `TMUX_PANE` in `/proc/<pid>/environ` holds tmux's stable `%N` pane ID.
+- **Anchor**: `TMUX_PANE` in the agent's environment holds tmux's stable `%N` pane ID
+  (`/proc/<pid>/environ`, or `KERN_PROCARGS2` on macOS).
   Note that `#{pane_pid}` is the pane's *shell*, not the agent — the agent is a
   descendant of it, which is why `claude-sessions` matches via tty instead.
 - **Claude session IDs** come from Claude's own live registry,
-  `~/.claude/sessions/<pid>.json`, whose `procStart` field equals `/proc/<pid>/stat`
-  field 22 and so survives PID reuse. This is exact, needs no hooks, and works for
-  resumed and `/clear`ed sessions.
-- **Codex session IDs** come from `codex resume <uuid>` in `/proc/<pid>/cmdline` when
+  `~/.claude/sessions/<pid>.json`, whose `procStart` field records the process's kernel
+  start time and so survives PID reuse. Its format is per-platform — see
+  *Requirements* — and `procinfo.claude_proc_start_matches` is what compares it.
+  This is exact, needs no hooks, and works for resumed and `/clear`ed sessions.
+- **Codex session IDs** come from `codex resume <uuid>` in the process argv when
   present, otherwise from matching a rollout's `session_meta` header (`cwd` plus start
   time) under `~/.codex/sessions/`. Codex has no live per-PID registry, and its hooks
   cannot supply one either — see *The Codex hook cannot bind a pane* below — so those
@@ -134,10 +165,15 @@ until re-approved in the TUI. Nothing warns; the session just falls back to the 
   silently ignored, with no warning even if malformed. Event keys are PascalCase
   (`SessionStart`/`SessionEnd`). The timeout key is `timeout`, in seconds; unknown keys
   inside a handler are dropped without warning, so a typo just yields the default.
-  `SessionEnd` is clamped to a 3 s maximum (1 s if omitted). Hook commands use an
-  absolute path rather than `$HOME`: whether Codex runs them through a shell is
-  unverified, and a failing Codex hook is invisible — the session just falls back to
-  the inferred `meta~Ns` tier.
+  `SessionEnd` is clamped to a 3 s maximum (1 s if omitted). A failing Codex hook is
+  invisible — the session just falls back to the inferred `meta~Ns` tier.
+
+  **`$HOME` in a hook command does expand**, which was previously recorded here as
+  unverified. Measured against codex-cli 0.146.1 by registering two handlers on one
+  `SessionStart` — one naming `$HOME/...`, one a literal absolute path — and running
+  `codex exec`: both ran, and both saw `TMUX_PANE` inherited from the pane. So
+  `codex/hooks.json` uses `$HOME`, matching `claude/settings.json`, and the repo no
+  longer hardcodes a `/home/junf` path that only ever resolved on one machine.
 - **Codex hooks require trust on first run.** They are discovered as `untrusted` and do
   not execute until approved in the TUI ("Hooks need review" → "Trust all and
   continue"). Approving writes a `[hooks.state]` table into `~/.codex/config.toml`,
@@ -190,7 +226,7 @@ Three sources feed one record per session, folded by `(pane id, agent, session i
 
 | Source | Covers | Tier |
 |---|---|---|
-| `agent-panes`, the live `/proc` scan | whatever is running at the moment of the save | `hook`, `sessions`, `env`, `cmdline`, `fd`, or an inferred `meta~Ns` / `btime~Ns` |
+| `agent-panes`, the live process scan | whatever is running at the moment of the save | `hook`, `sessions`, `env`, `cmdline`, `fd`, or an inferred `meta~Ns` / `btime~Ns` |
 | the agent's own exit banner in the archived capture | every session either agent exited *gracefully* out of and the pane's scrollback still holds, including ones that started and ended between two saves | `scrollback` |
 | this script's own block, parsed back out of the capture | everything a previous save wrote down — the only source for a session that was killed or lost to a reboot | whatever the block recorded |
 

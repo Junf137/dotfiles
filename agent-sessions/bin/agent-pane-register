@@ -26,31 +26,25 @@ import os
 import sys
 import time
 
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "lib"))
+import procinfo  # noqa: E402
+
 AGENTS = ("claude", "codex")
 REG = os.path.expanduser("~/.cache/agent-panes")
-
-
-def proc_stat_fields(pid):
-    """Fields of /proc/<pid>/stat from ppid onward, with comm safely stripped."""
-    with open(f"/proc/{pid}/stat") as fh:
-        st = fh.read()
-    return st[st.index("(") + 1 : st.rindex(")")], st[st.rindex(")") + 2 :].split()
 
 
 def is_agent(pid, comm):
     """Whether a process is the agent itself.
 
     comm is not always the agent's own name -- background sessions exec the
-    versioned binary directly, so comm reads as e.g. '2.1.220'. The executable
-    path is the reliable signal.
+    versioned binary directly, so comm reads as e.g. '2.1.220', which is also
+    how an installed Claude routinely reads on macOS. The executable path is
+    the reliable signal.
     """
     if comm in AGENTS:
         return True
-    try:
-        exe = os.readlink(f"/proc/{pid}/exe")
-    except OSError:
-        return False
-    return any(f"/{name}" in exe for name in AGENTS)
+    exe = procinfo.exe(pid)
+    return bool(exe) and any(f"/{name}" in exe for name in AGENTS)
 
 
 def agent_process():
@@ -63,13 +57,12 @@ def agent_process():
     for _ in range(12):
         if pid <= 1:
             break
-        try:
-            comm, fields = proc_stat_fields(pid)
-        except (OSError, IndexError, ValueError):
+        parent, comm = procinfo.ppid(pid), procinfo.comm(pid)
+        if parent is None:
             break
         if is_agent(pid, comm):
-            return pid, fields[19]
-        pid = int(fields[1])
+            return pid, procinfo.start_token(pid)
+        pid = parent
     return None, None
 
 
@@ -91,13 +84,8 @@ def prune(reg):
         except (OSError, ValueError):
             continue
         pid, start = rec.get("pid"), rec.get("proc_start")
-        if pid and start:
-            try:
-                _, fields = proc_stat_fields(pid)
-                if str(fields[19]) == str(start):
-                    continue
-            except (OSError, IndexError, ValueError):
-                pass
+        if pid and start and str(procinfo.start_token(pid)) == str(start):
+            continue
         try:
             # Re-check mtime: a session that claimed this pane after the read
             # above must not have its fresh record deleted.

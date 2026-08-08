@@ -138,7 +138,13 @@ check_hook_wiring() {
         done
 
         # A hook whose target has been renamed or moved fails silently in both
-        # agents, so resolve each command back to a real executable.
+        # agents, so resolve each command back to a real executable. statusLine
+        # is resolved by the same loop: it is one key over from the hooks, fails
+        # exactly as silently -- Claude just renders nothing -- and was in fact
+        # the one command in this file still naming a /home/junf path that no
+        # check caught. Its value carries an interpreter prefix (`bash <path>`),
+        # so the first path-shaped word is taken rather than word 0, which would
+        # resolve to `bash` and pass no matter what came after it.
         while read -r target; do
             [ -n "$target" ] || continue
             target="${target//\$HOME/$HOME}"
@@ -148,7 +154,8 @@ check_hook_wiring() {
                 printf 'Hook target not executable: %s -> %s\n' "$file" "$target" >&2
                 status=1
             fi
-        done < <(jq -r '[.hooks[]?[]?.hooks[]?.command // empty] | .[] | split(" ")[0]' "$file")
+        done < <(jq -r '[(.hooks[]?[]?.hooks[]?.command // empty), (.statusLine.command // empty)] | .[]' "$file" |
+            awk '{ for (i = 1; i <= NF; i++) { gsub(/"/, "", $i); if ($i ~ /^(\/|\$HOME\/)/) { print $i; next } } print $1 }')
     done
 
     return "$status"
@@ -276,7 +283,9 @@ check_manifest_sources() {
         src="${LINK_SOURCES[$i]}"
         required="${LINK_REQUIRED[$i]}"
         label="${LINK_LABELS[$i]}"
-        if [ -e "$src" ] || [ -L "$src" ]; then
+        if [ "$required" = "skip" ]; then
+            printf 'SKIP source (not applicable on %s): %s (%s)\n' "$(uname -s)" "$label" "$src"
+        elif [ -e "$src" ] || [ -L "$src" ]; then
             printf 'OK source: %s (%s)\n' "$label" "$src"
         elif [ "$required" = "optional" ]; then
             printf 'WARN optional source missing: %s (%s)\n' "$label" "$src"

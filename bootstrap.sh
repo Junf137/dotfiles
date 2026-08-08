@@ -123,7 +123,9 @@ validate_sources() {
         required="${LINK_REQUIRED[$i]}"
         label="${LINK_LABELS[$i]}"
 
-        if source_exists "$src"; then
+        if [ "$required" = "skip" ]; then
+            log_print "SKIP source (not applicable on $(uname -s)): $label ($src)"
+        elif source_exists "$src"; then
             log_print "OK source: $label ($src)"
         elif [ "$required" = "optional" ]; then
             warn_print "Optional source missing, will skip: $label ($src)"
@@ -135,11 +137,19 @@ validate_sources() {
 }
 
 audit_destinations() {
-    local i src dest target
+    local i src dest target required
 
     for i in "${!LINK_SOURCES[@]}"; do
         src="${LINK_SOURCES[$i]}"
         dest="${LINK_DESTS[$i]}"
+        required="${LINK_REQUIRED[$i]}"
+
+        # This platform is not responsible for a `skip` entry's destination, so
+        # reporting it as "not linked yet" would be a permanent false warning.
+        # validate_sources already printed a SKIP line for it in the same run.
+        if [ "$required" = "skip" ]; then
+            continue
+        fi
 
         if [ -L "$dest" ]; then
             target="$(readlink "$dest")"
@@ -412,6 +422,13 @@ else
         src="${LINK_SOURCES[$i]}"
         dest="${LINK_DESTS[$i]}"
         required="${LINK_REQUIRED[$i]}"
+
+        # A `skip` entry belongs to the other kernel: never linked here, and not
+        # unlinked either -- restore must not touch a destination this platform
+        # was never responsible for.
+        if [ "$required" = "skip" ]; then
+            continue
+        fi
 
         if $RESTORE_MODE; then
             remove_soft_link "$src" "$dest"
