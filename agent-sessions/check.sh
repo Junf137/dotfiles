@@ -80,6 +80,10 @@ import sys
 # use-before-assignment in exchange for never crying wolf, and it still catches
 # the one thing that matters -- a name the file uses and never binds at all.
 BOUND_BY = (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)
+# MatchAs/MatchStar arrived in 3.10, and the floor here is 3.9 (README:
+# Requirements). On 3.9 the tuple is empty, which costs nothing: a file
+# containing a match statement would already have failed ast.parse above.
+MATCH_BINDERS = tuple(getattr(ast, name) for name in ("MatchAs", "MatchStar") if hasattr(ast, name))
 ALLOWED = set(dir(builtins)) | {
     "__file__", "__name__", "__doc__", "__spec__",
     "__package__", "__loader__", "__builtins__",
@@ -110,7 +114,7 @@ for path in sys.argv[1:]:
             bound.add(node.name)
         elif isinstance(node, (ast.Global, ast.Nonlocal)):
             bound.update(node.names)
-        elif isinstance(node, (ast.MatchAs, ast.MatchStar)) and node.name:
+        elif isinstance(node, MATCH_BINDERS) and node.name:
             bound.add(node.name)
 
     for node in ast.walk(tree):
