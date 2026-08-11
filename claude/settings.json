@@ -13,9 +13,11 @@
     "ask": [],
     "defaultMode": "auto"
   },
-  "statusLine": {
-    "type": "command",
-    "command": "bash \"$HOME/.claude/statusline-command.sh\""
+  "skillOverrides": {
+    "production-artifact-provenance": "off",
+    "cva-stats": "off",
+    "cva-issue": "off",
+    "sync-agent-skills": "off"
   },
   "hooks": {
     "SessionStart": [
@@ -41,8 +43,12 @@
       }
     ]
   },
+  "statusLine": {
+    "type": "command",
+    "command": "bash \"$HOME/.claude/statusline-command.sh\""
+  },
   "enabledPlugins": {
-    "clangd-lsp@claude-plugins-official": true
+    "clangd-lsp@claude-plugins-official": false
   },
   "effortLevel": "xhigh",
   "tui": "fullscreen",
