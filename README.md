@@ -65,6 +65,32 @@ cd ${DOT_FILES:-$HOME/Documents/dotfiles} && git submodule update --init --recur
 
 Set `DOTFILES_SKIP_CLEANUP=1` to skip the automatic backup cleanup report during `./bootstrap.sh`.
 
+## Codex shared defaults and local settings
+
+`codex/config.toml` contains only portable, intentional defaults. Bootstrap links
+it to `/etc/codex/config.toml` on both macOS and Linux. Initial installation and
+removal of this system link use `sudo`; run bootstrap as your normal user.
+An already-correct link needs no administrator access or extra backup.
+
+`~/.codex/config.toml` is a regular, private file outside this repository. Codex
+reads the system defaults first, then applies the user config on top. Machine
+paths, project trust, hook approvals, plugin installation state, app settings,
+and onboarding state stay in the user file. Do not symlink it into the repository.
+
+Edit `codex/config.toml` to change defaults on both computers, then sync this
+repository. Changes made through the app may create local overrides; remove a
+duplicated user setting when you want the shared default to apply again. Do not
+add local paths or generated state to the shared file. Bootstrap restore removes
+the managed system link but leaves the user config untouched.
+
+The migration keeps one original config per machine at
+`~/.codex/config.before-shared-defaults.toml`. It is a recovery copy, not a loaded
+configuration layer. No recurring backup or config-generation job is needed.
+
+Run `./bootstrap.sh --check` to audit links and
+`bash scripts/test-codex-config.sh` to test installation, repeat runs, and restore
+in a temporary directory without touching the real system config.
+
 ## Log Files
 
 Bootstrap create, restore, and dry-run operations are logged to date-stamped files under `logs/` in the format:

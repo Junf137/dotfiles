@@ -1,43 +1,21 @@
-model = "gpt-5.6-sol"
-model_reasoning_effort = "max"
-personality = "pragmatic"
-service_tier = "default"
-
-[notice]
-fast_default_opt_out = true
-hide_rate_limit_model_nudge = true
-
-[notice.model_migrations]
-"gpt-5.1-codex-max" = "gpt-5.2-codex"
-"gpt-5.2-codex" = "gpt-5.3-codex"
-"gpt-5.3-codex" = "gpt-5.4"
+# Portable defaults for macOS and Linux, loaded through /etc/codex/config.toml.
+# Machine paths and app-managed state belong in the regular ~/.codex/config.toml.
+model = "gpt-6-astra"
+model_reasoning_effort = "xhigh"
+service_tier = "priority"
+approval_policy = "never"
 
 [features]
 multi_agent = true
 terminal_resize_reflow = true
 memories = true
 goals = true
+js_repl = false
 
 [tui]
 status_line = ["thread-title", "git-branch", "model-with-reasoning", "context-used", "five-hour-limit", "weekly-limit"]
 session_picker_view = "comfortable"
 status_line_use_colors = true
-
-[tui.model_availability_nux]
-"gpt-5.5" = 4
-"gpt-5.6-sol" = 4
-
-[plugins."notion@openai-curated"]
-enabled = true
-
-[plugins."linear@openai-curated"]
-enabled = true
-
-[plugins."sites@openai-bundled"]
-enabled = true
-
-[plugins."visualize@openai-bundled"]
-enabled = true
 
 [mcp_servers.openaiDeveloperDocs]
 url = "https://developers.openai.com/mcp"

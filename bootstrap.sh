@@ -107,6 +107,18 @@ source_exists() {
     [ -e "$1" ] || [ -L "$1" ]
 }
 
+# Only the Codex system defaults need administrator access. Never run the whole
+# bootstrap as root: all other destinations and backups belong to the user.
+run_link_command() {
+    local destination="$1"
+    shift
+    if [ "$destination" = "${DOTFILES_CODEX_SYSTEM_CONFIG:-/etc/codex/config.toml}" ]; then
+        sudo "$@"
+    else
+        "$@"
+    fi
+}
+
 warn_for_missing_source_context() {
     case "$1" in
         "$DOT_FILES"/agent-skills/*)
@@ -218,7 +230,7 @@ create_soft_link() {
         if $DRY_RUN; then
             log_print "[dry-run] Would rename: $dst_name -> $dst_name.$TIME_STAMP.bak"
         else
-            if mv "$dst_name" "$dst_name.$TIME_STAMP.bak"; then
+            if run_link_command "$dst_name" mv "$dst_name" "$dst_name.$TIME_STAMP.bak"; then
                 log_print "File renamed: $dst_name -> $dst_name.$TIME_STAMP.bak"
             else
                 error_print "Failed to rename file: $dst_name -> $dst_name.$TIME_STAMP.bak"
@@ -234,7 +246,7 @@ create_soft_link() {
         if $DRY_RUN; then
             log_print "[dry-run] Would create directory: $dst_dir"
         else
-            if mkdir -p "$dst_dir"; then
+            if run_link_command "$dst_name" mkdir -p "$dst_dir"; then
                 log_print "Directory created: $dst_dir"
             else
                 error_print "Failed to create directory: $dst_dir"
@@ -245,7 +257,7 @@ create_soft_link() {
 
     if $DRY_RUN; then
         log_print "[dry-run] Would create symbolic link: \033[36m$dst_name -> $ori_name\033[0m"
-    elif ln -s "$ori_name" "$dst_name"; then
+    elif run_link_command "$dst_name" ln -s "$ori_name" "$dst_name"; then
         log_print "Symbolic link created: \033[36m$dst_name -> $ori_name\033[0m"
     else
         error_print "Failed to create symbolic link: $dst_name -> $ori_name"
@@ -289,7 +301,7 @@ remove_soft_link() {
         return 0
     fi
 
-    if rm "$dst_name"; then
+    if run_link_command "$dst_name" rm "$dst_name"; then
         log_print "Symbolic link removed: \033[36m$dst_name -> $link_target\033[0m"
     else
         error_print "Failed to remove symbolic link: $dst_name"
@@ -297,7 +309,7 @@ remove_soft_link() {
     fi
 
     if [ -n "$most_recent_backup" ]; then
-        if mv "$most_recent_backup" "$dst_name"; then
+        if run_link_command "$dst_name" mv "$most_recent_backup" "$dst_name"; then
             log_print "Backup restored: $most_recent_backup -> $dst_name"
         else
             error_print "Failed to restore backup: $most_recent_backup -> $dst_name"

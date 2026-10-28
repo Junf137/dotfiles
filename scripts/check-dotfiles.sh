@@ -52,6 +52,7 @@ check_bash_syntax() {
         lib/link_manifest.sh
         lib/shell_paths.sh
         scripts/check-dotfiles.sh
+        scripts/test-codex-config.sh
         agent-sessions/check.sh
         utils/add_path
         utils/kill_ps
@@ -230,6 +231,7 @@ check_shfmt() {
         lib/link_manifest.sh \
         lib/shell_paths.sh \
         scripts/check-dotfiles.sh \
+        scripts/test-codex-config.sh \
         agent-sessions/check.sh \
         utils/add_path \
         utils/kill_ps \
@@ -253,6 +255,7 @@ check_shellcheck() {
         lib/link_manifest.sh \
         lib/shell_paths.sh \
         scripts/check-dotfiles.sh \
+        scripts/test-codex-config.sh \
         agent-sessions/check.sh \
         utils/add_path \
         utils/kill_ps \
@@ -398,6 +401,7 @@ check_agent_config_presence() {
 }
 
 run_required "bash syntax" check_bash_syntax
+run_required "Codex config bootstrap" bash "$REPO_ROOT/scripts/test-codex-config.sh"
 run_optional zsh "zsh syntax" check_zsh_syntax
 run_required "agent sessions" "$REPO_ROOT/agent-sessions/check.sh"
 run_optional jq "json syntax" check_json

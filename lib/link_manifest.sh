@@ -61,7 +61,9 @@ load_link_manifest() {
     _link_manifest_add "$DOT_FILES/claude/statusline-command.sh" "$HOME/.claude/statusline-command.sh" required "Claude statusline"
 
     _link_manifest_add "$DOT_FILES/codex/AGENTS.md" "$HOME/.codex/AGENTS.md" required "Codex global instructions"
-    _link_manifest_add "$DOT_FILES/codex/config.toml" "$HOME/.codex/config.toml" required "Codex config"
+    # Codex writes machine state to ~/.codex/config.toml; never link that into Git.
+    # The override allows bootstrap integration tests to use a temporary directory.
+    _link_manifest_add "$DOT_FILES/codex/config.toml" "${DOTFILES_CODEX_SYSTEM_CONFIG:-/etc/codex/config.toml}" required "Codex shared defaults"
     _link_manifest_add "$DOT_FILES/codex/hooks.json" "$HOME/.codex/hooks.json" required "Codex hooks"
     _link_manifest_add "$DOT_FILES/agent-skills/codex" "$HOME/.agents/skills" required "Codex skills"
 
