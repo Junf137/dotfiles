@@ -40,6 +40,31 @@ cd ${DOT_FILES:-$HOME/Documents/dotfiles} && git submodule update --init --recur
 ./bootstrap.sh --restore
 ```
 
+## Branch and commit conventions
+
+- `main` contains shared changes suitable for all machines and follows
+  `origin/main`. Push only this shared history to GitHub's `main`.
+- Each machine keeps its own `local` branch on top of `main`. Its commits may be
+  machine-specific or intentionally withheld from the shared repository. Do not
+  push `local` or merge it wholesale into `main`.
+- Shared commits use `type(scope): summary`, with a lowercase, imperative summary
+  and a type such as `feat`, `fix`, `docs`, `refactor`, `test`, or `chore`.
+  Use `local(scope): summary` only for commits that stay on a machine's `local`
+  branch. For example, this Codex config split is a `fix(codex)`; a machine's
+  Conda initialization is `local(shell)`.
+
+Prepare shared changes in a separate worktree based on the latest `origin/main`
+so switching branches does not replace the live, symlinked dotfiles. To promote
+an existing local commit, cherry-pick only that reviewed commit, correct its
+message if necessary, test it, and push explicitly to `main`. Do not rewrite
+already-published history to fix older message inconsistencies.
+
+On each machine, fetch and fast-forward `main`, then rebase `local` onto it.
+Check that the remaining commits are only the machine's local work; Git can drop
+patch-equivalent commits that have already been promoted. Preserve uncommitted
+work before rebasing and verify it afterward. Submodules have independent
+histories and dirty files: a parent-repository stash does not protect their work.
+
 ## Features
 
 - Creates symbolic links from dotfiles in the repository to their appropriate locations
