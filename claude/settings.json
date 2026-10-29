@@ -1,8 +1,4 @@
 {
-  "env": {
-    "CLAUDE_CODE_DISABLE_1M_CONTEXT": "1",
-    "CLAUDE_CODE_AUTO_COMPACT_WINDOW": "200000"
-  },
   "attribution": {
     "commit": "",
     "pr": ""
@@ -55,7 +51,8 @@
   "effortLevel": "xhigh",
   "modelSettings": {
     "claude-fable-5-1": {
-      "effortLevel": "xhigh"
+      "effortLevel": "xhigh",
+      "autoCompactWindow": 200000
     },
     "claude-opus-5-5": {
       "effortLevel": "xhigh"
