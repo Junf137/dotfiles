@@ -22,12 +22,14 @@ bare, unless the session carries a user-set title -- in which case it is that
 title, always double quoted, with \\ and " backslash-escaped.
 """
 
+import glob
 import json
 import os
 import re
 import sys
 import tempfile
 import time
+import types
 
 BIN = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "bin")
 LIB = os.path.join(os.path.dirname(BIN), "lib")
@@ -929,18 +931,37 @@ def agents_cases():
             day = os.path.join(agents.CODEX_SESSIONS, "2026", "10", "01")
             os.makedirs(day)
             os.makedirs(os.path.join(agents.CLAUDE_PROJECTS, "p"))
-            rollout = os.path.join(day, f"{stamp}{thread}_{other}.jsonl")
-            packed = os.path.join(day, f"{stamp}{CODEX_UUID}.jsonl.zst")
+            # A thread can span several rollouts and the newest must win, however
+            # the directory happens to list them -- so both orders are tried. The
+            # decoys are newer still, so indexing one would displace a real row.
+            later = "rollout-2026-10-01T05-00-00-"
+            decoy = "rollout-2026-10-01T06-00-00-"
+            rollout = os.path.join(day, f"{later}{thread}_{other}.jsonl")
+            packed = os.path.join(day, f"{later}{CODEX_UUID}.jsonl.zst")
             transcript = os.path.join(agents.CLAUDE_PROJECTS, "p", f"{UUID}.jsonl")
-            for path in (rollout, packed, transcript):
+            for path in (
+                os.path.join(day, f"{stamp}{thread}.jsonl.zst"),
+                rollout,
+                packed,
+                os.path.join(day, f"{stamp}{CODEX_UUID}.jsonl"),
+                os.path.join(day, f"{decoy}{thread}.jsonl.tmp"),
+                os.path.join(day, f"{decoy}{CODEX_UUID}_notes.jsonl"),
+                transcript,
+            ):
                 open(path, "w").close()
-            index = agents.transcript_index()
-            add("the index keys a suffixed rollout by its thread", index["codex"].get(thread) == rollout)
-            add("the index counts a compressed rollout", index["codex"].get(CODEX_UUID) == packed)
-            add("the index holds nothing else", len(index["codex"]) == 2)
+            listed = glob.glob
+            for order in ("sorted", "reversed"):
+                agents.glob = types.SimpleNamespace(
+                    glob=lambda pattern: sorted(listed(pattern), reverse=order == "reversed")
+                )
+                index = agents.transcript_index()
+                add(f"the index keys a suffixed rollout by its thread, {order}", index["codex"].get(thread) == rollout)
+                add(f"the index counts a compressed rollout, {order}", index["codex"].get(CODEX_UUID) == packed)
+                add(f"the index holds nothing else, {order}", len(index["codex"]) == 2)
             add("the index finds a Claude transcript", index["claude"] == {UUID: transcript})
         finally:
             agents.CLAUDE_PROJECTS, agents.CODEX_SESSIONS = saved
+            agents.glob = glob
 
         # Codex's session_meta header carries its whole system prompt on line 1:
         # ~52 KB as of 0.165, close behind what used to be a 64 KiB per-line cap.
@@ -950,23 +971,35 @@ def agents_cases():
             fh.write(header + "\n")
         add("a header longer than 64 KiB still yields its cwd", agents.transcript_cwd(big) == "/proj")
 
+        def cwd_of(path):
+            # Raising here would cost every pane its block, not just this one row.
+            try:
+                return agents.transcript_cwd(path)
+            except Exception:
+                return None
+
         packed = os.path.join(tmp, f"{stamp}{CODEX_UUID}.jsonl.zst")
-        corrupt = os.path.join(tmp, "corrupt.jsonl.zst")
-        with open(corrupt, "wb") as fh:
-            fh.write(b"\x28\xb5\x2f\xfd not a frame")
         if agents.zstd:
             with agents.zstd.open(packed, "wt") as fh:
                 fh.write(header + "\n")
-            add("a compressed rollout yields its cwd", agents.transcript_cwd(packed) == "/proj")
+            add("a compressed rollout yields its cwd", cwd_of(packed) == "/proj")
         else:
             open(packed, "w").close()
-            add("without zstd a compressed rollout yields no cwd", agents.transcript_cwd(packed) == "")
-        # Raising here would cost every pane its block, not just this one row.
+        # What macOS's stock python3 does, run here too.
+        saved_zstd, agents.zstd = agents.zstd, None
         try:
-            unreadable = agents.transcript_cwd(corrupt) == ""
-        except Exception:
-            unreadable = False
-        add("a corrupt compressed rollout is unreadable, not an error", unreadable)
+            add("without zstd a compressed rollout yields no cwd", cwd_of(packed) == "")
+        finally:
+            agents.zstd = saved_zstd
+
+        with open(packed, "rb") as fh:
+            frame = fh.read()
+        # Garbage after the magic number raises ZstdError, a cut-off frame EOFError.
+        for label, data in (("corrupt", b"\x28\xb5\x2f\xfd not a frame"), ("truncated", frame[: len(frame) // 2])):
+            bad = os.path.join(tmp, f"{label}.jsonl.zst")
+            with open(bad, "wb") as fh:
+                fh.write(data)
+            add(f"a {label} compressed rollout is unreadable, not an error", cwd_of(bad) == "")
 
     class Exe:
         def __init__(self, path):

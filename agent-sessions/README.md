@@ -106,7 +106,9 @@ Run `./scripts/check-dotfiles.sh` after touching any of it.
   (it arrived in 3.12, backported to 3.11.4 / 3.10.12 / 3.9.17), so an older
   interpreter loses nothing there. Reading a compressed Codex rollout needs
   `compression.zstd`, which is 3.14+; without it — macOS's stock `python3` is 3.9 —
-  such a session is still indexed and resumable, but comes back with no `cd`.
+  such a session is still indexed and resumable, but comes back with no `cd`, so
+  `agent-resume` resumes it from the pane's own directory — as it already does for
+  any row whose directory is unknown or gone.
 - **tmux-resurrect**, installed by TPM. Verified against `cff343cf`.
 
 ### Uninstall
@@ -162,9 +164,11 @@ until re-approved in the TUI. Nothing warns; the session just falls back to the 
   with two variations every reader goes through `lib/agents.py` for. From 0.158 on a
   second uuid may follow the first (`…-<thread>_<other>.jsonl`); the thread is the
   *first* — the file's own `session_meta` id, and the only one `state_5.sqlite` has a
-  row for. And a rollout idle for about a week is compressed to `.jsonl.zst` — 1015
-  of 1064 here, on codex-cli 0.165 — while Codex's thread table goes on naming the
-  `.jsonl`. Such a session is still resumable, so it still counts; before this was
+  row for. One thread can also span several rollouts (19 here have 2 to 4), and the
+  newest is the one that counts. And a rollout idle for about a week is compressed to
+  `.jsonl.zst` — for 1016 of 1064 sessions here, on codex-cli 0.165, the newest
+  rollout is one — while Codex's thread table goes on naming the `.jsonl`. Such a
+  session is still resumable, so it still counts; before this was
   handled, `agent-resume` called ~95% of Codex sessions gone. The `session_meta`
   header is line 1 and carries the whole system prompt, ~52 KB, which is why the
   per-line read cap is 256 KiB.

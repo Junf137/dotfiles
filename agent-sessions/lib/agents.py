@@ -46,8 +46,9 @@ CODEX_INDEX = os.path.expanduser("~/.codex/session_index.jsonl")
 # for exactly those files.
 #
 # Codex also compresses a rollout to `.jsonl.zst` once it has sat idle for about
-# a week -- 1035 of 1092 here, 2026-10-28 -- while its own thread table goes on
-# naming the `.jsonl`. Such a session is still resumable, so it still counts.
+# a week -- 1035 of 1092 rollout files here, 2026-10-28 -- while its own thread
+# table goes on naming the `.jsonl`. Such a session is still resumable, so it
+# still counts.
 #
 # The filename stamp is local time.
 ROLLOUT_RE = re.compile(
@@ -72,7 +73,9 @@ def agent_kind(pid, comm):
     exec'd straight out of ~/.local/share/claude/versions/. The executable path
     is the reliable signal -- matched on a whole path segment or the basename,
     since a bare substring also catches siblings that merely share the prefix,
-    such as codex's `bin/codex-code-mode-host`.
+    such as codex's `bin/codex-code-mode-host` in the standalone install. Under
+    npm every vendored binary sits below `@openai/codex/`, so there the path
+    alone does not tell them apart.
     """
     if comm in AGENTS:
         return comm
@@ -89,6 +92,14 @@ def rollout_id(path):
     return match.group(5) if match else None
 
 
+def rollouts():
+    """(path, ROLLOUT_RE match) for every Codex rollout on disk, compressed or not."""
+    for path in glob.glob(f"{CODEX_SESSIONS}/*/*/*/rollout-*.jsonl*"):
+        match = ROLLOUT_RE.search(path)
+        if match:
+            yield path, match
+
+
 def transcript_index():
     """agent -> session id -> transcript path.
 
@@ -99,9 +110,12 @@ def transcript_index():
     index = {"claude": {}, "codex": {}}
     for path in glob.glob(f"{CLAUDE_PROJECTS}/*/*.jsonl"):
         index["claude"][os.path.basename(path)[:-6]] = path
-    for path in glob.glob(f"{CODEX_SESSIONS}/*/*/*/rollout-*.jsonl*"):
-        sid = rollout_id(path)
-        if sid:
+    # One thread can span several rollouts -- 19 here have 2 to 4. Keep the
+    # newest, which is the one Codex's own thread table names; the path sorts by
+    # date directory and then start stamp, so that is the greatest.
+    for path, match in rollouts():
+        sid = match.group(5)
+        if path > index["codex"].get(sid, ""):
             index["codex"][sid] = path
     return index
 

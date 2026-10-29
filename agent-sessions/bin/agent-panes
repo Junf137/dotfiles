@@ -38,11 +38,10 @@ import procinfo  # noqa: E402
 from agent_ids import UUID  # noqa: E402
 from agents import (  # noqa: E402
     CLAUDE_PROJECTS,
-    CODEX_SESSIONS,
-    ROLLOUT_RE,
     agent_kind,
     codex_titles,
     rollout_id,
+    rollouts,
     transcript_cwd,
 )
 from claude_names import CLAUDE_SESSIONS  # noqa: E402
@@ -186,10 +185,7 @@ def resolve_claude(pid, cwd, start):
 def codex_rollouts():
     """Rollout path -> (session_id, start epoch)."""
     out = {}
-    for path in glob.glob(f"{CODEX_SESSIONS}/*/*/*/rollout-*.jsonl*"):
-        m = ROLLOUT_RE.search(path)
-        if not m:
-            continue
+    for path, m in rollouts():
         try:
             day = datetime.date.fromisoformat(m.group(1))
         except ValueError:
