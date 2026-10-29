@@ -122,6 +122,11 @@ def server_started():
         return None
 
 
+def sidecar_path():
+    """The save hook's sidecar: its records, and the titles it refused."""
+    return os.path.join(RESURRECT.resurrect_dir(), RESURRECT.SIDECAR_NAME)
+
+
 def sidecar_rows(pane, server):
     """Sidecar records for this pane, from this server generation only.
 
@@ -131,9 +136,8 @@ def sidecar_rows(pane, server):
     is lost by dropping them: a restored pane replays its own block, and
     capture_rows() reads that back.
     """
-    path = os.path.join(RESURRECT.resurrect_dir(), RESURRECT.SIDECAR_NAME)
     rows = []
-    for records in RESURRECT.read_sidecar(path).values():
+    for records in RESURRECT.read_sidecar(sidecar_path()).values():
         if not isinstance(records, list):
             continue
         for record in records:
@@ -178,11 +182,20 @@ def capture_rows(pane, server):
     indistinguishable from a banner. Here that only costs a screenful and a
     refusal rather than a permanent record -- but the two tools disagreeing
     about what a pane holds would be worse than either bound.
+
+    A banner that printed a Claude title rather than a uuid passes the
+    harvest's two title gates too, over the hook's own records: a title this
+    pane's block or sidecar records already name is not looked up, and one the
+    hook refused is never looked up again. See resolve_title().
     """
     tag = RESURRECT.server_tag(server)
     marked, plain = RESURRECT.split_capture(capture(pane))
     rows = RESURRECT.cap_stanzas(RESURRECT.parse_stanzas(marked, pane, tag), pane, tag)
     seen = {row["session_id"] for row in rows}
+    path = sidecar_path()
+    seen_names = {(row.get("agent"), row.get("name")) for row in rows if row.get("name")}
+    seen_names |= RESURRECT.recorded_names(RESURRECT.read_sidecar(path), server).get(pane, set())
+    refused = RESURRECT.read_refused(path)
 
     index = []
 
@@ -192,9 +205,15 @@ def capture_rows(pane, server):
         A third of this machine's sessions carry a custom title, and Claude's exit
         banner prints that rather than the uuid. `unique=True` because titles are
         free text: one that names more than one session resolves to nothing rather
-        than to a coin flip, which is the same refusal the save hook makes and for
-        the same reason.
+        than to a coin flip. That answers only for today. Ambiguity expires: once
+        Claude has pruned all but one of the sessions a title named, a fresh
+        lookup confidently names the survivor, whichever pane printed the title.
+        The save hook writes its refusals down for that reason, and a title it
+        refused is refused here without being asked again. This tool writes
+        nothing, so a refusal of its own lasts only for this run.
         """
+        if name in refused:
+            return None
         if not index:
             index.append(RESURRECT.name_index(unique=True))
         return index[0].get(name)
@@ -202,6 +221,12 @@ def capture_rows(pane, server):
     recovered = []
     for agent, session_id, name in RESURRECT.extract(plain):
         if not session_id and agent == "claude" and name:
+            # Compared in the form a record stores, as harvest() does:
+            # normalise() truncates a name to 60 characters.
+            stored = (agent, RESURRECT.clean(name, 60))
+            if stored in seen_names:
+                continue
+            seen_names.add(stored)
             session_id = resolve_title(name)
         if not session_id or session_id in seen:
             continue

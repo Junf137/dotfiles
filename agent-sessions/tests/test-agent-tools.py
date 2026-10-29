@@ -1254,11 +1254,26 @@ def resume_cases(tool):
     add("the merge keeps the date", merged[0]["last_seen"] == 100.0)
     add("the merge records both origins", merged[0]["origins"] == {"scrollback", "sidecar"})
 
+    # capture_rows() reads the sidecar as well as the capture, wherever the
+    # hook's resurrect_dir() says it is -- and that asks tmux. So every read here
+    # gets a scratch sidecar of its own, written by the hook's own writer.
+    resurrect = tool["RESURRECT"]
+
+    def read_pane(capture, server="", records=None, refused=None):
+        """The session ids capture_rows() reads in %7, over a canned capture."""
+        saved = tool["capture"], resurrect.resurrect_dir
+        with tempfile.TemporaryDirectory() as tmp:
+            resurrect.write_sidecar(os.path.join(tmp, resurrect.SIDECAR_NAME), records or {}, 1.0, refused)
+            tool["capture"], resurrect.resurrect_dir = (lambda _pane: capture), (lambda: tmp)
+            try:
+                return {row["session_id"] for row in tool["capture_rows"]("%7", server)}
+            finally:
+                tool["capture"], resurrect.resurrect_dir = saved
+
     # The per-pane caps are the save hook's own, borrowed rather than copied, so
     # the two tools cannot disagree about what a pane holds. Where a copy once
     # did: a block one stanza over the cap, whose dropped session also left its
     # own exit banner. The hook reads that banner back; the copy did not.
-    resurrect = tool["RESURRECT"]
     over = [f"dddd{i:04x}-0000-4000-8000-000000000000" for i in range(resurrect.MAX_STANZAS + 1)]
     data = b"".join(
         resurrect.marker_block(
@@ -1267,15 +1282,58 @@ def resume_cases(tool):
         )
         for i, sid in enumerate(over)
     ) + f"To continue this session, run codex resume {over[-1]}\n".encode()
-    previous_capture = tool["capture"]
-    tool["capture"] = lambda _pane: data
-    try:
-        mine = {row["session_id"] for row in tool["capture_rows"]("%7", "")}
-    finally:
-        tool["capture"] = previous_capture
+    mine = read_pane(data)
     hooks = {row["session_id"] for row in resurrect.harvest({"s:1.0": data}, {"s:1.0": "%7"}).get("s:1.0", [])}
     add("a session the stanza cap drops is still read from its banner", over[-1] in mine)
     add("a pane's scrollback is read exactly as the save hook reads it", mine == hooks)
+
+    # A Claude banner can print the session's title instead of its uuid, and the
+    # hook gates that lookup twice: a title the pane's records already name is
+    # not looked up, and one it refused is never looked up again. Both have to
+    # hold here too, where the answer is resumed rather than printed. Ambiguity
+    # expires as Claude prunes its transcripts, so a refused `rm` comes to name
+    # whichever session survived -- and if the pane's own session was the one
+    # pruned, that survivor is its only resumable candidate.
+    server = "/tmp/tmux-1000/default:7243:34779817"
+    real, survivor = "4e4e4e4e-0000-4000-8000-000000000000", "5a5a5a5a-0000-4000-8000-000000000000"
+    banner = b'\nResume this session with:\nclaude --resume "rm"\n'
+    titles, builds = {"rm": None}, []
+
+    def fake_index(unique=False, **_kwargs):
+        builds.append(unique)
+        return dict(titles)
+
+    previous_index = resurrect.name_index
+    resurrect.name_index = fake_index
+    try:
+        # Refused by the hook while `rm` named more than one session...
+        refused = {}
+        resurrect.harvest({"s:1.0": banner}, {"s:1.0": "%7"}, server, None, refused)
+        # ...and narrowed to one since, by pruning.
+        titles["rm"] = survivor
+        add("a title nothing has recorded or refused still resolves", read_pane(banner, server) == {survivor})
+        builds.clear()
+        add(
+            "a title the save hook refused is never looked up here",
+            read_pane(banner, server, refused=refused) == set() and builds == [],
+        )
+        own = resurrect.marker_block(
+            [dict(agent="claude", session_id=real, name="rm", cwd="/tmp", source="sessions", live=False, last_seen=1785600000.0)],
+            STAMP,
+        )
+        builds.clear()
+        add(
+            "a title the pane's own block names is not looked up",
+            read_pane(own + banner, server) == {real} and builds == [],
+        )
+        recorded = {"s:1.0": [dict(agent="claude", session_id=real, name="rm", pane_id="%7", server=server)]}
+        builds.clear()
+        add(
+            "a title the pane's sidecar records name is not looked up",
+            read_pane(banner, server, recorded) == set() and builds == [],
+        )
+    finally:
+        resurrect.name_index = previous_index
 
     # The hook cache is keyed by pane number with no server stamp, so a record
     # written before a reboot would otherwise be read against whichever restored
