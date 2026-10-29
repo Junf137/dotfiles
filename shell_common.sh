@@ -185,8 +185,7 @@ alias rm="rm -i"
 alias cp="cp -i"
 alias mv="mv -i"
 
-# trash-cli (Linux only; not available on macOS — these aliases are inert there)
-alias trash="trash-put"
+# trash-cli (Linux; inert on macOS). "trash" stays unaliased: trash-cli ships it, macOS has a native /usr/bin/trash
 alias tlist="trash-list"
 alias trestore="trash-restore"
 alias tempty="trash-empty"
