@@ -78,13 +78,15 @@ effect only once it reaches `local` in the live checkout.
 ## Verify
 
 - `./scripts/check-dotfiles.sh` checks the tree it belongs to, so it works from a
-  worktree. Run it after every change and after upgrading Claude Code or Codex. In a
-  worktree it warns that the live hooks point at another checkout, which is expected; a
-  fresh worktree needs `git submodule update --init --recursive` first.
-- `bootstrap.sh` and `cleanup_backups.sh` act on `$DOT_FILES`, the live checkout, even
-  when run from a worktree. Run `./bootstrap.sh --check` and `--dry-run` in the live
-  checkout once a change has reached it. Never point `DOT_FILES` at a worktree: that
-  relinks `$HOME` into it.
+  worktree. Run it after every change and after upgrading Claude Code or Codex. Its
+  hook-target checks resolve the live checkout's paths, though: in a worktree they warn
+  that the live hooks point at another checkout, which is expected, and a hook target
+  renamed there fails them until the rename reaches the live checkout. A fresh worktree
+  needs `git submodule update --init --recursive` first.
+- `bootstrap.sh` and `cleanup_backups.sh` act on `$DOT_FILES` when it is set (interactive
+  shells set it to the live checkout) and on their own directory otherwise, so run them
+  only in the live checkout: `./bootstrap.sh --check` and `--dry-run` once a change has
+  reached it. Never point `DOT_FILES` at a worktree: that relinks `$HOME` into it.
 
 ## Adding a dotfile
 
