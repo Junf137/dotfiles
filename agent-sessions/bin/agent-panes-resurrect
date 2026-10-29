@@ -152,16 +152,17 @@ except Exception as err:  # noqa: BLE001 - reported through the log, never raise
 ARCHIVE_NAME = "pane_contents.tar.gz"
 ARCHIVE_MEMBER_DIR = "./pane_contents"
 CONTENT_DIR = "pane_contents"
-# A note for the next person to meet a macOS tar: some of them serialise a
-# file's xattrs as a sibling `._<name>` archive member, which would break the
-# rebuilt-member-set comparison below -- `./._pane_contents` sits *beside*
-# ./pane_contents and so cannot be reproduced by tar.add(content_dir), and
-# inject() would then return "rebuilt member set differs" on every save, doing
-# all its work and publishing nothing. Measured not to happen here: the
-# `tar cf - -C <dir> ./pane_contents/` that tmux-resurrect runs is bsdtar 3.5.3,
-# which stores xattrs as pax LIBARCHIVE.xattr.* headers instead, and emits no
-# such member even for a file carrying a resource fork or under
-# `--mac-metadata`. GNU tar emits none either. So no filtering is needed.
+# macOS's tar -- bsdtar 3.5.3 on macOS 27 -- writes a directory's xattrs twice:
+# as pax headers, and as an AppleDouble `./._pane_contents` member *beside*
+# ./pane_contents, ahead of it. tar.add(content_dir) cannot reproduce a sibling,
+# so inject() carries it over; without that, every save fails the rebuilt-member-
+# set check and publishes nothing. One xattr is enough, and on the MacBook the
+# capture directory carries com.apple.provenance, which macOS sets on its own and
+# which stays because tmux-resurrect reuses the directory: 194 of its 219 saves
+# from 2026-08-07 on were lost this way. macOS's own `tar t` does not list the
+# member, which is how an earlier check here concluded it was never written.
+# GNU tar writes none.
+APPLEDOUBLE_NAME = f"._{CONTENT_DIR}"
 SIDECAR_NAME = "agent_sessions.json"
 # A sidecar that would not parse, kept rather than written over. Named with a
 # prefix rather than an exact name so sweep_scratch() and purge agree about it
@@ -1687,7 +1688,11 @@ def inject(rdir, blocks, strip_only=False, harvested_from=None):
             written += 1
 
         tmp = os.path.join(scratch, "rebuilt.tar.gz")
+        double = os.path.join(scratch, APPLEDOUBLE_NAME)
         with tarfile.open(tmp, "w:gz") as tar:
+            # First, where tar put it (see APPLEDOUBLE_NAME).
+            if os.path.isfile(double):
+                tar.add(double, arcname=f"./{APPLEDOUBLE_NAME}")
             tar.add(content_dir, arcname=ARCHIVE_MEMBER_DIR)
         with tarfile.open(tmp, "r:gz") as tar:
             if sorted(m.name for m in tar.getmembers()) != names:
