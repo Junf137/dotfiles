@@ -29,13 +29,6 @@ ZSH_THEME_GIT_PROMPT_SUFFIX="$YS_VCS_PROMPT_SUFFIX"
 ZSH_THEME_GIT_PROMPT_DIRTY="$YS_VCS_PROMPT_DIRTY"
 ZSH_THEME_GIT_PROMPT_CLEAN="$YS_VCS_PROMPT_CLEAN"
 
-# SVN info
-local svn_info='$(svn_prompt_info)'
-ZSH_THEME_SVN_PROMPT_PREFIX="${YS_VCS_PROMPT_PREFIX1}svn${YS_VCS_PROMPT_PREFIX2}"
-ZSH_THEME_SVN_PROMPT_SUFFIX="$YS_VCS_PROMPT_SUFFIX"
-ZSH_THEME_SVN_PROMPT_DIRTY="$YS_VCS_PROMPT_DIRTY"
-ZSH_THEME_SVN_PROMPT_CLEAN="$YS_VCS_PROMPT_CLEAN"
-
 # HG info
 local hg_info='$(ys_hg_prompt_info)'
 ys_hg_prompt_info() {
@@ -62,12 +55,12 @@ local exit_code="%(?,,C:%{$fg[red]%}%?%{$reset_color%})"
 # Adding conda_info into prompt if and when a conda environment is active
 _conda_prompt_info() {
   if [[ -n $CONDA_PREFIX ]]; then
-      if [[ $(basename $CONDA_PREFIX) == "miniconda3" ]]; then
+      if [[ ${CONDA_PREFIX:t} == "miniconda3" ]]; then
         # Without this, it would display conda version
         conda_info="(base)"
       else
         # For all environments that aren't (base)
-        conda_info="($(basename $CONDA_PREFIX))"
+        conda_info="(${CONDA_PREFIX:t})"
       fi
   # When no conda environment is active, don't show anything
   else
@@ -109,13 +102,11 @@ PROMPT="\
 %{$terminfo[bold]$fg[yellow]%}[%~]%{$reset_color%}\
 ${hg_info}\
 ${git_info}\
-${svn_info}\
-${venv_info}\
  \
 $exit_code
 %{$terminfo[bold]$fg[yellow]%}┗%{$reset_color%} %{$terminfo[bold]$fg[red]%}$  %{$reset_color%}"
 
-# $conda_info works only when using single quotes, ???
+# Single quotes: expanded at every prompt (prompt_subst), after precmd sets these
 RPROMPT='\
 %{$terminfo[bold]$fg[blue]%}$conda_info$venv_info%{$reset_color%} \
 at \
