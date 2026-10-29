@@ -1,4 +1,8 @@
-# tmux-continuum never replaces this: it writes its own unit only where none exists.
+# tmux-continuum writes its own unit only where none exists, so it leaves the
+# link bootstrap.sh makes to this file alone. But `systemctl --user disable
+# tmux.service` deletes that link too, and the next tmux start then writes
+# continuum's unit, which calls save.sh directly (see ExecStop below). Run
+# ./bootstrap.sh after any disable to put the link back.
 [Unit]
 Description=tmux server (independent of the desktop session)
 Documentation=man:tmux(1)
