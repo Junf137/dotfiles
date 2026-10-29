@@ -521,6 +521,12 @@ broken one degrades to "no harvest" and this is the only place it would be notic
   save hook into a silent no-op. That happened once (`NameError: name 'hashlib' is not
   defined`); `ast.parse` was blind to it, and the tests exercised 13 of 18 top-level
   imports.
+- **The rollout index against Codex's own.** `check.sh` reads Codex's thread table (the
+  newest `~/.codex/state_*.sqlite`, read-only) and fails if a thread whose rollout is
+  still on disk is missing from `transcript_index()` — what the compressed and the
+  archived rollouts both were before they were found by hand. It compares ids, not
+  paths: the table keeps the `.jsonl` name after Codex compresses the file. A thread
+  with no rollout left is counted, not failed.
 - **The exec is out of reach.** `agent-resume`'s two commands are spelled out in the
   tests as well as the tool, so changing one alone fails. To exercise the clear, the
   `chdir` and the argv for real, put a script named `claude` or `codex` ahead on `PATH`

@@ -413,6 +413,89 @@ check_tool_smoke() {
     printf 'OK agent-panes runs and emits JSON (%s row(s))\n' "$rows"
 }
 
+check_codex_threads_indexed() {
+    # transcript_index() finds Codex rollouts by globbing where Codex keeps them,
+    # and it has missed some twice -- compressed rollouts, then archived threads
+    # in ~/.codex/archived_sessions/. Both misses were silent: those threads just
+    # stopped being resumable from their panes. Codex's own thread table names
+    # every thread it knows, so this checks that each one with a rollout still on
+    # disk is one the index finds.
+    #
+    # Ids only, never paths. Codex does not rewrite rollout_path when it
+    # compresses a rollout -- it still named the .jsonl for 1667 of 1805 threads
+    # here, 2026-10-29, whose file was the .jsonl.zst -- so comparing paths fails
+    # on a correct tree. The recorded path only tells a missed rollout from a
+    # deleted one: a thread whose file is gone is resumable by nobody, so it is
+    # counted rather than failed. That leaves one blind spot, a Codex that moves
+    # rollouts without updating the table, which shows up as that count jumping.
+    #
+    # The file name carries a schema version (state_5.sqlite on codex-cli 0.165),
+    # so the newest is read, and finding none under an existing ~/.codex fails
+    # rather than skips: a skip is exactly what a rename would look like.
+    cd "$REPO_ROOT" || return 1
+
+    python3 - agent-sessions/lib <<'PY'
+import glob
+import os
+import re
+import sqlite3
+import sys
+import urllib.parse
+
+sys.path.insert(0, sys.argv[1])
+import agents
+
+home = os.path.dirname(agents.CODEX_SESSIONS)
+if not os.path.isdir(home):
+    print(f"SKIP: no {home} (nothing asserted)")
+    sys.exit(0)
+
+databases = {}
+for path in glob.glob(os.path.join(home, "state_*.sqlite")):
+    match = re.fullmatch(r"state_(\d+)\.sqlite", os.path.basename(path))
+    if match:
+        databases[int(match.group(1))] = path
+if not databases:
+    print(f"no state_*.sqlite in {home}: Codex's thread table has moved", file=sys.stderr)
+    sys.exit(1)
+database = databases[max(databases)]
+
+# With no -wal beside it, every row is in the main file, so read that as-is:
+# macOS's own SQLite cannot open a WAL database read-only while its -wal and
+# -shm are missing, as they are whenever Codex has it closed, and Linux's
+# creates both in ~/.codex instead.
+flags = "mode=ro" if os.path.exists(f"{database}-wal") else "mode=ro&immutable=1"
+try:
+    connection = sqlite3.connect(f"file:{urllib.parse.quote(database)}?{flags}", uri=True)
+    rows = connection.execute("SELECT id, rollout_path FROM threads").fetchall()
+except sqlite3.Error as err:
+    print(f"{database}: cannot read threads(id, rollout_path): {err}", file=sys.stderr)
+    sys.exit(1)
+
+index = agents.transcript_index()["codex"]
+missed = []
+gone = 0
+for thread, recorded in rows:
+    if thread in index:
+        continue
+    # Any suffix, since the recorded name outlives compression.
+    found = sorted(glob.glob(glob.escape(recorded) + "*"))
+    if found:
+        missed.append((thread, found[-1]))
+    else:
+        gone += 1
+
+for thread, path in missed[:5]:
+    print(f"{thread}: {path} is on disk but not in transcript_index()", file=sys.stderr)
+if missed:
+    print(f"{len(missed)} of {len(rows)} Codex threads are not indexed", file=sys.stderr)
+    sys.exit(1)
+
+note = f", {gone} with no rollout left" if gone else ""
+print(f"OK every Codex thread in {os.path.basename(database)} is indexed ({len(rows) - gone}{note})")
+PY
+}
+
 run_optional python3 "agent-sessions python syntax" check_python_syntax
 run_optional python3 "agent-sessions shared patterns" check_shared_module
 run_optional python3 "agent-resume borrowed names" check_borrowed_names
@@ -421,6 +504,7 @@ run_required "tmux resurrect hook wiring" check_tmux_hook_wiring
 run_required "tmux resurrect plugin contract" check_resurrect_plugin_contract
 run_optional python3 "agent resume-marker patterns" check_tool_tests
 run_optional python3 "agent-sessions tools run" check_tool_smoke
+run_optional python3 "Codex threads indexed" check_codex_threads_indexed
 
 if [ "$failures" -gt 0 ]; then
     printf '\n%d agent-sessions check(s) failed.\n' "$failures" >&2
