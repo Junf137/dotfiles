@@ -218,6 +218,16 @@ check_tmux_restore_hook() {
     return "$status"
 }
 
+check_add_path() {
+    (
+        # shellcheck source=../utils/add_path
+        source "$REPO_ROOT/utils/add_path"
+        PATH=/usr/local/bin:/x/usr/local/bin:/x/usr/bin
+        add_path /usr/local/bin
+        [ "$PATH" = /usr/local/bin:/x/usr/local/bin:/x/usr/bin ]
+    )
+}
+
 check_toml() {
     cd "$REPO_ROOT" || return 1
     taplo check
@@ -336,6 +346,7 @@ run_required "agent sessions" "$REPO_ROOT/agent-sessions/check.sh"
 run_optional jq "json syntax" check_json
 run_optional jq "agent hook wiring" check_hook_wiring
 run_required "tmux restore hook wiring" check_tmux_restore_hook
+run_required "add_path entry boundaries" check_add_path
 run_optional taplo "toml syntax" check_toml
 run_required "symlink manifest sources" check_manifest_sources
 run_required "welcome corpus metadata" check_welcome_corpus
