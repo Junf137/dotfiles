@@ -1,6 +1,0 @@
-#!/bin/bash
-
-find . -mindepth 1 -maxdepth 1 -type d -print0 | while IFS= read -r -d '' folder; do
-  printf '%s:\t' "$folder"
-  find "$folder" -type f | wc -l
-done

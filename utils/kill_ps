@@ -58,7 +58,7 @@ kill_ps() {
     # terminal you are actually sitting at (tmux/OSC 52 over SSH, a native tool when
     # local) and never hangs the way wl-copy/xclip do when no display is reachable.
     # Resolve `clip` next to this script (portable: no `readlink -f`, which BSD/macOS
-    # lacks). Falls back to the PATH copy (utils/ is on PATH) if the sibling is absent.
+    # lacks), because the fzf-tmux popup gets the tmux server's PATH, which may lack utils/.
     local clip_bin
     clip_bin="$(cd "$(dirname "${BASH_SOURCE[0]}")" 2>/dev/null && pwd)/clip"
     [ -x "$clip_bin" ] || clip_bin="clip"
@@ -73,7 +73,7 @@ kill_ps() {
     #   --header-lines=2 is used to disallow selecting the first two lines of the output (i.e., the header).
     #   --preview part simply prints the selected line in case it is too long to fit selection window.
     # awk '{print $2}': extracts the second column (PID) from the output of fzf and assigns it to the pid variable.
-    pid=$((date; ps -ef) | \
+    pid=$( (date; ps -ef) | \
         fzf-tmux --multi -p 80%,70% \
             --header="Press CTRL-R to reload${copy_hint}"$'\n' --header-lines=2 \
             --preview='echo {}' --preview-window=down,3,wrap \

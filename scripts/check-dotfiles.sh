@@ -56,11 +56,8 @@ check_bash_syntax() {
         agent-sessions/check.sh
         utils/add_path
         utils/kill_ps
-        utils/file_count
         utils/rfv
-        utils/cowsay_fortune
         utils/shell_welcome
-        utils/color_pwd
         utils/view-image
         utils/tmux-refit-windows
         utils/clip
