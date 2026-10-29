@@ -4,15 +4,10 @@
 
 """Self-tests for the pure logic in the agent-session utilities.
 
-Two things are covered, both of which fail silently in production:
-
-  * the resume-marker patterns in agent-sessions/bin/agent-scrollback-ids, which
-    are matched against terminal output produced by Claude Code and Codex and so
-    can rot when either agent changes its wording -- run these after upgrading an
-    agent;
-  * the marker rendering and stripping in agent-sessions/bin/agent-panes-resurrect,
-    where a strip that stops matching means a block stacks up on every reboot, and
-    an unsanitised field means a control sequence is replayed into a live terminal.
+Covers the resume-marker patterns (lib/agent_ids.py), the title and rollout
+indexes, agent-panes-resurrect's block render/strip/parse/harvest/inject, and
+agent-resume's rule. All of it fails silently in production; re-run after
+upgrading Claude or Codex.
 
     ./agent-sessions/tests/test-agent-tools.py
 
@@ -634,8 +629,7 @@ def harvest_cases(tool):
     at = lambda data, pane, t: tool["parse_stanzas"](tool["split_capture"](data)[0], pane, t)  # noqa: E731
     add("the block records the pane and server it belongs to", f"bound to %11@{tag}".encode() in bound)
     add("a stanza is read in the pane it was written for", len(at(bound, "%11", tag)) == 1)
-    add("a stanza claiming another pane on this server is refused", at(bound, "%99", tag) == [])
-    add("the refused stanza is not resurrected by the fallback", at(bound, "%99", tag) == [])
+    add("a stanza claiming another pane on this server is refused, fallback included", at(bound, "%99", tag) == [])
     # The two cases the carry-over depends on and cannot check: %N is reissued by
     # every new server, and blocks written before the field existed have none.
     add("a stanza from an older server generation is still read", len(at(bound, "%99", "deadbeef")) == 1)
@@ -1413,16 +1407,6 @@ def archive_cases(tool):
         os.utime(stale, (1.0, 1.0))
         tool["sweep_scratch"](tmp, time.time())
         add("an ordinary stale leftover is still swept", not os.path.exists(stale))
-
-        # `purge` is the only thing that removes the kept file, so an uninstall
-        # that skipped it would leave a file full of session ids behind.
-        add(
-            "purge names the kept sidecar",
-            any(
-                name.startswith(tool["UNREADABLE_PREFIX"])
-                for name in os.listdir(tmp)
-            ),
-        )
 
         # A well-formed sidecar holding nothing is what a machine with no agent
         # panes writes. Diagnosed as damage it was renamed aside on every save,

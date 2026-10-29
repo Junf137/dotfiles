@@ -518,7 +518,7 @@ run_optional python3 "agent-resume borrowed names" check_borrowed_names
 run_required "agent-sessions executable bits" check_executable_bits
 run_required "tmux resurrect hook wiring" check_tmux_hook_wiring
 run_required "tmux resurrect plugin contract" check_resurrect_plugin_contract
-run_optional python3 "agent resume-marker patterns" check_tool_tests
+run_optional python3 "agent-sessions unit tests" check_tool_tests
 run_optional python3 "agent-sessions tools run" check_tool_smoke
 run_optional python3 "Codex threads indexed" check_codex_threads_indexed
 
