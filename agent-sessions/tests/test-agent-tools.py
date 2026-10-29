@@ -793,6 +793,25 @@ def harvest_cases(tool):
         )
         add("and the index is not built at all", builds == [])
 
+        # A record keeps a title cut to 60 characters and the banner prints it
+        # whole, so the two are compared in the form the record stores. The
+        # record here is the one normalise() writes, read back the way recover()
+        # reads the sidecar.
+        long_title = "deploy the long-running migration for the analytics warehouse cluster"
+        stored = tool["normalise"](dict(agent="claude", session_id=TITLE_UUID, name=long_title, pane_id="%7"), 1.0, SERVER)
+        builds.clear()
+        add(
+            "a recorded title longer than a record keeps is not looked up again",
+            tool["harvest"](
+                {"s:1.0": f'claude --resume "{long_title}"\n'.encode()},
+                {"s:1.0": "%7"},
+                SERVER,
+                tool["recorded_names"]({"s:1.0": [stored]}, SERVER),
+            )
+            == {}
+            and builds == [],
+        )
+
         # One sweep per save, however many panes carry an unresolved title.
         builds.clear()
         many = {f"s:1.{i}": titled for i in range(5)}
