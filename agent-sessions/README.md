@@ -134,8 +134,8 @@ already inside `pane_contents.tar.gz` keep replaying on every restore.
     `state_5.sqlite` has a row for.
   - One thread can span several rollouts (92 here have 2 to 7); the newest counts. That
     is the greatest file *name*, which sorts by start stamp — not the greatest path.
-  - A rollout idle for about a week is compressed to `.jsonl.zst` — for 1016 of 1064
-    sessions here, on codex-cli 0.165, the newest rollout is one — while Codex's thread
+  - A rollout idle for about a week is compressed to `.jsonl.zst` — for 1698 of 1805
+    threads here, on codex-cli 0.165, the newest rollout is one — while Codex's thread
     table goes on naming the `.jsonl`. It is still resumable, so it still counts; before
     this was handled, `agent-resume` called ~95% of Codex sessions gone. Resuming one
     was checked end to end on 0.165; Codex replaces the newest `.zst` with a `.jsonl`.
@@ -428,7 +428,9 @@ It reads three sources and writes to none of them.
 - **A candidate whose transcript is gone is listed but never chosen**, and never makes a
   pane ambiguous. Both agents resolve `--resume` out of those files and Claude prunes its
   own at 30 days, so an id with nothing behind it is not a candidate at all. That is
-  what makes "exactly one" answerable as often as it is: 53 of 66 panes here.
+  what makes "exactly one" answerable as often as it is: 53 of 66 panes here. An
+  archived Codex thread is not gone — `codex resume` still opens it — so it is a
+  candidate like any other, and can make a pane ambiguous.
 - **The clear is `ESC[H ESC[2J` and deliberately not `ESC[3J`.** tmux answers the third
   by dropping the pane's history, which is a source this tool reads: for a session that
   started and exited between two saves, the banner there is the only record and nothing

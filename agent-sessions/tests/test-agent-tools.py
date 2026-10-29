@@ -947,6 +947,13 @@ def agents_cases():
             moved = "01a13daf-d27e-78a1-88f0-ae39fa2dcab4"
             archived = os.path.join(agents.CODEX_ARCHIVED, f"{stamp}{shelved}.jsonl.zst")
             newest = os.path.join(agents.CODEX_ARCHIVED, f"{later}{moved}_{other}.jsonl.zst")
+            # Ties, never seen on disk but possible mid-move: one name in both
+            # trees, and one rollout in both forms. Pinned, so that a key on the
+            # stamp alone cannot leave the pick to the directory listing.
+            tied = "01a14c02-5b3e-7f10-9d2a-6e8b4c1f0a37"
+            paired = "01a14c9e-0d71-7c42-8a15-3f6e2b9d4c80"
+            dated = os.path.join(day, f"{stamp}{tied}.jsonl.zst")
+            both = os.path.join(day, f"{stamp}{paired}.jsonl")
             for path in (
                 os.path.join(day, f"{stamp}{thread}.jsonl.zst"),
                 rollout,
@@ -958,6 +965,10 @@ def agents_cases():
                 archived,
                 newest,
                 os.path.join(day, f"{stamp}{moved}.jsonl"),
+                dated,
+                os.path.join(agents.CODEX_ARCHIVED, os.path.basename(dated)),
+                both,
+                f"{both}.zst",
             ):
                 open(path, "w").close()
             listed = glob.glob
@@ -970,7 +981,9 @@ def agents_cases():
                 add(f"the index counts a compressed rollout, {order}", index["codex"].get(CODEX_UUID) == packed)
                 add(f"the index counts an archived rollout, {order}", index["codex"].get(shelved) == archived)
                 add(f"the index keeps a newer archived rollout, {order}", index["codex"].get(moved) == newest)
-                add(f"the index holds nothing else, {order}", len(index["codex"]) == 4)
+                add(f"a name in both trees goes to the dated copy, {order}", index["codex"].get(tied) == dated)
+                add(f"a rollout in both forms goes to the .zst, {order}", index["codex"].get(paired) == f"{both}.zst")
+                add(f"the index holds nothing else, {order}", len(index["codex"]) == 6)
             add("the index finds a Claude transcript", index["claude"] == {UUID: transcript})
         finally:
             agents.CLAUDE_PROJECTS, agents.CODEX_SESSIONS, agents.CODEX_ARCHIVED = saved

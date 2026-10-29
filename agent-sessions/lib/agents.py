@@ -50,7 +50,7 @@ CODEX_INDEX = os.path.expanduser("~/.codex/session_index.jsonl")
 # for exactly those files.
 #
 # Codex also compresses a rollout to `.jsonl.zst` once it has sat idle for about
-# a week -- 1035 of 1092 rollout files here, 2026-10-28 -- while its own thread
+# a week -- 1829 of 1954 rollout files here, 2026-10-28 -- while its own thread
 # table goes on naming the `.jsonl`. Such a session is still resumable, so it
 # still counts.
 #
