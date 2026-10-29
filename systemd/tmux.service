@@ -1,0 +1,49 @@
+# tmux-continuum writes its own unit only where none exists, so it leaves the
+# link bootstrap.sh makes to this file alone. But `systemctl --user disable
+# tmux.service` deletes that link too, and the next tmux start then writes
+# continuum's unit, which calls save.sh directly (see ExecStop below). Run
+# ./bootstrap.sh after any disable to put the link back.
+[Unit]
+Description=tmux server (independent of the desktop session)
+Documentation=man:tmux(1)
+# Deliberately NOT bound to graphical-session.target: on 2026-08-06 a
+# gnome-shell segfault tore down app.slice and killed the tmux server
+# along with every pane. Keeping this under user@.service instead of the
+# GNOME session is the whole point of this unit.
+
+[Service]
+Type=forking
+# The `main` session anchors the server: tmux's exit-empty defaults to on,
+# so a server with zero sessions would quit immediately if the
+# tmux-continuum restore produced nothing.
+ExecStart=/usr/bin/tmux new-session -d -s main
+# Snapshot before tearing the server down. Continuum only autosaves while a
+# client is attached (it piggybacks on the status-right redraw), so a detached
+# server can otherwise go hours with no snapshot -- on 2026-08-06 the last save
+# was 02:14 for a 10:29 crash.
+#
+# Must go through `tmux run-shell`, not save.sh directly: the
+# @resurrect-hook-post-save-all hook (agent-panes-resurrect) refuses to run
+# without $TMUX, because every tmux call would otherwise resolve against the
+# default server and rewrite an archive belonging to a live session. systemd
+# gives ExecStop no $TMUX, so a direct call aborted the hook and save.sh still
+# rebuilt pane_contents.tar.gz -- clobbering the annotated archive with a raw
+# capture and freezing every pane's agent-session block at its previous value.
+# run-shell executes the job in the server, which sets $TMUX; `-` because a
+# failed snapshot must never block the kill-server that follows.
+ExecStop=-/usr/bin/tmux run-shell %h/.tmux/plugins/tmux-resurrect/scripts/save.sh
+ExecStop=/usr/bin/tmux kill-server
+# Panes register their own tmux-spawn-*.scope units, so they live outside
+# this cgroup and are untouched by the service's kill mode.
+KillMode=process
+Restart=on-failure
+RestartSec=5
+# The ExecStop save normally takes ~2s, but it runs resurrect's post-save hooks
+# in a non-interactive environment; cap it so a misbehaving hook cannot stall
+# shutdown for the default 90s.
+TimeoutStopSec=30
+# Never let systemd-oomd pick the tmux server as its victim.
+ManagedOOMPreference=avoid
+
+[Install]
+WantedBy=default.target

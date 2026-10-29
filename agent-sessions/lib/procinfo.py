@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 # __author__ == Junfeng Lei
 
 """Process introspection, on the two kernels this repo runs on.

@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
-# Claude Code statusLine script
-# Mirrors the ys_customized zsh theme: user@host in [dir] on git:BRANCH STATE
+# Claude Code statusLine: <dir>  git:<branch> x|o  ✻ <model> · ctx:N% · 5h:N%
 
 input=$(cat)
 
@@ -17,10 +16,6 @@ else
 fi
 cwd="${cwd:-${PWD:-$HOME}}"
 
-# User and host
-user=$(whoami)
-host=$(hostname -s)
-
 # Short path: replace $HOME with ~
 short_path=$(echo "$cwd" | sed "s|^$HOME|~|")
 
@@ -30,7 +25,7 @@ git_state=""
 if git -C "$cwd" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
     git_branch=$(git -C "$cwd" symbolic-ref --short HEAD 2>/dev/null \
                  || git -C "$cwd" rev-parse --short HEAD 2>/dev/null)
-    if [ -n "$(git -C "$cwd" status --porcelain 2>/dev/null)" ]; then
+    if [ -n "$(git -C "$cwd" --no-optional-locks status --porcelain 2>/dev/null)" ]; then
         git_state="x"   # dirty
     else
         git_state="o"   # clean
@@ -50,12 +45,8 @@ if [ -n "$five_pct" ]; then
 fi
 
 # Assemble output with ANSI colors
-# yellow bold box-drawing, cyan user, green host, bold-yellow dir,
-# blue git, dim conda, dim model info
 RESET='\033[0m'
 BOLD='\033[1m'
-YELLOW='\033[33m'
-CYAN='\033[36m'
 GREEN='\033[32m'
 BLUE='\033[34m'
 RED='\033[31m'

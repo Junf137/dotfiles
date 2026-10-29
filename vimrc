@@ -1,4 +1,3 @@
-" source /etc/vim/vimrc
 " Comments in Vimscript start with a `"`.
 
 
@@ -10,17 +9,14 @@ let mapleader=","
 " Plugins setting
 """"""""""""""""""""""""""""""
 " ---* call plugins
-"   - Vim (Linux/macOS): '~/.vim/plugged'
-"   - Vim (Windows): '~/vimfiles/plugged'
-"   - Neovim (Linux/macOS/Windows): stdpath('data') . '/plugged'
 call plug#begin()
     Plug 'preservim/nerdtree'                       " display directory
-    Plug 'ryanoasis/vim-devicons'                   " add file icon in NERDTree
     Plug 'tiagofumo/vim-nerdtree-syntax-highlight'  " highlight file in NERDTree
     Plug 'mhinz/vim-startify'                       " display most recently used file when vim started with no arguments
     Plug 'vim-airline/vim-airline'                  " modify display in bottom status line and head line, display buffer
     Plug 'vim-airline/vim-airline-themes'           " theme for air-line
     Plug 'christoomey/vim-tmux-navigator'           " unify pane navigation in vim and tmux
+    Plug 'ryanoasis/vim-devicons'                   " file icons (NERDTree, airline, startify); must load last
 call plug#end()
 
 
@@ -76,11 +72,8 @@ let g:startify_lists = [
 
 
 " ---* vim-airline
-let g:airline#extensions#whitespace#checks =
-  \  [ 'indent', 'trailing', 'mixed-indent-file', 'conflicts' ]  " disable trailing warnings
 let g:airline#extensions#tabline#enabled        = 1 " enable tabline
 let g:airline#extensions#tabline#buffer_nr_show = 1 " display buffer number
-let g:airline#extensions#ale#enabled            = 1 " enable ale integration
 let g:airline_theme                             = 'luna'  " bubblegum, violet
 
 
@@ -96,23 +89,6 @@ nnoremap <silent> <leader>o :enew<CR>
 " switch buffer
 nnoremap <silent> <leader>] :bnext<CR>
 nnoremap <silent> <leader>[ :bprevious<CR>
-" " <leader>1~9 switch to buffer1~9
-" map <leader>1 :b 1<CR>
-" map <leader>2 :b 2<CR>
-" map <leader>3 :b 3<CR>
-" map <leader>4 :b 4<CR>
-" map <leader>5 :b 5<CR>
-" map <leader>6 :b 6<CR>
-" map <leader>7 :b 7<CR>
-" map <leader>8 :b 8<CR>
-" map <leader>9 :b 9<CR>
-
-
-" setting window operation
-" nnoremap <silent> <Right> :vertical res+2<CR>
-" nnoremap <silent> <Left> :vertical res-2<CR>
-" nnoremap <silent> <Up> :res+2<CR>
-" nnoremap <silent> <Down> :res-2<CR>
 
 
 """"""""""""""""""""""""""""""
@@ -125,7 +101,6 @@ set shortmess+=I    " Disable the default Vim startup message.
 
 " ---* UI Config
 set number		        " show line numbers
-" set relativenumber		" show relative numbering
 set laststatus=2		" Show the status line at the bottom
 
 
@@ -143,9 +118,9 @@ set autoindent
 filetype plugin on	" load filetype specific plugin files
 set wildmenu		" visual autocomplete for command menu
 set showmatch		" highlight matching [{()}]
-set mouse+=r		" A necessary evil, mouse support
-set splitbelow		" Open new vertical split bottom
-set splitright		" Open new horizontal splits right
+set mouse+=r		" mouse only at hit-enter/more prompts
+set splitbelow		" :split opens below
+set splitright		" :vsplit opens right
 set linebreak		" Have lines wrap instead of continue off-screen
 set scrolloff=12	" Keep cursor in approximately the middle of the screen
 set updatetime=100	" Some plugins require fast updatetime
@@ -159,10 +134,6 @@ set shiftwidth=4	" Insert 4 spaces on a tab
 set expandtab		" tabs are spaces, mainly because of python
 
 
-" ---* Buffers
-set hidden		"Allows having hidden buffers(not displayed in any window)
-
-
 " ---* Sensible stuff
 " The backspace key has slightly unintuitive behavior by default. For example,
 " by default, you can't backspace before the insertion point set with 'i'.
@@ -172,7 +143,7 @@ set backspace=indent,eol,start
 " Unbind some useless/annoying default key bindings.
 " 'Q' in normal mode enters Ex mode. You almost never want this.
 nnoremap Q <Nop>
-" Unbind for tmux
+" Disable increment/decrement
 noremap <C-a> <Nop>
 noremap <C-x> <Nop>
 
@@ -190,14 +161,7 @@ set wildignore+=*/.git/*,*/tmp/*,*.swp  " Ignore files for completion
 " ---* Undo
 set undofile " Maintain undo history between sessions
 set undodir=~/.vim/undodir
-
-
-" ---* auto type mached (){}[]
-" inoremap { {}<ESC>i<CR><ESC>V<O
-" inoremap ( ()<ESC>i
-" inoremap [ []<ESC>i
-" inoremap < <><ESC>i
-" inoremap <C-[> <ESC>
+call mkdir(&undodir, 'p', 0700)
 
 
 " Try to prevent bad habits like using the arrow keys for movement. This is
@@ -205,12 +169,7 @@ set undodir=~/.vim/undodir
 " for movement, rather than using more efficient movement commands, is also a
 " bad habit. The former is enforceable through a .vimrc, while we don't know
 " how to prevent the latter.
-" ...and in insert mode
 inoremap <Left>  <ESC>:echoe "Use h"<CR>
 inoremap <Right> <ESC>:echoe "Use l"<CR>
 inoremap <Up>    <ESC>:echoe "Use k"<CR>
 inoremap <Down>  <ESC>:echoe "Use j"<CR>
-" inoremap <Left>  <ESC>i
-" inoremap <Right> <ESC>la
-" inoremap <Up>    <ESC>ki
-" inoremap <Down>  <ESC>ji

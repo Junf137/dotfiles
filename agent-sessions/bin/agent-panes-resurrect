@@ -247,8 +247,8 @@ MAX_STANZAS = _max_stanzas()
 # from an exit banner, and the record is append-only.
 #
 # Rows read back out of a block are capped separately, at MAX_STANZAS -- see
-# harvest(). A block this hook wrote can never hold more stanzas than it prints,
-# so anything past that arrived as text too.
+# cap_stanzas(). A block this hook wrote can never hold more stanzas than it
+# prints, so anything past that arrived as text too.
 MAX_HARVEST_PER_PANE = 2 * MAX_STANZAS
 
 # Where a row's session id came from, best first. agent-panes owns the exact
@@ -771,8 +771,8 @@ def parse_stanzas(marked, pane_id="", tag=""):
                 agent=agent,
                 session_id=session_id,
                 # Which pane and server generation the stanza claimed. Transient:
-                # harvest() ranks on it and drops it, and normalise() rebuilds a
-                # record field by field, so it never reaches the sidecar.
+                # cap_stanzas() ranks on it and drops it, and normalise() rebuilds
+                # a record field by field, so it never reaches the sidecar.
                 bound=(bound.group("pane"), bound.group("tag")) if bound else None,
                 name=(head_match.group("name") or "") if head_match else "",
                 cwd=cwd,
@@ -1028,6 +1028,78 @@ def enrich(rows):
             row["cwd"] = transcript_cwd(path)
 
 
+def cap_stanzas(parsed, pane_id, tag):
+    """The block rows a pane keeps: at most MAX_STANZAS, one per session.
+
+    MAX_STANZAS, not MAX_HARVEST_PER_PANE: a block this hook wrote can
+    never hold more stanzas than it prints, so anything past that arrived
+    as text. Uncapped, a `cat` of the archive into a pane after a restore
+    would file every pane's stanzas here -- the binding check waves those
+    through, because a previous server generation is exactly the case it
+    cannot judge -- and they would then evict the pane's real records from
+    its own block, which is how a display cap turns into a delete.
+
+    Which is why the cap ranks rather than slices the file. Stanzas the
+    pane can prove are its own come first (one bound to this server but
+    another pane was already refused whole inside parse_stanzas, so a
+    current-tag binding here can only be ours), then the most recently
+    seen. Taking the tail instead would keep the *oldest*: the renderer
+    writes newest-first, and the undated fallback rows are appended after
+    every structured one, so they would outrank all of them.
+
+    The cap counts sessions, not lines. parse_stanzas()'s structured pass
+    appends a row per `resume:` line and does not dedupe, so a block that
+    reached this pane twice -- two `--dry-run` previews run here, a `cat`
+    of a capture that already held one -- puts two rows per session in
+    front of the cap. Ranked, the copies land adjacent (same binding, same
+    date), so N duplicates evict N distinct ids and the strip then removes
+    the only evidence those ids had left.
+    """
+    parsed = sorted(
+        parsed,
+        key=lambda row: (
+            bool(tag and row.get("bound") == (pane_id, tag)),
+            row.get("last_seen") or 0,
+        ),
+        reverse=True,
+    )
+    deduped, already = [], set()
+    for row in parsed:
+        if row["session_id"] in already:
+            continue
+        already.add(row["session_id"])
+        deduped.append(row)
+    return [{k: v for k, v in row.items() if k != "bound"} for row in deduped[:MAX_STANZAS]]
+
+
+def cap_recovered(recovered, plain):
+    """The last MAX_HARVEST_PER_PANE rows by where they sit in `plain`."""
+    if len(recovered) <= MAX_HARVEST_PER_PANE:
+        return recovered
+    at = {}
+    for match in re.finditer(UUID, plain):
+        at.setdefault(match.group(0), match.start())
+
+    def where(row):
+        # A uuid resolved from a title never appears as a uuid in the
+        # capture -- the banner printed the title -- so that row is
+        # located by the text it was actually read from. Keyed on the
+        # uuid alone it would sort to -1 and be the first thing the cap
+        # discarded, which is exactly backwards.
+        if row["session_id"] in at:
+            return at[row["session_id"]]
+        # The title as extract() reports it is unescaped, while the
+        # capture holds Claude's escaped form, so a title containing a
+        # quote or a backslash will not be found. Failing to the end
+        # rather than to -1 keeps such a row instead of making it the
+        # first thing the cap discards: an id resolved from a banner is
+        # better evidence than the flood it is competing with.
+        found = plain.rfind(row["name"]) if row["name"] else -1
+        return found if found >= 0 else len(plain)
+
+    return sorted(recovered, key=where)[-MAX_HARVEST_PER_PANE:]
+
+
 def harvest(captures, loc_to_pane, server="", known_names=None, refused=None):
     """loc -> rows the archived captures still hold, for panes we can place.
 
@@ -1042,8 +1114,8 @@ def harvest(captures, loc_to_pane, server="", known_names=None, refused=None):
     blocks. The block would elide them behind its own cap anyway, so the bound
     belongs here, where it also keeps them out of the file.
 
-    What the cap keeps is the *last* ids in the capture, ordered by where they
-    appear in it -- the bottom of a pane's scrollback is what happened most
+    The genuine-text cap keeps the *last* ids in the capture, ordered by where
+    they appear in it -- the bottom of a pane's scrollback is what happened most
     recently. extract() reports hits pattern by pattern rather than in reading
     order, so the order has to be recovered from the text itself.
 
@@ -1093,43 +1165,7 @@ def harvest(captures, loc_to_pane, server="", known_names=None, refused=None):
         if not pane_id:
             continue
         marked, plain = split_capture(data)
-        # MAX_STANZAS, not MAX_HARVEST_PER_PANE: a block this hook wrote can
-        # never hold more stanzas than it prints, so anything past that arrived
-        # as text. Uncapped, a `cat` of the archive into a pane after a restore
-        # would file every pane's stanzas here -- the binding check waves those
-        # through, because a previous server generation is exactly the case it
-        # cannot judge -- and they would then evict the pane's real records from
-        # its own block, which is how a display cap turns into a delete.
-        #
-        # Which is why the cap ranks rather than slices the file. Stanzas the
-        # pane can prove are its own come first (one bound to this server but
-        # another pane was already refused whole inside parse_stanzas, so a
-        # current-tag binding here can only be ours), then the most recently
-        # seen. Taking the tail instead would keep the *oldest*: the renderer
-        # writes newest-first, and the undated fallback rows are appended after
-        # every structured one, so they would outrank all of them.
-        parsed = parse_stanzas(marked, pane_id, tag)
-        parsed.sort(
-            key=lambda row: (
-                bool(tag and row.get("bound") == (pane_id, tag)),
-                row.get("last_seen") or 0,
-            ),
-            reverse=True,
-        )
-        # The cap counts sessions, not lines. parse_stanzas()'s structured pass
-        # appends a row per `resume:` line and does not dedupe, so a block that
-        # reached this pane twice -- two `--dry-run` previews run here, a `cat`
-        # of a capture that already held one -- puts two rows per session in
-        # front of the cap. Ranked, the copies land adjacent (same binding, same
-        # date), so N duplicates evict N distinct ids and the strip then removes
-        # the only evidence those ids had left.
-        deduped, already = [], set()
-        for row in parsed:
-            if row["session_id"] in already:
-                continue
-            already.add(row["session_id"])
-            deduped.append(row)
-        rows = [{k: v for k, v in row.items() if k != "bound"} for row in deduped[:MAX_STANZAS]]
+        rows = cap_stanzas(parse_stanzas(marked, pane_id, tag), pane_id, tag)
         seen = {row["session_id"] for row in rows}
         # Titles this pane's record already accounts for, from the block just
         # parsed and from the sidecar. Claude's banner is *its* output, not ours,
@@ -1137,8 +1173,8 @@ def harvest(captures, loc_to_pane, server="", known_names=None, refused=None):
         # title on every save for as long as it is in the pane's history --
         # `seen` cannot suppress that, because it holds uuids and the banner
         # printed a title. Without this set the index would be rebuilt every 15
-        # minutes forever. (A title over clean()'s 60 characters is stored
-        # truncated and so never matches here; those few keep sweeping.)
+        # minutes forever. (A record keeps a title in clean()'s form, cut to 60
+        # characters, so the check below compares the banner's in that form.)
         seen_names = {(row.get("agent"), row.get("name")) for row in rows if row.get("name")}
         seen_names |= set(known_names.get(pane_id, ()))
         recovered = []
@@ -1172,31 +1208,7 @@ def harvest(captures, loc_to_pane, server="", known_names=None, refused=None):
                     last_seen=None,
                 )
             )
-        if len(recovered) > MAX_HARVEST_PER_PANE:
-            at = {}
-            for match in re.finditer(UUID, plain):
-                at.setdefault(match.group(0), match.start())
-
-            def where(row):
-                # A uuid resolved from a title never appears as a uuid in the
-                # capture -- the banner printed the title -- so that row is
-                # located by the text it was actually read from. Keyed on the
-                # uuid alone it would sort to -1 and be the first thing the cap
-                # discarded, which is exactly backwards.
-                if row["session_id"] in at:
-                    return at[row["session_id"]]
-                # The title as extract() reports it is unescaped, while the
-                # capture holds Claude's escaped form, so a title containing a
-                # quote or a backslash will not be found. Failing to the end
-                # rather than to -1 keeps such a row instead of making it the
-                # first thing the cap discards: an id resolved from a banner is
-                # better evidence than the flood it is competing with.
-                found = plain.rfind(row["name"]) if row["name"] else -1
-                return found if found >= 0 else len(plain)
-
-            recovered.sort(key=where)
-            recovered = recovered[-MAX_HARVEST_PER_PANE:]
-        rows += recovered
+        rows += cap_recovered(recovered, plain)
         if rows:
             found[loc] = [dict(row, pane_id=pane_id) for row in rows]
     enrich([row for rows in found.values() for row in rows])
@@ -1267,7 +1279,7 @@ def annotatable(sidecar, index, live_keys, server):
 
 
 def sidecar_state(path):
-    """(are these bytes a sidecar?, the records in it).
+    """(are these bytes a sidecar?, the records in it, its refused titles).
 
     Two questions the merge conflates and preserve_unreadable_sidecar() must
     not: a file that *is* a sidecar and holds nothing, and a file that is not
@@ -1778,6 +1790,12 @@ def recorded_names(sidecar, server):
     Only this generation's records: a `%N` from an earlier server names a pane
     this one never issued, so a match would suppress a lookup on the strength of
     an unrelated pane's history. Records with no title say nothing about titles.
+
+    normalise() writes the pane id, agent and title as strings, so a record
+    holding anything else there was edited by hand. It is skipped rather than
+    hashed: a list or a dict cannot go into these sets, and raising here would
+    cost the hook its harvest and agent-resume, which borrows this function,
+    its whole run.
     """
     names = {}
     for rows in (sidecar or {}).values():
@@ -1788,7 +1806,10 @@ def recorded_names(sidecar, server):
                 continue
             if not server or row.get("server") != server:
                 continue
-            names.setdefault(row.get("pane_id"), set()).add((row.get("agent"), row.get("name")))
+            pane_id, agent, name = row.get("pane_id"), row.get("agent"), row.get("name")
+            if not all(isinstance(field, str) for field in (pane_id, agent, name)):
+                continue
+            names.setdefault(pane_id, set()).add((agent, name))
     return names
 
 

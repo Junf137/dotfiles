@@ -63,8 +63,6 @@ fi
 
 # ---* Global env *---
 export DOT_FILES="${DOT_FILES:-$SCRIPT_DIR}"
-export ZSH="${ZSH:-$HOME/.local/share/oh-my-zsh}"
-export ZSH_CUSTOM="${ZSH_CUSTOM:-$ZSH/custom}"
 
 MANIFEST_FILE="$DOT_FILES/lib/link_manifest.sh"
 if [ ! -f "$MANIFEST_FILE" ]; then
@@ -377,7 +375,7 @@ setup_logging() {
         return 0
     fi
 
-    log_dir="${DOTFILES_LOG_DIR:-$DOT_FILES/logs}"
+    log_dir="$DOT_FILES/logs"
     mkdir -p "$log_dir" || {
         echo "Failed to create log directory: $log_dir" >&2
         exit 1

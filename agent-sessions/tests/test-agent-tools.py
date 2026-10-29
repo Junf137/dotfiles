@@ -4,15 +4,10 @@
 
 """Self-tests for the pure logic in the agent-session utilities.
 
-Two things are covered, both of which fail silently in production:
-
-  * the resume-marker patterns in agent-sessions/bin/agent-scrollback-ids, which
-    are matched against terminal output produced by Claude Code and Codex and so
-    can rot when either agent changes its wording -- run these after upgrading an
-    agent;
-  * the marker rendering and stripping in agent-sessions/bin/agent-panes-resurrect,
-    where a strip that stops matching means a block stacks up on every reboot, and
-    an unsanitised field means a control sequence is replayed into a live terminal.
+Covers the resume-marker patterns (lib/agent_ids.py), the title and rollout
+indexes, agent-panes-resurrect's block render/strip/parse/harvest/inject, and
+agent-resume's rule. All of it fails silently in production; re-run after
+upgrading Claude or Codex.
 
     ./agent-sessions/tests/test-agent-tools.py
 
@@ -189,12 +184,15 @@ def resurrect_cases(tool):
         re.sub(r"\x1b\[[0-9;]*m", "", over.splitlines()[-1]).startswith("#[agent-session] "),
     )
 
-    # A pane whose agent has exited is the case the feature exists for: Claude
-    # draws on the alternate screen, so its id is recoverable from nothing else.
+    # A pane whose agent has exited is the case the feature exists for: one that
+    # was killed leaves no banner, so its id is recoverable from nothing else.
     gone = tool["marker_block"]([EXITED_ROW], STAMP).decode()
     add("an exited session is still rendered", "claude --resume 1a03df5b-6a91-49de-927c-6920a34539c2" in gone)
     add("an exited session is not claimed as current", "ran in this pane until tmux was saved" not in gone)
-    add("an exited session says when it was last seen", "last seen 2026-08-01" in gone)
+    # The block dates in local time, and 16:00 UTC is already the next day from
+    # UTC+8 on.
+    seen_on = time.strftime("%Y-%m-%d", time.localtime(EXITED_ROW["last_seen"]))
+    add("an exited session says when it was last seen", f"last seen {seen_on}" in gone)
     add("an exited session is labelled exited", "· exited ·" in gone)
     add("a live session is labelled running", "still running at save" in text)
 
@@ -484,8 +482,9 @@ def harvest_cases(tool):
 
     This is the half that can rot silently and take data with it. A pane is
     stripped whenever it is annotated, so a parse that quietly stopped matching
-    would delete the only record that ever existed of every Claude session that
-    ran in that pane -- there is no second copy to fall back on.
+    would delete the only record that ever existed of every session that left
+    no banner (killed, or lost to a reboot) -- there is no second copy to fall
+    back on.
     """
     block_of = tool["marker_block"]
     parse = lambda data: tool["parse_stanzas"](tool["split_capture"](data)[0])  # noqa: E731
@@ -634,8 +633,7 @@ def harvest_cases(tool):
     at = lambda data, pane, t: tool["parse_stanzas"](tool["split_capture"](data)[0], pane, t)  # noqa: E731
     add("the block records the pane and server it belongs to", f"bound to %11@{tag}".encode() in bound)
     add("a stanza is read in the pane it was written for", len(at(bound, "%11", tag)) == 1)
-    add("a stanza claiming another pane on this server is refused", at(bound, "%99", tag) == [])
-    add("the refused stanza is not resurrected by the fallback", at(bound, "%99", tag) == [])
+    add("a stanza claiming another pane on this server is refused, fallback included", at(bound, "%99", tag) == [])
     # The two cases the carry-over depends on and cannot check: %N is reissued by
     # every new server, and blocks written before the field existed have none.
     add("a stanza from an older server generation is still read", len(at(bound, "%99", "deadbeef")) == 1)
@@ -698,34 +696,67 @@ def harvest_cases(tool):
     )
 
     # Which stanzas the cap keeps is the whole question, because the ones it
-    # drops are stripped out of the archive in the same save and a Claude id has
-    # nowhere else to live. The block is rendered newest-first, so slicing the
-    # file's tail keeps the oldest -- and a flood pasted in from another server
-    # generation, which the binding check cannot judge, would evict the pane's
-    # own records from its own block.
+    # drops are stripped out of the archive in the same save, and the id of a
+    # session that left no banner (killed, or lost to a reboot) has nowhere else
+    # to live. The block is rendered newest-first, so slicing the file's tail
+    # keeps the oldest -- and a flood pasted in from another server generation,
+    # which the binding check cannot judge, would evict the pane's own records
+    # from its own block.
+    #
+    # So the pane's own pair is bound to this server, a day older than the
+    # flood and in the middle of the file: only its binding can rank it first.
+    # By date, or by position from either end of the file, the flood wins.
     mine = b"".join(
         block_of(
-            [dict(EXITED_ROW, pane_id="%12", session_id=f"aaaa{i:04x}-0000-4000-8000-000000000000")],
+            [
+                dict(
+                    EXITED_ROW,
+                    pane_id="%12",
+                    server=SERVER,
+                    last_seen=EXITED_ROW["last_seen"] - 86400,
+                    session_id=f"aaaa{i:04x}-0000-4000-8000-000000000000",
+                )
+            ],
             STAMP,
         )
         for i in range(2)
     )
-    alien = b"".join(
+    alien = [
         block_of(
-            [dict(EXITED_ROW, pane_id="%77", session_id=f"bbbb{i:04x}-0000-4000-8000-000000000000")],
+            [
+                dict(
+                    EXITED_ROW,
+                    pane_id="%77",
+                    last_seen=EXITED_ROW["last_seen"] + 60 * i,
+                    session_id=f"bbbb{i:04x}-0000-4000-8000-000000000000",
+                )
+            ],
             STAMP,
         )
         for i in range(tool["MAX_STANZAS"] + 10)
-    )
+    ]
+    half = len(alien) // 2
+    buried = b"".join(alien[:half]) + mine + b"".join(alien[half:])
     survivors = {
         row["session_id"]
-        for row in tool["harvest"]({"s:1.0": mine + alien}, {"s:1.0": "%12"}, SERVER).get("s:1.0", [])
+        for row in tool["harvest"]({"s:1.0": buried}, {"s:1.0": "%12"}, SERVER).get("s:1.0", [])
     }
     add(
         "a flood of foreign stanzas cannot evict the pane's own",
         {"aaaa0000-0000-4000-8000-000000000000", "aaaa0001-0000-4000-8000-000000000000"} <= survivors,
     )
     add("and the cap still holds", len(survivors) == tool["MAX_STANZAS"])
+    # The binding only decides the pane's own slots; the rest of the cap goes to
+    # the most recently seen. In a restored pane no stanza carries this server's
+    # tag, so there the date is all that decides.
+    newest = {
+        f"bbbb{i:04x}-0000-4000-8000-000000000000"
+        for i in range(len(alien) - tool["MAX_STANZAS"] + 2, len(alien))
+    }
+    add(
+        "and the rest of the cap goes to the most recently seen",
+        survivors == {"aaaa0000-0000-4000-8000-000000000000", "aaaa0001-0000-4000-8000-000000000000"} | newest,
+    )
 
     # Claude prints the session's custom title instead of its uuid when it has
     # one, so about a third of its exit banners carry no id at all. Resolving one
@@ -761,6 +792,25 @@ def harvest_cases(tool):
             tool["harvest"]({"s:1.0": titled}, {"s:1.0": "%7"}, SERVER, {"%7": {("claude", "a-real-title")}}) == {},
         )
         add("and the index is not built at all", builds == [])
+
+        # A record keeps a title cut to 60 characters and the banner prints it
+        # whole, so the two are compared in the form the record stores. The
+        # record here is the one normalise() writes, read back the way recover()
+        # reads the sidecar.
+        long_title = "deploy the long-running migration for the analytics warehouse cluster"
+        stored = tool["normalise"](dict(agent="claude", session_id=TITLE_UUID, name=long_title, pane_id="%7"), 1.0, SERVER)
+        builds.clear()
+        add(
+            "a recorded title longer than a record keeps is not looked up again",
+            tool["harvest"](
+                {"s:1.0": f'claude --resume "{long_title}"\n'.encode()},
+                {"s:1.0": "%7"},
+                SERVER,
+                tool["recorded_names"]({"s:1.0": [stored]}, SERVER),
+            )
+            == {}
+            and builds == [],
+        )
 
         # One sweep per save, however many panes carry an unresolved title.
         builds.clear()
@@ -801,6 +851,23 @@ def harvest_cases(tool):
         builds.clear()
         tool["harvest"]({"z:9.9": miss}, {"z:9.9": "%99"}, "another-server", None, refused)
         add("a refusal holds on a different pane and server", builds == [])
+
+        # The sidecar is a file people edit by hand, and normalise() writes these
+        # three fields only as strings. A list or a dict in one of them cannot be
+        # hashed, so recorded_names() skips that record -- not the whole sidecar:
+        # the well-formed record beside it still keeps its title from the index.
+        named = dict(agent="claude", session_id=TITLE_UUID, name="a-real-title", pane_id="%7", server=SERVER)
+        for field, value in (("name", ["a-real-title"]), ("pane_id", ["%7"]), ("agent", {"kind": "claude"})):
+            builds.clear()
+            try:
+                known = tool["recorded_names"]({"s:1.0": [dict(named, **{field: value}), named]}, SERVER)
+                found = tool["harvest"]({"s:1.0": titled}, {"s:1.0": "%7"}, SERVER, known)
+            except Exception:  # noqa: BLE001 - raising is the failure under test
+                found = None
+            add(
+                f"a hand-edited sidecar record with a {type(value).__name__} {field} does not break the harvest",
+                found == {} and builds == [],
+            )
     finally:
         tool["name_index"] = previous_index
 
@@ -808,9 +875,21 @@ def harvest_cases(tool):
     # `cat` of a capture that already held one -- used to put two rows per
     # session in front of the cap, so N duplicates evicted N distinct ids and
     # the strip then removed their only remaining evidence.
+    #
+    # The sessions are an hour apart, so the ranking puts each one's two copies
+    # side by side and a cap without its dedupe spends two slots on one id. On
+    # one shared date the sort keeps file order, the copies stay a block apart,
+    # and the first six rows are distinct with or without the dedupe.
     six = b"".join(
         block_of(
-            [dict(EXITED_ROW, pane_id="%12", session_id=f"cccc{i:04x}-0000-4000-8000-000000000000")],
+            [
+                dict(
+                    EXITED_ROW,
+                    pane_id="%12",
+                    last_seen=EXITED_ROW["last_seen"] - 3600 * i,
+                    session_id=f"cccc{i:04x}-0000-4000-8000-000000000000",
+                )
+            ],
             STAMP,
         )
         for i in range(tool["MAX_STANZAS"])
@@ -1211,6 +1290,115 @@ def resume_cases(tool):
     add("the merge keeps the date", merged[0]["last_seen"] == 100.0)
     add("the merge records both origins", merged[0]["origins"] == {"scrollback", "sidecar"})
 
+    # capture_rows() reads the sidecar as well as the capture, wherever the
+    # hook's resurrect_dir() says it is -- and that asks tmux. So every read here
+    # gets a scratch sidecar of its own, written by the hook's own writer.
+    resurrect = tool["RESURRECT"]
+
+    def read_pane(capture, server="", records=None, refused=None):
+        """The session ids capture_rows() reads in %7, over a canned capture."""
+        saved = tool["capture"], resurrect.resurrect_dir
+        with tempfile.TemporaryDirectory() as tmp:
+            resurrect.write_sidecar(os.path.join(tmp, resurrect.SIDECAR_NAME), records or {}, 1.0, refused)
+            tool["capture"], resurrect.resurrect_dir = (lambda _pane: capture), (lambda: tmp)
+            try:
+                return {row["session_id"] for row in tool["capture_rows"]("%7", server)}
+            finally:
+                tool["capture"], resurrect.resurrect_dir = saved
+
+    # The per-pane caps are the save hook's own, borrowed rather than copied, so
+    # the two tools cannot disagree about what a pane holds. Where a copy once
+    # did: a block one stanza over the cap, whose dropped session also left its
+    # own exit banner. The hook reads that banner back; the copy did not.
+    over = [f"dddd{i:04x}-0000-4000-8000-000000000000" for i in range(resurrect.MAX_STANZAS + 1)]
+    data = b"".join(
+        resurrect.marker_block(
+            [dict(agent="codex", session_id=sid, cwd="/tmp", source="cmdline", live=False, last_seen=1785600000.0 - 3600 * i)],
+            STAMP,
+        )
+        for i, sid in enumerate(over)
+    ) + f"To continue this session, run codex resume {over[-1]}\n".encode()
+    mine = read_pane(data)
+    hooks = {row["session_id"] for row in resurrect.harvest({"s:1.0": data}, {"s:1.0": "%7"}).get("s:1.0", [])}
+    add("a session the stanza cap drops is still read from its banner", over[-1] in mine)
+    add("a pane's scrollback is read exactly as the save hook reads it", mine == hooks)
+
+    # A Claude banner can print the session's title instead of its uuid, and the
+    # hook gates that lookup twice: a title the pane's records already name is
+    # not looked up, and one it refused is never looked up again. Both have to
+    # hold here too, where the answer is resumed rather than printed. Ambiguity
+    # expires as Claude prunes its transcripts, so a refused `rm` comes to name
+    # whichever session survived -- and if the pane's own session was the one
+    # pruned, that survivor is its only resumable candidate.
+    server = "/tmp/tmux-1000/default:7243:34779817"
+    real, survivor = "4e4e4e4e-0000-4000-8000-000000000000", "5a5a5a5a-0000-4000-8000-000000000000"
+    banner = b'\nResume this session with:\nclaude --resume "rm"\n'
+    titles, builds = {"rm": None}, []
+
+    def fake_index(unique=False, **_kwargs):
+        builds.append(unique)
+        return dict(titles)
+
+    previous_index = resurrect.name_index
+    resurrect.name_index = fake_index
+    try:
+        # Refused by the hook while `rm` named more than one session...
+        refused = {}
+        resurrect.harvest({"s:1.0": banner}, {"s:1.0": "%7"}, server, None, refused)
+        # ...and narrowed to one since, by pruning.
+        titles["rm"] = survivor
+        add("a title nothing has recorded or refused still resolves", read_pane(banner, server) == {survivor})
+        builds.clear()
+        add(
+            "a title the save hook refused is never looked up here",
+            read_pane(banner, server, refused=refused) == set() and builds == [],
+        )
+        own = resurrect.marker_block(
+            [dict(agent="claude", session_id=real, name="rm", cwd="/tmp", source="sessions", live=False, last_seen=1785600000.0)],
+            STAMP,
+        )
+        builds.clear()
+        add(
+            "a title the pane's own block names is not looked up",
+            read_pane(own + banner, server) == {real} and builds == [],
+        )
+        recorded = {"s:1.0": [dict(agent="claude", session_id=real, name="rm", pane_id="%7", server=server)]}
+        builds.clear()
+        add(
+            "a title the pane's sidecar records name is not looked up",
+            read_pane(banner, server, recorded) == set() and builds == [],
+        )
+        # A record keeps a title cut to 60 characters, and the banner prints it
+        # whole, so the two are compared in the stored form, as the hook does.
+        long_title = "deploy the long-running migration for the analytics warehouse cluster"
+        titles[long_title] = survivor
+        own_long = resurrect.marker_block(
+            [dict(agent="claude", session_id=real, name=long_title, cwd="/tmp", source="sessions", live=False, last_seen=1785600000.0)],
+            STAMP,
+        )
+        builds.clear()
+        add(
+            "a title longer than a record keeps is matched as it is stored",
+            read_pane(own_long + f'\nclaude --resume "{long_title}"\n'.encode(), server) == {real} and builds == [],
+        )
+        # The records are read through the hook's recorded_names(), which skips
+        # one that was edited by hand to hold a list or a dict where the hook
+        # writes a string, rather than raising: the well-formed record beside it
+        # still keeps `rm` from the index.
+        named = recorded["s:1.0"][0]
+        for field, value in (("name", ["rm"]), ("pane_id", ["%7"]), ("agent", {"kind": "claude"})):
+            builds.clear()
+            try:
+                ids = read_pane(banner, server, {"s:1.0": [dict(named, **{field: value}), named]})
+            except Exception:  # noqa: BLE001 - raising is the failure under test
+                ids = None
+            add(
+                f"a hand-edited sidecar record with a {type(value).__name__} {field} is skipped, not raised on",
+                ids == set() and builds == [],
+            )
+    finally:
+        resurrect.name_index = previous_index
+
     # The hook cache is keyed by pane number with no server stamp, so a record
     # written before a reboot would otherwise be read against whichever restored
     # pane inherited that number.
@@ -1390,16 +1578,6 @@ def archive_cases(tool):
         os.utime(stale, (1.0, 1.0))
         tool["sweep_scratch"](tmp, time.time())
         add("an ordinary stale leftover is still swept", not os.path.exists(stale))
-
-        # `purge` is the only thing that removes the kept file, so an uninstall
-        # that skipped it would leave a file full of session ids behind.
-        add(
-            "purge names the kept sidecar",
-            any(
-                name.startswith(tool["UNREADABLE_PREFIX"])
-                for name in os.listdir(tmp)
-            ),
-        )
 
         # A well-formed sidecar holding nothing is what a machine with no agent
         # panes writes. Diagnosed as damage it was renamed aside on every save,

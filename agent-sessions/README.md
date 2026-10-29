@@ -35,9 +35,7 @@ another program produced — `agent_ids.py` Claude's and Codex's terminal output
 agent process looks like and where its transcripts live — and each rots silently when
 that program changes. So there is exactly one copy of each, for `tests/` to cover:
 `agent-scrollback-ids` sweeps live panes and `agent-panes-resurrect` the archived
-captures with the same code, so a change to one changes both. `agents.py` exists because
-that rule was not followed at first: its contents had been written out up to four times,
-and the copies disagreed with each other and with Codex (see *Rollout files*).
+captures with the same code, so a change to one changes both.
 
 **Title lookups are broad by hand and narrow in the hook.** `claude_names.name_index()`
 serves two callers. `agent-scrollback-ids` is interactive and takes the broadest index:
@@ -76,9 +74,9 @@ touching any of it.
 - After editing the tmux hook, `tmux source-file ~/.tmux.conf`: the running server keeps
   the old value otherwise, and nothing warns.
 - **Editing `codex/hooks.json` revokes Codex's hook trust.** `[hooks.state]` in
-  `codex/config.toml` stores a content hash of each handler that covers its `command`,
-  so any change flips it back to untrusted until re-approved in the TUI. Nothing warns;
-  sessions just fall back to the inferred `meta~Ns` tier.
+  `~/.codex/config.toml` stores a content hash of each handler that covers its
+  `command`, so any change flips it back to untrusted until re-approved in the TUI on
+  each machine. Nothing warns; sessions just fall back to the inferred `meta~Ns` tier.
 
 **Uninstall:** `agent-panes-resurrect purge` strips every block out of the archive and
 removes the sidecar, log and lock. Removing the tmux hook alone does **not** — blocks
@@ -136,14 +134,14 @@ already inside `pane_contents.tar.gz` keep replaying on every restore.
     is the greatest file *name*, which sorts by start stamp — not the greatest path.
   - A rollout idle for about a week is compressed to `.jsonl.zst` — for 1698 of 1805
     threads here, on codex-cli 0.165, the newest rollout is one — while Codex's thread
-    table goes on naming the `.jsonl`. It is still resumable, so it still counts; before
-    this was handled, `agent-resume` called ~95% of Codex sessions gone. Resuming one
-    was checked end to end on 0.165; Codex replaces the newest `.zst` with a `.jsonl`.
+    table goes on naming the `.jsonl`. It is still resumable, so it still counts.
+    Resuming one was checked end to end on 0.165; Codex replaces the newest `.zst` with
+    a `.jsonl`.
   - Archiving a thread moves its rollouts into the flat `~/.codex/archived_sessions/`
     (757 of 1805 threads here). `codex resume <id>` still opens one, after asking
-    whether to unarchive it, so it counts too; before, `agent-resume` called every one
-    gone. That flat directory sorts before every dated one, and a thread can leave an
-    empty rollout behind in `sessions/`, which is why the newest is picked by name.
+    whether to unarchive it, so it counts too. That flat directory sorts before every
+    dated one, and a thread can leave an empty rollout behind in `sessions/`, which is
+    why the newest is picked by name.
 
   The `session_meta` header is line 1 and carries the whole system prompt, ~52 KB,
   which is why the per-line read cap is 256 KiB.
@@ -161,9 +159,9 @@ already inside `pane_contents.tar.gz` keep replaying on every restore.
   `~/.cache/agent-panes/<pane>.json` with the agent PID and its kernel start time, so a
   session that died without firing its end hook is detected as stale instead of being
   attributed to the next agent in that pane. **Hooks only affect newly started
-  sessions.** The cache is live-only — `end` deletes the record and prunes any whose
-  process is gone — so it is not, and cannot be, a source of history. That is what the
-  sidecar is for.
+  sessions.** The cache is live-only — `end` deletes its record, and every hook run in
+  a pane prunes any whose process is gone — so it is not, and cannot be, a source of
+  history. That is what the sidecar is for.
 - **Claude `SessionEnd` needs an explicit `timeout`**: without one it gets only a
   ~1.5 s shutdown budget and may be killed mid-write.
 
@@ -183,8 +181,7 @@ execution.
   like `claude/settings.json`.
 - **Hooks need trust on first run.** They are discovered as `untrusted` and do not run
   until approved in the TUI ("Hooks need review" → "Trust all and continue"), which
-  writes `[hooks.state]` into `~/.codex/config.toml` — a symlink into this repo, where
-  Codex already writes its `[projects]` trust levels.
+  writes `[hooks.state]` into `~/.codex/config.toml`, a private file outside this repo.
 - **Trust is not sufficient: the interactive TUI cannot bind a pane.** Measured on
   0.146.0: an interactive session hands its hooks to the shared `app-server` daemon,
   which is started once at login *outside* tmux, so the hook inherits neither
@@ -243,10 +240,6 @@ for the whole hook.
   and only when a pane holds a title neither recorded nor refused. Both halves of that
   gate are load-bearing: the strip never removes Claude's banner, so the title would
   otherwise be looked up every 15 minutes for as long as it stays in the history.
-- **A session that did not exit gracefully leaves no banner** — killed, or lost to a
-  reboot. Reading our own block back is what covers those, and it is not an
-  optimisation: a pane is stripped whenever it is annotated, so the block is their only
-  carrier.
 - **A text match is evidence about text.** A `codex resume <uuid>` in a document, a
   ripgrep hit or a `cat`ed handoff is indistinguishable from a real banner, so those
   rows are recorded as `scrollback` and printed as `(recovered)`.
@@ -254,8 +247,8 @@ for the whole hook.
 ### What gets annotated
 
 - **Live and exited sessions alike**, an exited one dated by when it was last seen
-  rather than by the save. An exited pane is the one that most needs the block: Claude
-  leaves nothing in scrollback to replay.
+  rather than by the save. An exited pane is the one that most needs the block: a
+  killed agent leaves no banner to replay.
 - **The block is printed even when the agent printed its own banner**, so such a pane
   says it twice, on purpose. Suppressing it would mean parsing another tool's output to
   decide whether our own record is worth printing, and the block carries more: the `cd`
@@ -282,11 +275,12 @@ for the whole hook.
   archive exists.
 - **Coverage gap**, stated exactly: a session is lost only when it left no banner
   (killed, or lost to a reboot) *and* was never running at any save. Continuum saves
-  every 15 min while a client is attached, so in practice that is a short session while
-  nothing was attached. Everything else is covered by the sidecar, a banner, or the
-  title lookup — unless the title names more than one session. `agent-scrollback-ids`
-  is the by-hand tool for what is left; its index is the broad one, so it can offer a
-  best guess where the hook refuses to.
+  every 15 min while a client is attached, so in practice that is a session killed
+  before its first save — within 15 min of starting, or while nothing was attached.
+  Everything else is covered by the sidecar, a banner, or the title lookup — unless the
+  title names more than one session. `agent-scrollback-ids` is the by-hand tool for
+  what is left; its index is the broad one, so it can offer a best guess where the hook
+  refuses to.
 
 ### The block is read as well as written
 
@@ -294,7 +288,7 @@ The harvest parses the block back. That is what carries ids across a tmux server
 restart — a new server reissues `%N` to unrelated panes, but the restored pane replays
 its capture, block included, so the evidence travels with the pane's contents. It is
 also what makes the strip safe: without it the strip would delete the only record of
-every Claude session that ever ran in the pane.
+every session that left no banner (killed, or lost to a reboot).
 
 - **Harvest before strip, and write the sidecar before touching the archive.** A crash
   in between costs a block the next save rewrites, never an id.
@@ -419,7 +413,7 @@ It reads three sources and writes to none of them.
 |---|---|
 | the sidecar, filtered to this server's own `%N` | every session a save saw running here |
 | this pane's scrollback: our block, then the agents' own banners | the window between a restore and the first save after it, and a session that started and exited between two saves |
-| the hook cache, `~/.cache/agent-panes/<pane>.json` | a **killed** agent, between the kill and the next save — the only place that id exists |
+| the hook cache, `~/.cache/agent-panes/<pane>.json` | a **killed** agent no save saw running — the only place its id exists, until the next hook run in any pane prunes it |
 
 - **It starts a session only where the pane maps to one, and no flag names one.**
   Anything selecting a candidate would be a way to start a session the tool could not
@@ -445,9 +439,15 @@ It reads three sources and writes to none of them.
   `split_capture()` come from `agent-panes-resurrect` by import, so the stanza binding
   rules apply identically. The per-pane caps are borrowed for the same reason: here they
   cost only a screenful, but the two tools disagreeing about what a pane holds would be
-  worse than either bound. `check_borrowed_names` resolves every borrowed attribute,
-  because a rename in the lender leaves `agent-resume` importing cleanly and raising
-  `AttributeError` on the one path that starts a session.
+  worse than either bound. The hook's two title gates apply here too, over its own
+  records, read through its `recorded_names()` and `read_refused()`: a Claude title the
+  pane's block or sidecar records already name is not looked up, and one the hook
+  refused is never looked up again. Here a fresh lookup would be worse than wasted —
+  once Claude's pruning has narrowed `rm` to one session, it would be offered in every
+  pane that printed `rm`, and resumed in any where nothing else is resumable.
+  `check_borrowed_names` resolves every borrowed attribute, because a rename in the
+  lender leaves `agent-resume` importing cleanly and raising `AttributeError` on the one
+  path that starts a session.
 
 ## Commands
 
@@ -457,8 +457,8 @@ It reads three sources and writes to none of them.
 | `agent-panes-resurrect save [--dry-run]` | the hook target; silent by design |
 | `agent-panes-resurrect list [--json]` | read the sidecar |
 | `agent-panes-resurrect purge [--dry-run]` | remove every block, sidecar, log |
-| `agent-resume [-n] [-l] [--pane %N]` | resume this pane's session, if it has exactly one |
-| `agent-scrollback-ids` | recover ids exited agents printed into scrollback |
+| `agent-resume [-n] [-l] [--pane %N] [--force]` | resume this pane's session, if it has exactly one |
+| `agent-scrollback-ids [--json]` | recover ids exited agents printed into scrollback |
 | `claude-sessions [-n]` | running Claude sessions, in tmux or not, with uptime, CPU and memory |
 
 `list`'s `LAST SEEN` is when the agent was last observed *running* there, and `-` where
@@ -510,7 +510,7 @@ keep it that expires after an hour is not one; `purge` removes it.
 `check.sh` derives its own repo root and is dispatched from `./scripts/check-dotfiles.sh`
 as one entry, so a failure here fails the repo checks. Two things stay in the parent:
 resolving the hook `command` strings in `claude/settings.json` and `codex/hooks.json`
-(jq-gated), and linting `claude-sessions` with the generic bash/shfmt/shellcheck lists.
+(jq-gated), and checking `claude-sessions` with the generic bash syntax list.
 **Re-run after upgrading Claude or Codex.** The resume-marker patterns, the title index
 and the rollout index read those tools' output and records and rot silently when either
 changes; the run also covers the marker rendering, stripping, parsing and placement,
@@ -520,16 +520,13 @@ broken one degrades to "no harvest" and this is the only place it would be notic
 - **The name-binding pass.** The syntax check runs a flat, deliberately
   scope-insensitive pass over every Python file here. It never reports a shadowing, but
   it catches a name a file uses and never binds — a dropped `import`, which turns the
-  save hook into a silent no-op. That happened once (`NameError: name 'hashlib' is not
-  defined`); `ast.parse` was blind to it, and the tests exercised 13 of 18 top-level
-  imports.
+  save hook into a silent no-op.
 - **The rollout index against Codex's own.** `check.sh` reads Codex's thread table (the
   highest-numbered `~/.codex/state_*.sqlite`) and fails if a thread whose rollout is
-  still on disk is missing from `transcript_index()` — what the compressed and the
-  archived rollouts both were before they were found by hand. It compares ids, not
-  paths: the table keeps the `.jsonl` name after Codex compresses the file. A thread
-  with no rollout left is counted, not failed, but a table with no thread left to verify
-  fails. It skips only where Codex has left neither a thread nor a rollout, since
+  still on disk is missing from `transcript_index()`. It compares ids, not paths: the
+  table keeps the `.jsonl` name after Codex compresses the file. A thread with no
+  rollout left is counted, not failed, but a table with no thread left to verify fails.
+  It skips only where Codex has left neither a thread nor a rollout, since
   `bootstrap.sh` creates `~/.codex` on machines that have never run Codex. The read is
   `readonly_shm` or `immutable`, never a plain read-only open: that one rebuilds the
   `-shm` in `~/.codex`, and creates it and the `-wal` where they are missing.

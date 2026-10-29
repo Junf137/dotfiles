@@ -20,7 +20,7 @@ late, so every doubt is spent on refusing:
 
   * an id that is not a well-formed uuid is not a candidate;
   * a session whose transcript is no longer on disk cannot be resumed, so it is
-    listed but never chosen;
+    listed but never chosen, and never makes a pane ambiguous;
   * a stanza in this pane's scrollback that claims this server but a different
     pane is text that arrived here, not history that happened here, and is
     dropped whole;
@@ -39,19 +39,10 @@ others cannot:
     window between a restore and the first save after it, and the only one for a
     session that started and exited between two saves;
   * the hook cache, `~/.cache/agent-panes/<pane>.json` -- live-only and pruned,
-    but between an agent being *killed* and the next save it is the sole place
-    that session's id exists, and killing an agent while keeping its pane is the
-    case this whole family of tools is built around.
-
-A candidate whose transcript is no longer on disk cannot be resumed -- Claude
-prunes ~/.claude/projects at 30 days -- so it is shown but never chosen. That is
-also what makes "one and only one" answerable more often than the raw history
-would suggest.
-
-The block-reading is agent-panes-resurrect's own marker_line()/parse_stanzas(),
-imported rather than reimplemented: they carry the rules deciding which stanzas a
-pane may claim as its own, and a second copy would drift exactly where drift is
-silent.
+    but for an agent *killed* before any save saw it, it is the sole place that
+    session's id exists until the next hook run in any pane prunes it, and
+    killing an agent while keeping its pane is the case this whole family of
+    tools is built around.
 
 Usage: agent-resume [-n|--dry-run] [-l|--list] [--pane %N] [--force]
 Env:   SCROLLBACK_DEPTH  value passed to `tmux capture-pane -S` (default '-',
@@ -131,6 +122,11 @@ def server_started():
         return None
 
 
+def sidecar_path():
+    """The save hook's sidecar: its records, and the titles it refused."""
+    return os.path.join(RESURRECT.resurrect_dir(), RESURRECT.SIDECAR_NAME)
+
+
 def sidecar_rows(pane, server):
     """Sidecar records for this pane, from this server generation only.
 
@@ -140,9 +136,8 @@ def sidecar_rows(pane, server):
     is lost by dropping them: a restored pane replays its own block, and
     capture_rows() reads that back.
     """
-    path = os.path.join(RESURRECT.resurrect_dir(), RESURRECT.SIDECAR_NAME)
     rows = []
-    for records in RESURRECT.read_sidecar(path).values():
+    for records in RESURRECT.read_sidecar(sidecar_path()).values():
         if not isinstance(records, list):
             continue
         for record in records:
@@ -180,40 +175,27 @@ def capture_rows(pane, server):
     server but another pane, and the remaining text through the shared
     resume-marker patterns, which is where an agent's own exit banner is found.
 
-    Both passes are capped the way the harvest caps them, with its constants. A
-    `cat` of a session dump, a ripgrep over a directory of handoff notes, or a
-    restored pane displaying the archive itself puts hundreds of resume commands
-    into one pane's history, every one of them indistinguishable from a banner.
-    Here that only costs a screenful and a refusal rather than a permanent
-    record -- but the two tools disagreeing about what a pane holds would be
-    worse than either bound.
+    Both passes are capped by the harvest's own cap_stanzas() and
+    cap_recovered(). A `cat` of a session dump, a ripgrep over a directory of
+    handoff notes, or a restored pane displaying the archive itself puts
+    hundreds of resume commands into one pane's history, every one of them
+    indistinguishable from a banner. Here that only costs a screenful and a
+    refusal rather than a permanent record -- but the two tools disagreeing
+    about what a pane holds would be worse than either bound.
+
+    A banner that printed a Claude title rather than a uuid passes the
+    harvest's two title gates too, over the hook's own records: a title this
+    pane's block or sidecar records already name is not looked up, and one the
+    hook refused is never looked up again. See resolve_title().
     """
     tag = RESURRECT.server_tag(server)
     marked, plain = RESURRECT.split_capture(capture(pane))
-    parsed = RESURRECT.parse_stanzas(marked, pane, tag)
-    # A block this hook wrote can never hold more stanzas than it prints, so
-    # anything past MAX_STANZAS arrived as text. Ranked, never sliced: stanzas
-    # the pane can prove are its own first (one bound to this server but another
-    # pane was already refused whole inside parse_stanzas), then the most
-    # recently seen. Duplicates are dropped before the cap, or N copies of one
-    # stanza would evict N distinct ids.
-    parsed.sort(
-        key=lambda row: (bool(tag and row.get("bound") == (pane, tag)), row.get("last_seen") or 0),
-        reverse=True,
-    )
-    rows, seen = [], set()
-    for row in parsed:
-        # `seen` grows past the cap on purpose: a session the cap dropped is still
-        # one this block named, and letting the text pass re-add it as a bare
-        # `scrollback` row would spend the cap and then undo it.
-        if row["session_id"] in seen:
-            continue
-        seen.add(row["session_id"])
-        if len(rows) < RESURRECT.MAX_STANZAS:
-            # Transient: parse_stanzas() reports which pane and generation a
-            # stanza claimed so the ranking above can use it. Nothing downstream
-            # needs it.
-            rows.append({key: value for key, value in row.items() if key != "bound"})
+    rows = RESURRECT.cap_stanzas(RESURRECT.parse_stanzas(marked, pane, tag), pane, tag)
+    seen = {row["session_id"] for row in rows}
+    path = sidecar_path()
+    seen_names = {(row.get("agent"), row.get("name")) for row in rows if row.get("name")}
+    seen_names |= RESURRECT.recorded_names(RESURRECT.read_sidecar(path), server).get(pane, set())
+    refused = RESURRECT.read_refused(path)
 
     index = []
 
@@ -223,9 +205,15 @@ def capture_rows(pane, server):
         A third of this machine's sessions carry a custom title, and Claude's exit
         banner prints that rather than the uuid. `unique=True` because titles are
         free text: one that names more than one session resolves to nothing rather
-        than to a coin flip, which is the same refusal the save hook makes and for
-        the same reason.
+        than to a coin flip. That answers only for today. Ambiguity expires: once
+        Claude has pruned all but one of the sessions a title named, a fresh
+        lookup confidently names the survivor, whichever pane printed the title.
+        The save hook writes its refusals down for that reason, and a title it
+        refused is refused here without being asked again. This tool writes
+        nothing, so a refusal of its own lasts only for this run.
         """
+        if name in refused:
+            return None
         if not index:
             index.append(RESURRECT.name_index(unique=True))
         return index[0].get(name)
@@ -233,6 +221,12 @@ def capture_rows(pane, server):
     recovered = []
     for agent, session_id, name in RESURRECT.extract(plain):
         if not session_id and agent == "claude" and name:
+            # Compared in the form a record stores, as harvest() does:
+            # normalise() truncates a name to 60 characters.
+            stored = (agent, RESURRECT.clean(name, 60))
+            if stored in seen_names:
+                continue
+            seen_names.add(stored)
             session_id = resolve_title(name)
         if not session_id or session_id in seen:
             continue
@@ -249,28 +243,7 @@ def capture_rows(pane, server):
                 last_seen=None,
             )
         )
-    if len(recovered) > RESURRECT.MAX_HARVEST_PER_PANE:
-        # Keep the *last* ids in the capture: the bottom of a pane's scrollback
-        # is what happened there most recently. extract() reports hits pattern by
-        # pattern rather than in reading order, so the order has to be recovered
-        # from the text. A uuid resolved from a title never appears as a uuid --
-        # the banner printed the title -- so that row is located by what it was
-        # actually read from, and an unfindable one falls to the end rather than
-        # to -1, where it would be the first thing discarded.
-        at = {}
-        for match in re.finditer(RESURRECT.UUID, plain):
-            at.setdefault(match.group(0), match.start())
-
-        def where(row):
-            if row["session_id"] in at:
-                return at[row["session_id"]]
-            found = plain.rfind(row["name"]) if row["name"] else -1
-            return found if found >= 0 else len(plain)
-
-        recovered.sort(key=where)
-        recovered = recovered[-RESURRECT.MAX_HARVEST_PER_PANE :]
-
-    return [dict(row, origin="scrollback") for row in rows + recovered]
+    return [dict(row, origin="scrollback") for row in rows + RESURRECT.cap_recovered(recovered, plain)]
 
 
 def cache_row(pane, since):

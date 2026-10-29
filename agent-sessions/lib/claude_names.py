@@ -29,12 +29,11 @@ back to the bare uuid), so it is the only one a banner can have come from;
 import glob
 import json
 import os
-import re
+
+from agent_ids import UUID_RE
 
 CLAUDE_PROJECTS = os.path.expanduser("~/.claude/projects")
 CLAUDE_SESSIONS = os.path.expanduser("~/.claude/sessions")
-
-UUID_RE = re.compile(r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}")
 
 # Claude records a rename inside the transcript, as a one-line object.
 NAME_FIELDS = {"custom-title": "customTitle", "agent-name": "agentName"}

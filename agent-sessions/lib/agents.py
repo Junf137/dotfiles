@@ -5,11 +5,7 @@ files their sessions live in, and the directory each session was opened in.
 
 One copy for every tool, for the reason lib/agent_ids.py gives: this encodes
 another program's private layout, it rots silently when that program changes,
-and the tests can only cover one copy. Before it existed the transcript globs
-were written out four times and the agent test twice, and the copies had drifted
-apart and away from Codex: agent-pane-register matched any path containing
-`/codex` (codex's own `bin/codex-code-mode-host` among them), and no copy found a
-rollout Codex had compressed or read the right uuid out of a suffixed name.
+and the tests can only cover one copy.
 
 The index is by file name only. A file is opened by the caller, for the one
 session it actually needs, through transcript_cwd().

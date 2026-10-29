@@ -69,13 +69,13 @@ load_link_manifest() {
 
     _link_manifest_add "$DOT_FILES/nvim/markdownlint.jsonc" "$HOME/.markdownlint.jsonc" required "markdownlint"
 
-    # Handoff pruning is the same policy through two different schedulers:
-    # systemd-tmpfiles on Linux, a launchd agent on macOS. Neither exists on the
-    # other platform, so each is gated to its own.
+    # Handoff pruning runs through systemd-tmpfiles, so it exists only on Linux.
     _link_manifest_add "$DOT_FILES/tmpfiles/handoffs.conf" "$HOME/.config/user-tmpfiles.d/handoffs.conf" \
         "$(_link_manifest_tier_for Linux)" "handoff cleanup rules (systemd-tmpfiles)"
-    _link_manifest_add "$DOT_FILES/launchd/com.junf.prune-handoffs.plist" "$HOME/Library/LaunchAgents/com.junf.prune-handoffs.plist" \
-        "$(_link_manifest_tier_for Darwin)" "handoff cleanup agent (launchd)"
+
+    # The tmux server's systemd user unit, enabled by @continuum-boot on Linux.
+    _link_manifest_add "$DOT_FILES/systemd/tmux.service" "$HOME/.config/systemd/user/tmux.service" \
+        "$(_link_manifest_tier_for Linux)" "tmux server unit (systemd)"
 
     # External, user-managed image directory. It is useful when present but should
     # not block bootstrap checks on a fresh machine.

@@ -34,9 +34,6 @@ if [[ "$(uname -s)" == "Darwin" ]]; then
     export HOMEBREW_NO_ANALYTICS=1
 fi
 
-# fixing color code output in man command
-export MANROFFOPT="-c"
-
 # disable virtualenv prompt
 export VIRTUAL_ENV_DISABLE_PROMPT=1
 
@@ -65,9 +62,9 @@ if [ "${DOTFILES_DISABLE_WELCOME:-0}" != "1" ] \
     if [ -z "${SSH_CONNECTION:-}" ] \
         && [ "${DOTFILES_DISABLE_ANIMATED_WELCOME:-0}" != "1" ] \
         && command -v lolcat &> /dev/null; then
-      echo -e "$msg\n" | lolcat --animate --duration=1 --speed=120 --freq=0.05 --truecolor
+      printf '%s\n\n' "$msg" | lolcat --animate --duration=1 --speed=120 --freq=0.05 --truecolor
     else
-      echo -e "$msg\n"
+      printf '%s\n\n' "$msg"
     fi
   fi
 fi
@@ -75,9 +72,6 @@ fi
 # ============================================================
 # FZF Configuration
 # ============================================================
-# Setup fzf (installed with git)
-add_path "$HOME/.local/share/fzf/bin"
-
 # Shell-specific fzf initialization
 if command -v fzf &> /dev/null; then
   if [ -n "$ZSH_VERSION" ]; then
@@ -88,8 +82,8 @@ if command -v fzf &> /dev/null; then
 fi
 
 if command -v fd &> /dev/null; then
-  export FZF_DEFAULT_COMMAND='fd --unrestricted'
-  export FZF_CTRL_T_COMMAND='fd --unrestricted'
+  export FZF_DEFAULT_COMMAND='fd --unrestricted --exclude .git'
+  export FZF_CTRL_T_COMMAND='fd --unrestricted --exclude .git'
   export FZF_ALT_C_COMMAND='fd --type d'
 else
   export FZF_DEFAULT_COMMAND='find . -path "*/.git" -prune -o -print'
@@ -120,7 +114,6 @@ export FZF_COMPLETION_TRIGGER='~~'
 export FZF_COMPLETION_OPTS='--border --info=inline'
 
 export FZF_CTRL_T_OPTS="
-  --walker-skip .git
   --preview '$_DOTFILES_FZF_FILE_PREVIEW'
   --bind 'ctrl-/:toggle-preview'"
 
@@ -130,7 +123,6 @@ export FZF_CTRL_R_OPTS="
   --bind 'ctrl-/:toggle-preview'"
 
 export FZF_ALT_C_OPTS="
-  --walker-skip .git
   --preview '$_DOTFILES_FZF_DIR_PREVIEW'
   --bind 'ctrl-/:toggle-preview'"
 
@@ -185,8 +177,7 @@ alias rm="rm -i"
 alias cp="cp -i"
 alias mv="mv -i"
 
-# trash-cli (Linux only; not available on macOS — these aliases are inert there)
-alias trash="trash-put"
+# trash-cli (Linux; inert on macOS). "trash" stays unaliased: trash-cli ships it, macOS has a native /usr/bin/trash
 alias tlist="trash-list"
 alias trestore="trash-restore"
 alias tempty="trash-empty"
@@ -206,11 +197,6 @@ alias zshConfig="nvim $HOME/.zshrc"
 alias vimConfig="nvim $HOME/.vimrc"
 alias nvimConfig="nvim $HOME/.config/nvim/init.lua"
 alias tmuxConfig="nvim $HOME/.tmux.conf"
-alias ohmyzshConfig="nvim $HOME/.oh-my-zsh"
-
-# Add an "alert" alias for long running commands.  Use like so:
-#   sleep 10; alert
-alias alert='notify-send --urgency=low -i "$([ $? = 0 ] && echo terminal || echo error)" "$(history|tail -n1|sed -e '\''s/^\s*[0-9]\+\s*//;s/[;&|]\s*alert$//'\'')"'
 
 # git-short-command
 alias gs="git status"

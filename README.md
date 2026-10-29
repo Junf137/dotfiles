@@ -1,58 +1,89 @@
-# README
-Synchronizing my dotfiles
+# dotfiles
 
-## Description
+Junfeng Lei's dotfiles for Arch Linux and macOS. `bootstrap.sh` symlinks them into
+place from one manifest, `lib/link_manifest.sh`, and backs up whatever it replaces.
+Coding agents: see [AGENTS.md](AGENTS.md).
 
-This repository contains my personal dotfiles for various applications and tools including:
-- Bash and ZSH shell configurations
-- Vim configurations
-- Git configurations
-- tmux settings
-- Custom oh-my-zsh themes
-- tmuxp session configurations
-- Claude and Codex agent skills via the private `agent-skills` submodule
-- Authored skills are shared across machines; Claude-managed `claude/synced/`
-  bundles stay local and are ignored by the `agent-skills` repository.
-- `agent-sessions/` — maps running Claude/Codex sessions to their tmux pane, and carries
-  each pane's session id across a reboot so the restored pane prints what ran there and
-  how to resume it (nothing is restarted). See `agent-sessions/README.md`
+## What is managed
 
-## Usage
+- Shells: `zshrc` (Oh My Zsh, theme in `omz_themes/`) and `bashrc`, which share
+  `shell_common.sh` for PATH, fzf and aliases; helper scripts in `utils/`
+- Editors: `vimrc`, and Neovim from the `nvim/nvim-kickstart` submodule (a
+  kickstart.nvim fork) with `nvim/markdownlint.jsonc`
+- Terminals: WezTerm from the `wezterm/wezterm-config` submodule, and Alacritty
+- tmux (`tmux.conf`, `tmux/`, and on Linux its systemd user unit in `systemd/`) with
+  tmuxp layouts (`tmuxp/`), Yazi (`yazi/`), git, conda
+- Claude Code and Codex: global instructions and settings (`claude/`, `codex/`), and
+  skills from the private `agent-skills` submodule
+- [`agent-sessions/`](agent-sessions/README.md): maps running Claude/Codex sessions to
+  their tmux pane and carries them across a reboot, so a restored pane shows what ran
+  there and how to resume it
+- [`~/hf` handoff pruning](tmpfiles/README.md) on Linux, through systemd-tmpfiles
+- macOS: Homebrew packages (`Brewfile`) and system preferences (`macos-defaults.sh`)
+
+## Install
+
+Clone to `~/Documents/dotfiles`: the hooks in `tmux.conf`, `claude/settings.json` and
+`codex/hooks.json` hard-code that path.
+
+On a new machine, install these before the first bootstrap. Bootstrap creates
+`~/.local/share/oh-my-zsh` for the theme link, and the Oh My Zsh installer refuses to
+run once that directory exists.
+
+- Oh My Zsh: run its installer with `ZSH=~/.local/share/oh-my-zsh`, then clone the
+  custom plugins `zshrc` lists (`zsh-bat`, `you-should-use`, `zsh-autosuggestions`,
+  `zsh-syntax-highlighting`) into its `custom/plugins/`.
+- TPM: `git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm`.
 
 ```bash
-# ---* Attention *---
-# Don't run this script until you know what it does
+git clone --recurse-submodules git@github.com:Junf137/dotfiles.git ~/Documents/dotfiles
+cd ~/Documents/dotfiles        # existing clone: git submodule update --init --recursive
+brew bundle --file=Brewfile    # macOS only; provides ya, which bootstrap uses
 
-# Clone the repository with submodules
-git clone --recurse-submodules git@github.com:Junf137/dotfiles.git ${DOT_FILES:-$HOME/Documents/dotfiles}
-
-# If already cloned, initialize or update submodules
-cd ${DOT_FILES:-$HOME/Documents/dotfiles} && git submodule update --init --recursive
-
-# Create symbolic links
-./bootstrap.sh
-
-# Check sources and current destination state without changing files
-./bootstrap.sh --check
-
-# Preview link creation without changing files
-./bootstrap.sh --dry-run
-
-# To remove all symbolic links and restore backups
-./bootstrap.sh --restore
+./bootstrap.sh --check         # validate sources, audit destinations
+./bootstrap.sh --dry-run       # preview every action
+./bootstrap.sh                 # link (backing up what it replaces), ya pkg install, backup report
+./cleanup_backups.sh -f        # delete the redundant backups that report lists
+./scripts/check-dotfiles.sh    # read-only repo checks; needs the status line link
 ```
+
+Undo with `./bootstrap.sh --restore`, which removes the managed links and restores the
+newest backups. `DOTFILES_SKIP_CLEANUP=1` skips the backup report and
+`DOTFILES_SKIP_YAZI=1` skips `ya pkg install`. Create, dry-run and restore runs are
+logged to `logs/` (gitignored).
+
+Then, once per machine:
+
+- In tmux, press `prefix + I` (the prefix is `Alt+a`) to install the plugins.
+- Linux: `systemctl --user enable --now systemd-tmpfiles-clean.timer`.
+- macOS: optionally `./macos-defaults.sh`.
+- Codex: approve its hooks when it asks ("Hooks need review"). Every edit to
+  `codex/hooks.json` needs that approval again, on each machine.
+
+## Codex shared defaults and local settings
+
+`codex/config.toml` holds only portable defaults. Bootstrap links it to
+`/etc/codex/config.toml` on both systems, using `sudo` for that one link, so run
+bootstrap itself as your normal user; `--restore` removes the link again.
+
+`~/.codex/config.toml` stays a regular, private file outside the repository. Codex
+applies it on top of the system defaults, and it holds machine paths, project trust,
+hook approvals, and plugin and app state. Never link it into the repository, and never
+put local paths or generated state in `codex/config.toml`. A setting changed in the
+Codex app can land in the user file and override the shared default until you delete
+it there.
 
 ## Branch and commit conventions
 
 - `main` contains shared changes suitable for all machines and follows
   `origin/main`. Push only this shared history to GitHub's `main`.
-- Each machine keeps its own `local` branch on top of `main`. Its commits may be
-  machine-specific or intentionally withheld from the shared repository. Do not
-  push `local` or merge it wholesale into `main`.
+- Each machine keeps its own `local` branch directly on top of `main`. Its commits
+  may be machine-specific or intentionally withheld from the shared repository. Do
+  not push `local`, merge it wholesale into `main`, or merge `main` into it.
 - Shared commits use `type(scope): summary`, with a lowercase, imperative summary
   and a type such as `feat`, `fix`, `docs`, `refactor`, `test`, or `chore`.
   Use `local(scope): summary` only for commits that stay on a machine's `local`
-  branch. For example, this Codex config split is a `fix(codex)`; a machine's
+  branch. For example, a shared Codex config fix is `fix(codex)`; a machine's
   Conda initialization is `local(shell)`.
 
 Prepare shared changes in a separate worktree based on the latest `origin/main`
@@ -62,67 +93,8 @@ message if necessary, test it, and push explicitly to `main`. Do not rewrite
 already-published history to fix older message inconsistencies.
 
 On each machine, fetch and fast-forward `main`, then rebase `local` onto it.
-Check that the remaining commits are only the machine's local work; Git can drop
-patch-equivalent commits that have already been promoted. Preserve uncommitted
-work before rebasing and verify it afterward. Submodules have independent
-histories and dirty files: a parent-repository stash does not protect their work.
-
-## Features
-
-- Creates symbolic links from dotfiles in the repository to their appropriate locations
-- Uses `lib/link_manifest.sh` as the single symlink manifest for install and cleanup
-- Automatically backs up existing files before creating links (with timestamp)
-- Skips destinations that are already linked to the expected repo source
-- Provides `--check` and `--dry-run` modes before mutation
-- Provides restoration capabilities to undo all changes
-- Detailed logging of mutating and dry-run operations under `logs/`
-- Error reporting and handling
-
-## Available Commands
-
-| Command | Description |
-|---------|-------------|
-| `./scripts/check-dotfiles.sh` | Run non-destructive repo checks |
-| `./bootstrap.sh --check` | Validate manifest sources and audit destinations |
-| `./bootstrap.sh --dry-run` | Preview symbolic link creation and backup cleanup without deleting backups |
-| `./bootstrap.sh` | Create symbolic links, back up existing differing files, and run backup cleanup in dry-run mode |
-| `./bootstrap.sh --restore` | Remove managed symbolic links and restore original files |
-| `./cleanup_backups.sh` | Preview redundant backup symlink cleanup |
-| `./cleanup_backups.sh --force` | Remove redundant backup symlinks |
-
-Set `DOTFILES_SKIP_CLEANUP=1` to skip the automatic backup cleanup report during `./bootstrap.sh`.
-
-## Codex shared defaults and local settings
-
-`codex/config.toml` contains only portable, intentional defaults. Bootstrap links
-it to `/etc/codex/config.toml` on both macOS and Linux. Initial installation and
-removal of this system link use `sudo`; run bootstrap as your normal user.
-An already-correct link needs no administrator access or extra backup.
-
-`~/.codex/config.toml` is a regular, private file outside this repository. Codex
-reads the system defaults first, then applies the user config on top. Machine
-paths, project trust, hook approvals, plugin installation state, app settings,
-and onboarding state stay in the user file. Do not symlink it into the repository.
-
-Edit `codex/config.toml` to change defaults on both computers, then sync this
-repository. Changes made through the app may create local overrides; remove a
-duplicated user setting when you want the shared default to apply again. Do not
-add local paths or generated state to the shared file. Bootstrap restore removes
-the managed system link but leaves the user config untouched.
-
-The migration keeps one original config per machine at
-`~/.codex/config.before-shared-defaults.toml`. It is a recovery copy, not a loaded
-configuration layer. No recurring backup or config-generation job is needed.
-
-Run `./bootstrap.sh --check` to audit links and
-`bash scripts/test-codex-config.sh` to test installation, repeat runs, and restore
-in a temporary directory without touching the real system config.
-
-## Log Files
-
-Bootstrap create, restore, and dry-run operations are logged to date-stamped files under `logs/` in the format:
-- `bootstrap_YYYY_MM_DD_HH_MM_SS.log` for link creation
-- `bootstrap_restore_YYYY_MM_DD_HH_MM_SS.log` for link removal
-- `bootstrap_dry_run_YYYY_MM_DD_HH_MM_SS.log` for dry-runs
-
-`logs/` is ignored by git.
+Check that the remaining commits are only the machine's local work; Git drops
+patch-equivalent commits that have already been promoted, which is expected.
+Preserve uncommitted work before rebasing and verify it afterward. Submodules have
+independent histories and dirty files: a parent-repository stash does not protect
+their work.

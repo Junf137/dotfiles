@@ -29,8 +29,6 @@ blur = true
 
 startup_mode = "Maximized"
 
-dynamic_title = true
-
 # Scrolling configuration
 [scrolling]
 # Sets the scrollback history size.
@@ -41,34 +39,6 @@ history = 20000
 # Font family and size.
 normal = { family = "FiraCode Nerd Font Mono", style = "DemiLight" }
 size = 12.0
-
-# # Color scheme (Catppuccin Mocha based)
-# [colors]
-# primary = { background = "#1f1f28", foreground = "#cdd6f4" }
-# cursor = { text = "#11111b", cursor = "#f5e0dc" }
-# selection = { text = "#cdd6f4", background = "#585b70" }
-
-# # Normal colors
-# [colors.normal]
-# black = "#0C0C0C"
-# red = "#C50F1F"
-# green = "#13A10E"
-# yellow = "#C19C00"
-# blue = "#0037DA"
-# magenta = "#881798"
-# cyan = "#3A96DD"
-# white = "#CCCCCC"
-
-# # Bright colors
-# [colors.bright]
-# black = "#767676"
-# red = "#E74856"
-# green = "#16C60C"
-# yellow = "#F9F1A5"
-# blue = "#3B78FF"
-# magenta = "#B4009E"
-# cyan = "#61D6D6"
-# white = "#F2F2F2"
 
 [selection]
 save_to_clipboard = true
@@ -85,13 +55,7 @@ bindings = [
 
     # Close window (equivalent to closing tab/pane in WezTerm)
     { key = "W", mods = "Alt", action = "Quit" },
-
-    # Copy and Paste (usually handled by default, but explicitly set here)
-    { key = "C", mods = "Control|Shift", action = "Copy" },
-    { key = "V", mods = "Control|Shift", action = "Paste" },
 ]
-
-[terminal]
 
 [env]
 TERM = "xterm-256color"

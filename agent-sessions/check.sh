@@ -9,9 +9,6 @@
 # runtime: tmux-resurrect discards its hook's exit status and its stderr, Codex
 # ignores a missing hooks file without a word, and the resume-marker patterns
 # match another program's terminal output and rot when it changes wording.
-#
-# It derives its own root rather than inheriting one, so it keeps working if this
-# directory is ever extracted to a repo of its own.
 
 SELF_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
 REPO_ROOT="$(cd -- "$SELF_DIR/.." && pwd -P)"
@@ -57,11 +54,7 @@ check_python_syntax() {
     # A save whose hook raises NameError is a completely silent no-op --
     # tmux-resurrect discards the exit status and the stderr, and the failure
     # happens before there is anywhere to log -- and that is exactly what a
-    # dropped `import` produces. It happened here once: a partially edited
-    # working tree ran `2026-08-02 03:31:44 failed: NameError: name 'hashlib'
-    # is not defined` against the live server. Nothing but the tests would have
-    # caught it, and only because one of 1900 lines happens to call the one
-    # function that uses hashlib; five of the imports are exercised by nothing.
+    # dropped `import` produces.
     python3 - \
         agent-sessions/bin/agent-panes \
         agent-sessions/bin/agent-pane-register \
@@ -525,7 +518,7 @@ run_optional python3 "agent-resume borrowed names" check_borrowed_names
 run_required "agent-sessions executable bits" check_executable_bits
 run_required "tmux resurrect hook wiring" check_tmux_hook_wiring
 run_required "tmux resurrect plugin contract" check_resurrect_plugin_contract
-run_optional python3 "agent resume-marker patterns" check_tool_tests
+run_optional python3 "agent-sessions unit tests" check_tool_tests
 run_optional python3 "agent-sessions tools run" check_tool_smoke
 run_optional python3 "Codex threads indexed" check_codex_threads_indexed
 
