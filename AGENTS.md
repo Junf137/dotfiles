@@ -12,14 +12,12 @@ effect only once it reaches `local` in the live checkout.
 ## Layout
 
 - `agent-sessions/`: Claude/Codex session-to-tmux-pane tooling; `bin/` is on `PATH`
-- `agent-skills/`: submodule; `claude/` links to `~/.claude/skills`, `codex/` to
-  `~/.agents/skills`
+- `agent-skills/`: submodule with the Claude (`claude/`) and Codex (`codex/`) skills
 - `alacritty/`, `tmux/`, `tmuxp/`, `omz_themes/`: Alacritty config, tmux window-name
   overrides, tmuxp layout, Oh My Zsh theme
-- `claude/`: global Claude Code files, each linked into `~/.claude/`; `settings.json`
-  also wires the agent-sessions hooks and the status line
-- `codex/`: global Codex files; `AGENTS.md` and `hooks.json` link into `~/.codex/`,
-  `config.toml` to `/etc/codex/config.toml`
+- `claude/`: global Claude Code instructions, settings and status line; `settings.json`
+  also wires the agent-sessions hooks
+- `codex/`: global Codex instructions, shared config defaults and hooks
 - `lib/link_manifest.sh`: every managed link, for `bootstrap.sh` and `cleanup_backups.sh`
 - `msg/`: bootstrap banner and shell welcome messages
 - `nvim/`: kickstart.nvim submodule (`nvim-kickstart/`) and `markdownlint.jsonc`
@@ -32,11 +30,9 @@ effect only once it reaches `local` in the live checkout.
   flavors
 - `bashrc`, `zshrc`, `shell_common.sh`: both rc files source `shell_common.sh` (PATH,
   fzf, aliases)
-- `vimrc`, `tmux.conf`, `gitconfig`, `condarc`: linked into `$HOME` with a leading dot
+- `vimrc`, `tmux.conf`, `gitconfig`, `condarc`: Vim, tmux, git and conda configs
 - `bootstrap.sh`, `cleanup_backups.sh`: create or restore links; prune redundant backups
 - `Brewfile`, `macos-defaults.sh`: macOS packages and preferences, applied by hand
-- `AGENTS.md`, `CLAUDE.md`, `README.md`: this guide, its import for Claude Code, the
-  human README
 
 ## Rules
 
