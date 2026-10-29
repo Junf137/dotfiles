@@ -26,18 +26,18 @@ agent-sessions/
 ```
 
 Nothing in `lib/` is a tool. `procinfo.py` is the platform layer: the only Python file
-that knows whether this is Linux or macOS. (Two others carry kernel knowledge of their
+that knows whether this is Linux or macOS. (Two others carry platform knowledge of their
 own: `claude-sessions` is bash and probes for itself, `/proc` when present and
 `ps`/`lsof` otherwise, and `agent-panes-resurrect` knows about bsdtar's AppleDouble
-members.) The other three each read something another program produced — `agent_ids.py`
-Claude's and Codex's terminal output, `claude_names.py` the records Claude writes into
-its transcripts, `agents.py` what an agent process looks like and where its transcripts
-live — and each rots silently when that program changes. So there is exactly one copy of
-each, for `tests/` to cover: `agent-scrollback-ids` sweeps live panes and
-`agent-panes-resurrect` the archived captures with the same code, so a change to one
-changes both. `agents.py` exists because that rule was not followed at first: its
-contents had been written out up to four times, and the copies disagreed with each other
-and with Codex (see *Rollout files*).
+members, which macOS's own `tar t` does not list.) The other three each read something
+another program produced — `agent_ids.py` Claude's and Codex's terminal output,
+`claude_names.py` the records Claude writes into its transcripts, `agents.py` what an
+agent process looks like and where its transcripts live — and each rots silently when
+that program changes. So there is exactly one copy of each, for `tests/` to cover:
+`agent-scrollback-ids` sweeps live panes and `agent-panes-resurrect` the archived
+captures with the same code, so a change to one changes both. `agents.py` exists because
+that rule was not followed at first: its contents had been written out up to four times,
+and the copies disagreed with each other and with Codex (see *Rollout files*).
 
 **Title lookups are broad by hand and narrow in the hook.** `claude_names.name_index()`
 serves two callers. `agent-scrollback-ids` is interactive and takes the broadest index:
