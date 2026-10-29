@@ -42,6 +42,7 @@ source "$MANIFEST_FILE"
 load_link_manifest || exit 1
 
 removed_count=0
+failed=0
 
 cleanup_backup() {
     dst_name="$1"
@@ -61,7 +62,10 @@ cleanup_backup() {
 
         if [ "$backup_target" = "$current_target" ]; then
             if $FORCE_MODE; then
-                rm "$backup"
+                rm "$backup" || {
+                    failed=1
+                    continue
+                }
                 echo "Removed: $backup"
             else
                 echo "[dry-run] Would remove: $backup"
@@ -91,3 +95,4 @@ if $FORCE_MODE; then
 else
     echo "Found $removed_count redundant backup(s) to remove"
 fi
+exit "$failed"
