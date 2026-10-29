@@ -35,21 +35,23 @@ import time
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "lib"))
 import procinfo  # noqa: E402
+from agent_ids import UUID  # noqa: E402
+from agents import (  # noqa: E402
+    CLAUDE_PROJECTS,
+    agent_kind,
+    codex_titles,
+    rollout_id,
+    rollouts,
+    transcript_cwd,
+)
+from claude_names import CLAUDE_SESSIONS  # noqa: E402
 
 BOOT = procinfo.boot_time()
 REG = os.path.expanduser("~/.cache/agent-panes")
-CLAUDE_PROJECTS = os.path.expanduser("~/.claude/projects")
-CLAUDE_SESSIONS = os.path.expanduser("~/.claude/sessions")
-CODEX_SESSIONS = os.path.expanduser("~/.codex/sessions")
-CODEX_INDEX = os.path.expanduser("~/.codex/session_index.jsonl")
-
-UUID = r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"
-ROLLOUT_RE = re.compile(r"rollout-(\d{4}-\d\d-\d\d)T(\d\d)-(\d\d)-(\d\d)-(" + UUID + r")\.jsonl$")
 
 # Widest gap tolerated between a process start and an inferred session artifact.
 INFER_WINDOW_S = 900
 
-AGENTS = ("claude", "codex")
 EXACT_SOURCES = ("hook", "sessions", "env", "cmdline", "fd")
 
 # Subcommands that run the agent binary without holding an interactive session.
@@ -63,26 +65,6 @@ def pstart(pid):
 
 environ = procinfo.environ
 cmdline = procinfo.cmdline
-
-
-def agent_kind(pid, comm):
-    """Which agent a process is, if any.
-
-    comm is not always the agent's own name: background sessions exec the
-    versioned binary directly, so comm reads as e.g. '2.1.220' -- which is what
-    an installed Claude reads as on macOS as a matter of course, since it is
-    exec'd straight out of ~/.local/share/claude/versions/. The executable path
-    is the reliable signal -- matched on a whole path segment or the basename,
-    since a bare substring also catches siblings that merely share the prefix,
-    such as codex's `bin/codex-code-mode-host`.
-    """
-    if comm in AGENTS:
-        return comm
-    exe = procinfo.exe(pid)
-    if not exe:
-        return ""
-    base = os.path.basename(exe)
-    return next((name for name in AGENTS if base == name or f"/{name}/" in exe), "")
 
 
 def is_session(pid):
@@ -200,28 +182,10 @@ def resolve_claude(pid, cwd, start):
 # ---* Codex *---
 
 
-def codex_titles():
-    titles = {}
-    if not os.path.exists(CODEX_INDEX):
-        return titles
-    with open(CODEX_INDEX, errors="ignore") as fh:
-        for line in fh:
-            try:
-                rec = json.loads(line)
-            except ValueError:
-                continue
-            if rec.get("id"):
-                titles[rec["id"]] = rec.get("thread_name") or ""
-    return titles
-
-
 def codex_rollouts():
-    """Rollout path -> (session_id, start epoch). The filename stamp is local time."""
+    """Rollout path -> (session_id, start epoch)."""
     out = {}
-    for path in glob.glob(f"{CODEX_SESSIONS}/*/*/*/rollout-*.jsonl"):
-        m = ROLLOUT_RE.search(path)
-        if not m:
-            continue
+    for path, m in rollouts():
         try:
             day = datetime.date.fromisoformat(m.group(1))
         except ValueError:
@@ -233,17 +197,6 @@ def codex_rollouts():
     return out
 
 
-def rollout_cwd(path):
-    """Read the session_meta header without pulling in the whole transcript."""
-    try:
-        with open(path, errors="ignore") as fh:
-            rec = json.loads(fh.readline())
-    except (OSError, ValueError):
-        return None
-    payload = rec.get("payload") or {}
-    return payload.get("cwd")
-
-
 def resolve_codex(pid, cwd, start):
     argv = cmdline(pid)
     if "resume" in argv:
@@ -253,9 +206,9 @@ def resolve_codex(pid, cwd, start):
 
     # App-server style sessions keep the rollout file open; TUI sessions do not.
     for target in procinfo.open_files(pid):
-        m = re.search(r"rollout-.*?-(" + UUID + r")\.jsonl", target)
-        if m:
-            return m.group(1), "fd", ""
+        sid = rollout_id(target)
+        if sid:
+            return sid, "fd", ""
 
     # Fall back to the rollout whose recorded start is nearest this process, and
     # only accept it when the rollout was opened in the same directory.
@@ -264,7 +217,7 @@ def resolve_codex(pid, cwd, start):
         delta = abs(stamp - start)
         if delta >= INFER_WINDOW_S or (best is not None and delta >= best[0]):
             continue
-        if rollout_cwd(path) != cwd:
+        if transcript_cwd(path) != cwd:
             continue
         best = (delta, sid)
     if best:

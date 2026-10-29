@@ -69,7 +69,9 @@ check_python_syntax() {
         agent-sessions/bin/agent-resume \
         agent-sessions/bin/agent-scrollback-ids \
         agent-sessions/lib/agent_ids.py \
+        agent-sessions/lib/agents.py \
         agent-sessions/lib/claude_names.py \
+        agent-sessions/lib/procinfo.py \
         agent-sessions/tests/test-agent-tools.py <<'PY'
 import ast
 import builtins

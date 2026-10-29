@@ -22,14 +22,17 @@ bare, unless the session carries a user-set title -- in which case it is that
 title, always double quoted, with \\ and " backslash-escaped.
 """
 
+import glob
 import json
 import os
 import re
 import sys
 import tempfile
 import time
+import types
 
 BIN = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "bin")
+LIB = os.path.join(os.path.dirname(BIN), "lib")
 TOOL = os.path.join(BIN, "agent-scrollback-ids")
 RESURRECT_TOOL = os.path.join(BIN, "agent-panes-resurrect")
 RESUME_TOOL = os.path.join(BIN, "agent-resume")
@@ -885,6 +888,143 @@ def harvest_cases(tool):
 
     cases.extend(archive_cases(tool))
     cases.extend(title_index_cases(tool))
+    cases.extend(agents_cases())
+    return cases
+
+
+def agents_cases():
+    """lib/agents.py: which process is an agent, and which file is which session.
+
+    Both read another program's private layout. The rollout names matter most: a
+    wrong id there is reported by agent-panes as an exact `fd` match, and makes
+    agent-resume call a session that is still on disk gone.
+    """
+    cases = []
+
+    def add(label, ok):
+        cases.append((f"agents  {label}", ok))
+
+    sys.path.insert(0, LIB)
+    import agents
+
+    thread = "01a0f63f-f406-7450-a6d5-31b3585f3482"
+    other = "01a0f642-cb07-7103-84fe-50f456228b5e"
+    stamp = "rollout-2026-10-01T02-59-27-"
+    rollout_id = agents.rollout_id
+
+    add("a rollout name yields its session id", rollout_id(f"/s/{stamp}{thread}.jsonl") == thread)
+    # Real Codex names: the first uuid is the thread, the second names nothing.
+    add("a suffixed rollout yields the thread, not the suffix", rollout_id(f"/s/{stamp}{thread}_{other}.jsonl") == thread)
+    match = agents.ROLLOUT_RE.search(f"{stamp}{thread}_{other}.jsonl")
+    add("a suffixed rollout still carries its start stamp", bool(match) and match.group(1) == "2026-10-01")
+    add("an unknown suffix is skipped, not guessed at", rollout_id(f"/s/{stamp}{thread}_notes.jsonl") is None)
+    add("a Claude transcript is not a rollout", rollout_id(f"/p/{thread}.jsonl") is None)
+    # Codex compresses a rollout after about a week idle; it is still resumable.
+    add("a compressed rollout yields its session id", rollout_id(f"/s/{stamp}{CODEX_UUID}.jsonl.zst") == CODEX_UUID)
+    add("a half-written rollout is not one", rollout_id(f"/s/{stamp}{CODEX_UUID}.jsonl.tmp") is None)
+
+    saved = agents.CLAUDE_PROJECTS, agents.CODEX_SESSIONS
+    with tempfile.TemporaryDirectory() as tmp:
+        agents.CLAUDE_PROJECTS = os.path.join(tmp, "projects")
+        agents.CODEX_SESSIONS = os.path.join(tmp, "sessions")
+        try:
+            day = os.path.join(agents.CODEX_SESSIONS, "2026", "10", "01")
+            os.makedirs(day)
+            os.makedirs(os.path.join(agents.CLAUDE_PROJECTS, "p"))
+            # A thread can span several rollouts and the newest must win, however
+            # the directory happens to list them -- so both orders are tried. The
+            # decoys are newer still, so indexing one would displace a real row.
+            later = "rollout-2026-10-01T05-00-00-"
+            decoy = "rollout-2026-10-01T06-00-00-"
+            rollout = os.path.join(day, f"{later}{thread}_{other}.jsonl")
+            packed = os.path.join(day, f"{later}{CODEX_UUID}.jsonl.zst")
+            transcript = os.path.join(agents.CLAUDE_PROJECTS, "p", f"{UUID}.jsonl")
+            for path in (
+                os.path.join(day, f"{stamp}{thread}.jsonl.zst"),
+                rollout,
+                packed,
+                os.path.join(day, f"{stamp}{CODEX_UUID}.jsonl"),
+                os.path.join(day, f"{decoy}{thread}.jsonl.tmp"),
+                os.path.join(day, f"{decoy}{CODEX_UUID}_notes.jsonl"),
+                transcript,
+            ):
+                open(path, "w").close()
+            listed = glob.glob
+            for order in ("sorted", "reversed"):
+                agents.glob = types.SimpleNamespace(
+                    glob=lambda pattern: sorted(listed(pattern), reverse=order == "reversed")
+                )
+                index = agents.transcript_index()
+                add(f"the index keys a suffixed rollout by its thread, {order}", index["codex"].get(thread) == rollout)
+                add(f"the index counts a compressed rollout, {order}", index["codex"].get(CODEX_UUID) == packed)
+                add(f"the index holds nothing else, {order}", len(index["codex"]) == 2)
+            add("the index finds a Claude transcript", index["claude"] == {UUID: transcript})
+        finally:
+            agents.CLAUDE_PROJECTS, agents.CODEX_SESSIONS = saved
+            agents.glob = glob
+
+        # Codex's session_meta header carries its whole system prompt on line 1:
+        # ~52 KB as of 0.165, close behind what used to be a 64 KiB per-line cap.
+        header = json.dumps({"type": "session_meta", "payload": {"cwd": "/proj", "base_instructions": "x" * 100_000}})
+        big = os.path.join(tmp, "big.jsonl")
+        with open(big, "w") as fh:
+            fh.write(header + "\n")
+        add("a header longer than 64 KiB still yields its cwd", agents.transcript_cwd(big) == "/proj")
+
+        def cwd_of(path):
+            # Raising here would cost every pane its block, not just this one row.
+            try:
+                return agents.transcript_cwd(path)
+            except Exception:
+                return None
+
+        packed = os.path.join(tmp, f"{stamp}{CODEX_UUID}.jsonl.zst")
+        if agents.zstd:
+            with agents.zstd.open(packed, "wt") as fh:
+                fh.write(header + "\n")
+            add("a compressed rollout yields its cwd", cwd_of(packed) == "/proj")
+        else:
+            open(packed, "w").close()
+        # What macOS's stock python3 does, run here too.
+        saved_zstd, agents.zstd = agents.zstd, None
+        try:
+            add("without zstd a compressed rollout yields no cwd", cwd_of(packed) == "")
+        finally:
+            agents.zstd = saved_zstd
+
+        with open(packed, "rb") as fh:
+            frame = fh.read()
+        # Garbage after the magic number raises ZstdError, a cut-off frame EOFError.
+        for label, data in (("corrupt", b"\x28\xb5\x2f\xfd not a frame"), ("truncated", frame[: len(frame) // 2])):
+            bad = os.path.join(tmp, f"{label}.jsonl.zst")
+            with open(bad, "wb") as fh:
+                fh.write(data)
+            add(f"a {label} compressed rollout is unreadable, not an error", cwd_of(bad) == "")
+
+    class Exe:
+        def __init__(self, path):
+            self.path = path
+
+        def exe(self, _pid):
+            return self.path
+
+    def kind(comm, exe):
+        previous = agents.procinfo
+        agents.procinfo = Exe(exe)
+        try:
+            return agents.agent_kind(1, comm)
+        finally:
+            agents.procinfo = previous
+
+    add("an agent is known by its comm", kind("codex", None) == "codex")
+    add("a versioned Claude is known by its path", kind("2.1.312", "/h/.local/share/claude/versions/2.1.312") == "claude")
+    add("a Codex binary is known by its name", kind("x", "/usr/lib/chatgpt/resources/codex") == "codex")
+    # What the old register test accepted: any path containing `/codex` or `/claude`.
+    add("codex's own helper is not codex", kind("codex-code-mode", "/r/bin/codex-code-mode-host") == "")
+    add("a directory that only starts with codex is not codex", kind("Xvfb", "/h/.local/share/codex-asia-browser/Xvfb") == "")
+    add("a directory that only starts with claude is not claude", kind("chrome-native-h", "/usr/lib/claude-desktop/resources/chrome-native-host") == "")
+    add("an unreadable exe is no agent", kind("bash", None) == "")
+
     return cases
 
 

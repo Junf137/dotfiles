@@ -15,6 +15,7 @@ agent-sessions/
 │   └── claude-sessions        # list running Claude Code sessions with details
 ├── lib/
 │   ├── agent_ids.py           # the resume-marker patterns, shared by two of the above
+│   ├── agents.py              # agent processes, transcript files and their cwd
 │   ├── claude_names.py        # session title -> uuid, from Claude's own transcripts
 │   └── procinfo.py            # process facts: /proc on Linux, libproc+sysctl on macOS
 ├── tests/
@@ -29,13 +30,16 @@ Two others hold kernel knowledge of their own: `claude-sessions` is bash and pro
 for itself (`/proc` when present, `ps`/`lsof` otherwise), and
 `agent-panes-resurrect` knows about bsdtar's AppleDouble members. See *Requirements*.
 
-Neither of the other two files in `lib/` is a tool either. Both read something
+None of the other three files in `lib/` is a tool either. Each reads something
 another program produced — `agent_ids.py` the patterns matching Claude's and
-Codex's terminal output,
-`claude_names.py` the records Claude writes into its own transcripts — and both
-rot silently the next time either changes. So there is exactly one copy of each
-for `tests/` to cover: `agent-scrollback-ids` sweeps live panes, and
-`agent-panes-resurrect` sweeps the archived captures, with the same code.
+Codex's terminal output, `claude_names.py` the records Claude writes into its own
+transcripts, `agents.py` what an agent process looks like and where its
+transcripts live — and each rots silently the next time either changes. So there
+is exactly one copy of each for `tests/` to cover: `agent-scrollback-ids` sweeps
+live panes, and `agent-panes-resurrect` sweeps the archived captures, with the
+same code. `agents.py` exists because that rule was not followed at first: its
+contents were written out up to four times, and by the time they were merged the
+copies disagreed with each other and with Codex — see *Rollout files* below.
 
 The two callers ask `claude_names.name_index()` for different things.
 `agent-scrollback-ids` is interactive, prints what it could not map, and takes the
@@ -98,9 +102,13 @@ Run `./scripts/check-dotfiles.sh` after touching any of it.
   Claude reads as its version (`2.1.223`) because it is exec'd straight out of
   `~/.local/share/claude/versions/` — so the executable path, not `comm`, is what
   identifies an agent. That was already true for Linux background sessions.
-- **Python ≥ 3.9.** The only version-sensitive call, `extractall(filter=)`, falls back
-  when the kwarg is unsupported (it arrived in 3.12, backported to 3.11.4 / 3.10.12 /
-  3.9.17), so an older interpreter loses nothing.
+- **Python ≥ 3.9.** `extractall(filter=)` falls back when the kwarg is unsupported
+  (it arrived in 3.12, backported to 3.11.4 / 3.10.12 / 3.9.17), so an older
+  interpreter loses nothing there. Reading a compressed Codex rollout needs
+  `compression.zstd`, which is 3.14+; without it — macOS's stock `python3` is 3.9 —
+  such a session is still indexed and resumable, but comes back with no `cd`, so
+  `agent-resume` resumes it from the pane's own directory — as it already does for
+  any row whose directory is unknown or gone.
 - **tmux-resurrect**, installed by TPM. Verified against `cff343cf`.
 
 ### Uninstall
@@ -152,6 +160,24 @@ until re-approved in the TUI. Nothing warns; the session just falls back to the 
   (a `/new`) keeps being reported as its first, which mislabels *which* of a pane's
   sessions was live at a save. It loses neither: the second one's own exit banner and
   this script's block both record it.
+- **Rollout files** are `~/.codex/sessions/YYYY/MM/DD/rollout-<stamp>-<uuid>.jsonl`,
+  with two variations every reader goes through `lib/agents.py` for. From 0.158 on a
+  second uuid may follow the first (`…-<thread>_<other>.jsonl`); the thread is the
+  *first* — the file's own `session_meta` id, and the only one `state_5.sqlite` has a
+  row for. One thread can also span several rollouts (19 here have 2 to 4), and the
+  newest is the one that counts. And a rollout idle for about a week is compressed to
+  `.jsonl.zst` — for 1016 of 1064 sessions here, on codex-cli 0.165, the newest
+  rollout is one — while Codex's thread table goes on naming the `.jsonl`. Such a
+  session is still resumable, so it still counts; before this was
+  handled, `agent-resume` called ~95% of Codex sessions gone. The `session_meta`
+  header is line 1 and carries the whole system prompt, ~52 KB, which is why the
+  per-line read cap is 256 KiB.
+- **What was looked at and not used.** Claude's live registry now also records
+  `tmux` (`<session>:@<window>.%<pane>`) and `name`, but only while the process is
+  alive — the `sessions` tier already reads that file, and a killed agent is the
+  case that matters. Codex's `state_5.sqlite` `threads` table and its
+  `thread-writer-locks/` belong to the `app-server` daemon, which runs outside tmux,
+  so neither names a pane. Checked against Claude Code 2.1.312 and codex-cli 0.165.
 - **Hooks** call `agent-pane-register`, which writes `~/.cache/agent-panes/<pane>.json`.
   Records carry the agent PID and its kernel start time so a session that died without
   firing its end hook is detected as stale instead of being attributed to the next agent

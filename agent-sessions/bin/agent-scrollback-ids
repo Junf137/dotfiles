@@ -30,7 +30,6 @@ Env:   SCROLLBACK_DEPTH  value passed to `tmux capture-pane -S` (default -20000)
 """
 
 import concurrent.futures
-import glob
 import json
 import os
 import re
@@ -44,48 +43,19 @@ import sys
 # of each and the unit tests cover it.
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "lib"))
 from agent_ids import UUID, extract  # noqa: E402
-from claude_names import CLAUDE_PROJECTS, name_index  # noqa: E402
+from agents import codex_titles, transcript_index  # noqa: E402
+from claude_names import name_index  # noqa: E402
 
 DEPTH = os.environ.get("SCROLLBACK_DEPTH", "-20000")
 WORKERS = min(16, (os.cpu_count() or 4) * 2)
 
-# CLAUDE_PROJECTS comes from claude_names, which owns the layout of Claude's own
-# directories along with the records inside them.
-CODEX_SESSIONS = os.path.expanduser("~/.codex/sessions")
-CODEX_INDEX = os.path.expanduser("~/.codex/session_index.jsonl")
-
 # ---* Session-name indexes *---
 
 
-def codex_titles():
-    titles = {}
-    if not os.path.exists(CODEX_INDEX):
-        return titles
-    with open(CODEX_INDEX, errors="ignore") as fh:
-        for line in fh:
-            try:
-                rec = json.loads(line)
-            except ValueError:
-                continue
-            if rec.get("id"):
-                titles[rec["id"]] = rec.get("thread_name") or ""
-    return titles
-
-
-def codex_rollouts():
-    paths = {}
-    for path in glob.glob(f"{CODEX_SESSIONS}/*/*/*/rollout-*.jsonl"):
-        m = re.search(UUID + r"\.jsonl$", path)
-        if m:
-            paths[m.group(0)[:-6]] = path
-    return paths
-
-
-def claude_transcripts():
-    """session id -> transcript path, skipping single-record bridge-session stubs."""
-    paths = {}
-    for path in glob.glob(f"{CLAUDE_PROJECTS}/*/*.jsonl"):
-        sid = os.path.basename(path)[:-6]
+def claude_transcripts(paths):
+    """The Claude half of the transcript index, minus single-record bridge-session stubs."""
+    out = {}
+    for sid, path in paths.items():
         if not re.fullmatch(UUID, sid):
             continue
         try:
@@ -93,8 +63,8 @@ def claude_transcripts():
                 continue
         except OSError:
             continue
-        paths[sid] = path
-    return paths
+        out[sid] = path
+    return out
 
 
 def claude_name_index():
@@ -150,8 +120,9 @@ def main():
     with concurrent.futures.ThreadPoolExecutor(max_workers=WORKERS) as pool:
         hits = [hit for group in pool.map(scan, pane_list) for hit in group]
 
-    codex_paths = codex_rollouts()
-    claude_paths = claude_transcripts()
+    index = transcript_index()
+    codex_paths = index["codex"]
+    claude_paths = claude_transcripts(index["claude"])
     titles = codex_titles()
     names = claude_name_index() if any(h[0] == "claude" and not h[4] for h in hits) else {}
 
