@@ -180,40 +180,18 @@ def capture_rows(pane, server):
     server but another pane, and the remaining text through the shared
     resume-marker patterns, which is where an agent's own exit banner is found.
 
-    Both passes are capped the way the harvest caps them, with its constants. A
-    `cat` of a session dump, a ripgrep over a directory of handoff notes, or a
-    restored pane displaying the archive itself puts hundreds of resume commands
-    into one pane's history, every one of them indistinguishable from a banner.
-    Here that only costs a screenful and a refusal rather than a permanent
-    record -- but the two tools disagreeing about what a pane holds would be
-    worse than either bound.
+    Both passes are capped by the harvest's own cap_stanzas() and
+    cap_recovered(). A `cat` of a session dump, a ripgrep over a directory of
+    handoff notes, or a restored pane displaying the archive itself puts
+    hundreds of resume commands into one pane's history, every one of them
+    indistinguishable from a banner. Here that only costs a screenful and a
+    refusal rather than a permanent record -- but the two tools disagreeing
+    about what a pane holds would be worse than either bound.
     """
     tag = RESURRECT.server_tag(server)
     marked, plain = RESURRECT.split_capture(capture(pane))
-    parsed = RESURRECT.parse_stanzas(marked, pane, tag)
-    # A block this hook wrote can never hold more stanzas than it prints, so
-    # anything past MAX_STANZAS arrived as text. Ranked, never sliced: stanzas
-    # the pane can prove are its own first (one bound to this server but another
-    # pane was already refused whole inside parse_stanzas), then the most
-    # recently seen. Duplicates are dropped before the cap, or N copies of one
-    # stanza would evict N distinct ids.
-    parsed.sort(
-        key=lambda row: (bool(tag and row.get("bound") == (pane, tag)), row.get("last_seen") or 0),
-        reverse=True,
-    )
-    rows, seen = [], set()
-    for row in parsed:
-        # `seen` grows past the cap on purpose: a session the cap dropped is still
-        # one this block named, and letting the text pass re-add it as a bare
-        # `scrollback` row would spend the cap and then undo it.
-        if row["session_id"] in seen:
-            continue
-        seen.add(row["session_id"])
-        if len(rows) < RESURRECT.MAX_STANZAS:
-            # Transient: parse_stanzas() reports which pane and generation a
-            # stanza claimed so the ranking above can use it. Nothing downstream
-            # needs it.
-            rows.append({key: value for key, value in row.items() if key != "bound"})
+    rows = RESURRECT.cap_stanzas(RESURRECT.parse_stanzas(marked, pane, tag), pane, tag)
+    seen = {row["session_id"] for row in rows}
 
     index = []
 
@@ -249,28 +227,7 @@ def capture_rows(pane, server):
                 last_seen=None,
             )
         )
-    if len(recovered) > RESURRECT.MAX_HARVEST_PER_PANE:
-        # Keep the *last* ids in the capture: the bottom of a pane's scrollback
-        # is what happened there most recently. extract() reports hits pattern by
-        # pattern rather than in reading order, so the order has to be recovered
-        # from the text. A uuid resolved from a title never appears as a uuid --
-        # the banner printed the title -- so that row is located by what it was
-        # actually read from, and an unfindable one falls to the end rather than
-        # to -1, where it would be the first thing discarded.
-        at = {}
-        for match in re.finditer(RESURRECT.UUID, plain):
-            at.setdefault(match.group(0), match.start())
-
-        def where(row):
-            if row["session_id"] in at:
-                return at[row["session_id"]]
-            found = plain.rfind(row["name"]) if row["name"] else -1
-            return found if found >= 0 else len(plain)
-
-        recovered.sort(key=where)
-        recovered = recovered[-RESURRECT.MAX_HARVEST_PER_PANE :]
-
-    return [dict(row, origin="scrollback") for row in rows + recovered]
+    return [dict(row, origin="scrollback") for row in rows + RESURRECT.cap_recovered(recovered, plain)]
 
 
 def cache_row(pane, since):

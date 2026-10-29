@@ -1211,6 +1211,29 @@ def resume_cases(tool):
     add("the merge keeps the date", merged[0]["last_seen"] == 100.0)
     add("the merge records both origins", merged[0]["origins"] == {"scrollback", "sidecar"})
 
+    # The per-pane caps are the save hook's own, borrowed rather than copied, so
+    # the two tools cannot disagree about what a pane holds. Where a copy once
+    # did: a block one stanza over the cap, whose dropped session also left its
+    # own exit banner. The hook reads that banner back; the copy did not.
+    resurrect = tool["RESURRECT"]
+    over = [f"dddd{i:04x}-0000-4000-8000-000000000000" for i in range(resurrect.MAX_STANZAS + 1)]
+    data = b"".join(
+        resurrect.marker_block(
+            [dict(agent="codex", session_id=sid, cwd="/tmp", source="cmdline", live=False, last_seen=1785600000.0 - 3600 * i)],
+            STAMP,
+        )
+        for i, sid in enumerate(over)
+    ) + f"To continue this session, run codex resume {over[-1]}\n".encode()
+    previous_capture = tool["capture"]
+    tool["capture"] = lambda _pane: data
+    try:
+        mine = {row["session_id"] for row in tool["capture_rows"]("%7", "")}
+    finally:
+        tool["capture"] = previous_capture
+    hooks = {row["session_id"] for row in resurrect.harvest({"s:1.0": data}, {"s:1.0": "%7"}).get("s:1.0", [])}
+    add("a session the stanza cap drops is still read from its banner", over[-1] in mine)
+    add("a pane's scrollback is read exactly as the save hook reads it", mine == hooks)
+
     # The hook cache is keyed by pane number with no server stamp, so a record
     # written before a reboot would otherwise be read against whichever restored
     # pane inherited that number.
