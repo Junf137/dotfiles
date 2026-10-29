@@ -35,9 +35,7 @@ another program produced — `agent_ids.py` Claude's and Codex's terminal output
 agent process looks like and where its transcripts live — and each rots silently when
 that program changes. So there is exactly one copy of each, for `tests/` to cover:
 `agent-scrollback-ids` sweeps live panes and `agent-panes-resurrect` the archived
-captures with the same code, so a change to one changes both. `agents.py` exists because
-that rule was not followed at first: its contents had been written out up to four times,
-and the copies disagreed with each other and with Codex (see *Rollout files*).
+captures with the same code, so a change to one changes both.
 
 **Title lookups are broad by hand and narrow in the hook.** `claude_names.name_index()`
 serves two callers. `agent-scrollback-ids` is interactive and takes the broadest index:
@@ -136,14 +134,14 @@ already inside `pane_contents.tar.gz` keep replaying on every restore.
     is the greatest file *name*, which sorts by start stamp — not the greatest path.
   - A rollout idle for about a week is compressed to `.jsonl.zst` — for 1698 of 1805
     threads here, on codex-cli 0.165, the newest rollout is one — while Codex's thread
-    table goes on naming the `.jsonl`. It is still resumable, so it still counts; before
-    this was handled, `agent-resume` called ~95% of Codex sessions gone. Resuming one
-    was checked end to end on 0.165; Codex replaces the newest `.zst` with a `.jsonl`.
+    table goes on naming the `.jsonl`. It is still resumable, so it still counts.
+    Resuming one was checked end to end on 0.165; Codex replaces the newest `.zst` with
+    a `.jsonl`.
   - Archiving a thread moves its rollouts into the flat `~/.codex/archived_sessions/`
     (757 of 1805 threads here). `codex resume <id>` still opens one, after asking
-    whether to unarchive it, so it counts too; before, `agent-resume` called every one
-    gone. That flat directory sorts before every dated one, and a thread can leave an
-    empty rollout behind in `sessions/`, which is why the newest is picked by name.
+    whether to unarchive it, so it counts too. That flat directory sorts before every
+    dated one, and a thread can leave an empty rollout behind in `sessions/`, which is
+    why the newest is picked by name.
 
   The `session_meta` header is line 1 and carries the whole system prompt, ~52 KB,
   which is why the per-line read cap is 256 KiB.
@@ -242,10 +240,6 @@ for the whole hook.
   and only when a pane holds a title neither recorded nor refused. Both halves of that
   gate are load-bearing: the strip never removes Claude's banner, so the title would
   otherwise be looked up every 15 minutes for as long as it stays in the history.
-- **A session that did not exit gracefully leaves no banner** — killed, or lost to a
-  reboot. Reading our own block back is what covers those, and it is not an
-  optimisation: a pane is stripped whenever it is annotated, so the block is their only
-  carrier.
 - **A text match is evidence about text.** A `codex resume <uuid>` in a document, a
   ripgrep hit or a `cat`ed handoff is indistinguishable from a real banner, so those
   rows are recorded as `scrollback` and printed as `(recovered)`.
@@ -520,16 +514,13 @@ broken one degrades to "no harvest" and this is the only place it would be notic
 - **The name-binding pass.** The syntax check runs a flat, deliberately
   scope-insensitive pass over every Python file here. It never reports a shadowing, but
   it catches a name a file uses and never binds — a dropped `import`, which turns the
-  save hook into a silent no-op. That happened once (`NameError: name 'hashlib' is not
-  defined`); `ast.parse` was blind to it, and the tests exercised 13 of 18 top-level
-  imports.
+  save hook into a silent no-op.
 - **The rollout index against Codex's own.** `check.sh` reads Codex's thread table (the
   highest-numbered `~/.codex/state_*.sqlite`) and fails if a thread whose rollout is
-  still on disk is missing from `transcript_index()` — what the compressed and the
-  archived rollouts both were before they were found by hand. It compares ids, not
-  paths: the table keeps the `.jsonl` name after Codex compresses the file. A thread
-  with no rollout left is counted, not failed, but a table with no thread left to verify
-  fails. It skips only where Codex has left neither a thread nor a rollout, since
+  still on disk is missing from `transcript_index()`. It compares ids, not paths: the
+  table keeps the `.jsonl` name after Codex compresses the file. A thread with no
+  rollout left is counted, not failed, but a table with no thread left to verify fails.
+  It skips only where Codex has left neither a thread nor a rollout, since
   `bootstrap.sh` creates `~/.codex` on machines that have never run Codex. The read is
   `readonly_shm` or `immutable`, never a plain read-only open: that one rebuilds the
   `-shm` in `~/.codex`, and creates it and the `-wal` where they are missing.

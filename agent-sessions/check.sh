@@ -54,11 +54,7 @@ check_python_syntax() {
     # A save whose hook raises NameError is a completely silent no-op --
     # tmux-resurrect discards the exit status and the stderr, and the failure
     # happens before there is anywhere to log -- and that is exactly what a
-    # dropped `import` produces. It happened here once: a partially edited
-    # working tree ran `2026-08-02 03:31:44 failed: NameError: name 'hashlib'
-    # is not defined` against the live server. Nothing but the tests would have
-    # caught it, and only because one of 1900 lines happens to call the one
-    # function that uses hashlib; five of the imports are exercised by nothing.
+    # dropped `import` produces.
     python3 - \
         agent-sessions/bin/agent-panes \
         agent-sessions/bin/agent-pane-register \
