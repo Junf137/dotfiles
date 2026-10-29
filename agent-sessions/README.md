@@ -128,15 +128,22 @@ already inside `pane_contents.tar.gz` keep replaying on every restore.
   which session was live at a save but loses neither: the second one's exit banner and
   this tool's block both record it.
 - **Rollout files** are `~/.codex/sessions/YYYY/MM/DD/rollout-<stamp>-<uuid>.jsonl`, and
-  every reader goes through `lib/agents.py` for three variations:
+  every reader goes through `lib/agents.py` for four variations:
   - From 0.158 a second uuid may follow the first (`…-<thread>_<other>.jsonl`). The
     thread is the *first* — the file's own `session_meta` id, and the only one
     `state_5.sqlite` has a row for.
-  - One thread can span several rollouts (19 here have 2 to 4); the newest counts.
+  - One thread can span several rollouts (92 here have 2 to 7); the newest counts. That
+    is the greatest file *name*, which sorts by start stamp — not the greatest path.
   - A rollout idle for about a week is compressed to `.jsonl.zst` — for 1016 of 1064
     sessions here, on codex-cli 0.165, the newest rollout is one — while Codex's thread
     table goes on naming the `.jsonl`. It is still resumable, so it still counts; before
-    this was handled, `agent-resume` called ~95% of Codex sessions gone.
+    this was handled, `agent-resume` called ~95% of Codex sessions gone. Resuming one
+    was checked end to end on 0.165; Codex replaces the newest `.zst` with a `.jsonl`.
+  - Archiving a thread moves its rollouts into the flat `~/.codex/archived_sessions/`
+    (757 of 1805 threads here). `codex resume <id>` still opens one, after asking
+    whether to unarchive it, so it counts too; before, `agent-resume` called every one
+    gone. That flat directory sorts before every dated one, and a thread can leave an
+    empty rollout behind in `sessions/`, which is why the newest is picked by name.
 
   The `session_meta` header is line 1 and carries the whole system prompt, ~52 KB,
   which is why the per-line read cap is 256 KiB.
