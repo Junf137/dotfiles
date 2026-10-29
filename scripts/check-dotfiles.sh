@@ -217,7 +217,7 @@ check_add_path() {
     (
         # shellcheck source=../utils/add_path
         source "$REPO_ROOT/utils/add_path"
-        PATH=/usr/local/bin:/x/usr/local/bin:/x/usr/bin
+        PATH=/x/usr/local/bin:/usr/local/bin:/x/usr/bin
         add_path /usr/local/bin
         [ "$PATH" = /usr/local/bin:/x/usr/local/bin:/x/usr/bin ]
     )
