@@ -22,6 +22,7 @@ effect only once it reaches `local` in the live checkout.
 - `msg/`: bootstrap banner and shell welcome messages
 - `nvim/`: kickstart.nvim submodule (`nvim-kickstart/`) and `markdownlint.jsonc`
 - `scripts/`: `check-dotfiles.sh` (all repo checks) and `test-codex-config.sh`
+- `systemd/` (Linux): the tmux server's user unit, which `@continuum-boot` enables
 - `tmpfiles/` (Linux): prune `~/hf` handoffs; see `tmpfiles/README.md`
 - `utils/`: helpers on `PATH`; `tmux-refit-windows` is the resurrect restore hook, and
   yazi calls `clip` and `view-image`

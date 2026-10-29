@@ -73,6 +73,10 @@ load_link_manifest() {
     _link_manifest_add "$DOT_FILES/tmpfiles/handoffs.conf" "$HOME/.config/user-tmpfiles.d/handoffs.conf" \
         "$(_link_manifest_tier_for Linux)" "handoff cleanup rules (systemd-tmpfiles)"
 
+    # The tmux server's systemd user unit, enabled by @continuum-boot on Linux.
+    _link_manifest_add "$DOT_FILES/systemd/tmux.service" "$HOME/.config/systemd/user/tmux.service" \
+        "$(_link_manifest_tier_for Linux)" "tmux server unit (systemd)"
+
     # External, user-managed image directory. It is useful when present but should
     # not block bootstrap checks on a fresh machine.
     _link_manifest_add "$HOME/Pictures/Background" "$HOME/.config/wezterm/backdrops" optional "wezterm backdrops"
