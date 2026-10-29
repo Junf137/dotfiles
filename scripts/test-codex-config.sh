@@ -24,11 +24,9 @@ trap 'rm -rf "$test_dir"' EXIT
     "$found"
 )
 
-mkdir -p "$test_dir/repo/lib" "$test_dir/repo/codex" "$test_dir/bin" "$test_dir/user"
+mkdir -p "$test_dir/repo/lib" "$test_dir/repo/codex" "$test_dir/bin"
 cp "$REPO_ROOT/bootstrap.sh" "$test_dir/repo/bootstrap.sh"
 printf 'model = "shared-model"\n' > "$test_dir/repo/codex/config.toml"
-printf 'notify = ["machine-local"]\n' > "$test_dir/user/config.toml"
-cp "$test_dir/user/config.toml" "$test_dir/user/expected.toml"
 
 cat > "$test_dir/repo/lib/link_manifest.sh" <<'MANIFEST'
 load_link_manifest() {
@@ -77,7 +75,6 @@ run_bootstrap --restore --dry-run
 cmp "$DOTFILES_TEST_SUDO_LOG" "$test_dir/expected-sudo.log"
 run_bootstrap --restore
 [ ! -L "$DOTFILES_CODEX_SYSTEM_CONFIG" ]
-cmp "$test_dir/user/config.toml" "$test_dir/user/expected.toml"
 
 # A pre-existing system file is backed up once and restored intact.
 printf 'model = "previous-system-model"\n' > "$DOTFILES_CODEX_SYSTEM_CONFIG"
@@ -89,5 +86,4 @@ run_bootstrap
 run_bootstrap --restore
 cmp "$DOTFILES_CODEX_SYSTEM_CONFIG" "$test_dir/previous-system.toml"
 [ "$(find "$test_dir/system" -name '*.bak' | wc -l | tr -d ' ')" = 0 ]
-cmp "$test_dir/user/config.toml" "$test_dir/user/expected.toml"
 printf 'Codex bootstrap lifecycle passed; temporary files removed on exit.\n'

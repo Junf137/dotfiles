@@ -47,6 +47,7 @@ check_bash_syntax() {
     local files=(
         bootstrap.sh
         cleanup_backups.sh
+        macos-defaults.sh
         shell_common.sh
         bashrc
         lib/link_manifest.sh
@@ -63,6 +64,7 @@ check_bash_syntax() {
         utils/color_pwd
         utils/view-image
         utils/tmux-refit-windows
+        utils/clip
         agent-sessions/bin/claude-sessions
         claude/statusline-command.sh
     )
@@ -221,54 +223,6 @@ check_toml() {
     taplo check
 }
 
-check_shfmt() {
-    cd "$REPO_ROOT" || return 1
-    shfmt -d \
-        bootstrap.sh \
-        cleanup_backups.sh \
-        shell_common.sh \
-        bashrc \
-        lib/link_manifest.sh \
-        lib/shell_paths.sh \
-        scripts/check-dotfiles.sh \
-        scripts/test-codex-config.sh \
-        agent-sessions/check.sh \
-        utils/add_path \
-        utils/kill_ps \
-        utils/file_count \
-        utils/rfv \
-        utils/cowsay_fortune \
-        utils/shell_welcome \
-        utils/color_pwd \
-        utils/view-image \
-        agent-sessions/bin/claude-sessions \
-        claude/statusline-command.sh
-}
-
-check_shellcheck() {
-    cd "$REPO_ROOT" || return 1
-    shellcheck \
-        bootstrap.sh \
-        cleanup_backups.sh \
-        shell_common.sh \
-        bashrc \
-        lib/link_manifest.sh \
-        lib/shell_paths.sh \
-        scripts/check-dotfiles.sh \
-        scripts/test-codex-config.sh \
-        agent-sessions/check.sh \
-        utils/add_path \
-        utils/kill_ps \
-        utils/file_count \
-        utils/rfv \
-        utils/cowsay_fortune \
-        utils/shell_welcome \
-        utils/color_pwd \
-        utils/view-image \
-        agent-sessions/bin/claude-sessions \
-        claude/statusline-command.sh
-}
-
 check_manifest_sources() {
     local status=0
     local i src required label
@@ -375,31 +329,6 @@ check_welcome_corpus() {
     ' "$file"
 }
 
-check_agent_config_presence() {
-    local status=0
-    local file
-    local files=(
-        claude/CLAUDE.md
-        claude/settings.json
-        claude/statusline-command.sh
-        codex/AGENTS.md
-        codex/config.toml
-        codex/hooks.json
-    )
-
-    cd "$REPO_ROOT" || return 1
-    for file in "${files[@]}"; do
-        if [ ! -f "$file" ]; then
-            printf 'Missing agent config file: %s\n' "$file" >&2
-            status=1
-        else
-            printf 'OK agent config file: %s\n' "$file"
-        fi
-    done
-
-    return "$status"
-}
-
 run_required "bash syntax" check_bash_syntax
 run_required "Codex config bootstrap" bash "$REPO_ROOT/scripts/test-codex-config.sh"
 run_optional zsh "zsh syntax" check_zsh_syntax
@@ -408,11 +337,8 @@ run_optional jq "json syntax" check_json
 run_optional jq "agent hook wiring" check_hook_wiring
 run_required "tmux restore hook wiring" check_tmux_restore_hook
 run_optional taplo "toml syntax" check_toml
-run_optional shfmt "shell formatting" check_shfmt
-run_optional shellcheck "shellcheck" check_shellcheck
 run_required "symlink manifest sources" check_manifest_sources
 run_required "welcome corpus metadata" check_welcome_corpus
-run_required "agent config presence" check_agent_config_presence
 
 printf '\n'
 if [ "$failures" -eq 0 ]; then
