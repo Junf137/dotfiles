@@ -696,11 +696,12 @@ def harvest_cases(tool):
     )
 
     # Which stanzas the cap keeps is the whole question, because the ones it
-    # drops are stripped out of the archive in the same save and a Claude id has
-    # nowhere else to live. The block is rendered newest-first, so slicing the
-    # file's tail keeps the oldest -- and a flood pasted in from another server
-    # generation, which the binding check cannot judge, would evict the pane's
-    # own records from its own block.
+    # drops are stripped out of the archive in the same save, and the id of a
+    # session that left no banner (killed, or lost to a reboot) has nowhere else
+    # to live. The block is rendered newest-first, so slicing the file's tail
+    # keeps the oldest -- and a flood pasted in from another server generation,
+    # which the binding check cannot judge, would evict the pane's own records
+    # from its own block.
     #
     # So the pane's own pair is bound to this server, a day older than the
     # flood and in the middle of the file: only its binding can rank it first.
