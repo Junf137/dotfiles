@@ -479,8 +479,9 @@ def harvest_cases(tool):
 
     This is the half that can rot silently and take data with it. A pane is
     stripped whenever it is annotated, so a parse that quietly stopped matching
-    would delete the only record that ever existed of every Claude session that
-    ran in that pane -- there is no second copy to fall back on.
+    would delete the only record that ever existed of every session that left
+    no banner (killed, or lost to a reboot) -- there is no second copy to fall
+    back on.
     """
     block_of = tool["marker_block"]
     parse = lambda data: tool["parse_stanzas"](tool["split_capture"](data)[0])  # noqa: E731

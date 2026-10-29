@@ -288,7 +288,7 @@ The harvest parses the block back. That is what carries ids across a tmux server
 restart — a new server reissues `%N` to unrelated panes, but the restored pane replays
 its capture, block included, so the evidence travels with the pane's contents. It is
 also what makes the strip safe: without it the strip would delete the only record of
-every Claude session that ever ran in the pane.
+every session that left no banner (killed, or lost to a reboot).
 
 - **Harvest before strip, and write the sidecar before touching the archive.** A crash
   in between costs a block the next save rewrites, never an id.
