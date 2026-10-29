@@ -1173,8 +1173,8 @@ def harvest(captures, loc_to_pane, server="", known_names=None, refused=None):
         # title on every save for as long as it is in the pane's history --
         # `seen` cannot suppress that, because it holds uuids and the banner
         # printed a title. Without this set the index would be rebuilt every 15
-        # minutes forever. (A title over clean()'s 60 characters is stored
-        # truncated and so never matches here; those few keep sweeping.)
+        # minutes forever. (A record keeps a title in clean()'s form, cut to 60
+        # characters, so the check below compares the banner's in that form.)
         seen_names = {(row.get("agent"), row.get("name")) for row in rows if row.get("name")}
         seen_names |= set(known_names.get(pane_id, ()))
         recovered = []
