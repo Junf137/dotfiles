@@ -443,10 +443,11 @@ It reads three sources and writes to none of them.
   records, read through its `recorded_names()` and `read_refused()`: a Claude title the
   pane's block or sidecar records already name is not looked up, and one the hook
   refused is never looked up again. Here a fresh lookup would be worse than wasted —
-  once Claude's pruning has narrowed `rm` to one session, it would resume that one in
-  every pane that printed `rm`. `check_borrowed_names` resolves every borrowed
-  attribute, because a rename in the lender leaves `agent-resume` importing cleanly and
-  raising `AttributeError` on the one path that starts a session.
+  once Claude's pruning has narrowed `rm` to one session, it would be offered in every
+  pane that printed `rm`, and resumed in any where nothing else is resumable.
+  `check_borrowed_names` resolves every borrowed attribute, because a rename in the
+  lender leaves `agent-resume` importing cleanly and raising `AttributeError` on the one
+  path that starts a session.
 
 ## Commands
 
