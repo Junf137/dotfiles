@@ -51,7 +51,6 @@ check_bash_syntax() {
         shell_common.sh
         bashrc
         lib/link_manifest.sh
-        lib/shell_paths.sh
         scripts/check-dotfiles.sh
         scripts/test-codex-config.sh
         agent-sessions/check.sh
@@ -88,7 +87,6 @@ check_zsh_syntax() {
     local files=(
         zshrc
         shell_common.sh
-        lib/shell_paths.sh
         omz_themes/ys_customized.zsh-theme
     )
 
