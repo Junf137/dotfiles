@@ -152,7 +152,8 @@ already inside `pane_contents.tar.gz` keep replaying on every restore.
   killed agent is the case that matters. Codex's `state_5.sqlite` `threads` table and
   its `thread-writer-locks/` belong to the `app-server` daemon, which runs outside tmux,
   so neither names a pane. (`check.sh` does read that table, but only as a list of
-  threads to hold the rollout index against — see Tests.) Checked against Claude Code 2.1.312 and codex-cli 0.165.
+  threads to hold the rollout index against — see Tests.) Checked against Claude Code
+  2.1.312 and codex-cli 0.165.
 - **Do not rely on open file descriptors**: both agents open → append → close their
   transcript per turn. Only the Codex app-server keeps rollout files open (the `fd`
   tier).
@@ -528,7 +529,7 @@ broken one degrades to "no harvest" and this is the only place it would be notic
   archived rollouts both were before they were found by hand. It compares ids, not
   paths: the table keeps the `.jsonl` name after Codex compresses the file. A thread
   with no rollout left is counted, not failed, but a table with no thread left to verify
-  fails. It skips only where Codex has left neither a table nor a rollout, since
+  fails. It skips only where Codex has left neither a thread nor a rollout, since
   `bootstrap.sh` creates `~/.codex` on machines that have never run Codex. The read is
   `readonly_shm` or `immutable`, never a plain read-only open: that one rebuilds the
   `-shm` in `~/.codex`, and creates it and the `-wal` where they are missing.

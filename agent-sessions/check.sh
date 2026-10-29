@@ -427,9 +427,10 @@ check_codex_threads_indexed() {
     # on a correct tree. The recorded path only tells a missed rollout from a
     # deleted one: a thread whose file is gone is resumable by nobody, so it is
     # counted rather than failed -- pruning old rollouts by hand is a correct
-    # tree. A table with no thread left to verify fails, though. That leaves one
-    # blind spot, a Codex that moves some rollouts without updating the table,
-    # which shows up as the gone count jumping.
+    # tree. A table with no thread left to verify fails, though, unless there is
+    # no rollout either. That leaves one blind spot, a Codex that moves some
+    # rollouts without updating the table, which shows up as the gone count
+    # jumping.
     #
     # The file name carries a schema version (state_5.sqlite on codex-cli 0.165),
     # so the highest-numbered one is read, and finding none fails rather than
@@ -478,7 +479,7 @@ try:
     connection = sqlite3.connect(f"file:{urllib.parse.quote(database)}?{flags}", uri=True)
     rows = connection.execute("SELECT id, rollout_path FROM threads").fetchall()
 except sqlite3.Error as err:
-    print(f"{database}: cannot read threads(id, rollout_path): {err}", file=sys.stderr)
+    print(f"{database}: cannot read threads(id, rollout_path): {err} (rerun first: Codex writing it mid-read fails the same way)", file=sys.stderr)
     sys.exit(1)
 
 missed = []
@@ -510,7 +511,7 @@ if not checked:
     if not rows and not index:
         print(f"SKIP: no thread in {database} and no rollout under {home} (nothing asserted)")
         sys.exit(0)
-    print(f"no thread in {database} has a rollout at its recorded path ({len(rows)} threads): nothing verified", file=sys.stderr)
+    print(f"{len(rows)} thread(s) in {database}, none with a rollout at its recorded path, against {len(index)} indexed rollout(s): nothing verified", file=sys.stderr)
     sys.exit(1)
 
 note = f", {gone} with no rollout left" if gone else ""
