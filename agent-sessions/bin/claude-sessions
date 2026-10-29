@@ -2,9 +2,9 @@
 
 # __author__ == Junfeng Lei
 
-# List every running Claude Code session: its tmux pane, directory, git branch,
-# uptime, CPU and memory. agent-panes is the one that maps panes to session ids;
-# this one also shows sessions outside tmux, and what each costs to run.
+# List the running Claude Code sessions: each one's tmux pane, directory, git
+# branch, uptime, CPU and memory. agent-panes is the one that maps panes to
+# session ids; this one also shows sessions outside tmux, and what each costs.
 #
 # Usage: claude-sessions [-n|--no-color]
 
@@ -57,8 +57,12 @@ human_kb() {
     fi
 }
 
+# The first argument is the row's colour; the reset goes before the newline, so
+# piped output never starts a line with an escape.
 row() {
-    printf '%-2s%-8s%-22s%-18s%11s %6s %7s  %s\n' "$@"
+    local color=$1
+    shift
+    printf '%b%-2s%-8s%-22s%-18s%11s %6s %7s  %s%b\n' "$color" "$@" "${color:+$RESET}"
 }
 
 # Not `pgrep -x claude`: BSD pgrep omits its own ancestors, so on macOS that
@@ -76,13 +80,14 @@ fi
 CURRENT_TTY=$(tty 2>/dev/null)
 PANES=$(tmux list-panes -a -F '#{pane_tty}|#{session_name}:#{window_index}.#{pane_index}' 2>/dev/null)
 
-printf '%b' "$BOLD"
-row "" PID PANE BRANCH UPTIME CPU MEM DIRECTORY
-printf '%b' "$RESET"
+row "$BOLD" "" PID PANE BRANCH UPTIME CPU MEM DIRECTORY
 
 count=0
 total_kb=0
 for pid in $CLAUDE_PIDS; do
+    # Only this user's: kill -0 is refused for another user's process, whose cwd
+    # is unreadable anyway, and ps -ax lists those too.
+    kill -0 "$pid" 2>/dev/null || continue
     # Also the liveness check: a process that exited since the scan prints nothing.
     read -r elapsed cpu rss_kb < <(ps -p "$pid" -o etime=,%cpu=,rss= 2>/dev/null) || continue
     [[ "$rss_kb" =~ ^[0-9]+$ ]] || rss_kb=0
@@ -103,10 +108,11 @@ for pid in $CLAUDE_PIDS; do
     count=$((count + 1))
     total_kb=$((total_kb + rss_kb))
 
-    [ -n "$mark" ] && printf '%b' "$GREEN"
-    pane=${pane:0:21} branch=${branch:0:17} cwd=${cwd/#"$HOME"/\~}
-    row "$mark" "$pid" "${pane:--}" "${branch:--}" "$elapsed" "$cpu%" "$(human_kb "$rss_kb")" "${cwd:--}"
-    [ -n "$mark" ] && printf '%b' "$RESET"
+    # Cut to the column with a marker, so a cut name never reads as a real one.
+    [ ${#pane} -gt 21 ] && pane=${pane:0:19}..
+    [ ${#branch} -gt 17 ] && branch=${branch:0:15}..
+    cwd=${cwd/#"$HOME"/\~}
+    row "${mark:+$GREEN}" "$mark" "$pid" "${pane:--}" "${branch:--}" "$elapsed" "$cpu%" "$(human_kb "$rss_kb")" "${cwd:--}"
 done
 
 printf '\n%b%d session(s), %s resident; * marks this one%b\n' "$DIM" "$count" "$(human_kb "$total_kb")" "$RESET"

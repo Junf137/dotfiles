@@ -33,7 +33,9 @@ members.) The other three each read something another program produced —
 `agent_ids.py` Claude's and Codex's terminal output, `claude_names.py` the records
 Claude writes into its transcripts, `agents.py` what an agent process looks like and
 where its transcripts live — and each rots silently when that program changes. So
-there is exactly one copy of each, for `tests/` to cover. `agents.py` exists because
+there is exactly one copy of each, for `tests/` to cover: `agent-scrollback-ids` sweeps
+live panes and `agent-panes-resurrect` the archived captures with the same code, so a
+change to one changes both. `agents.py` exists because
 that rule was not followed at first: its contents had been written out up to four
 times, and the copies disagreed with each other and with Codex (see *Rollout files*).
 
@@ -89,7 +91,8 @@ already inside `pane_contents.tar.gz` keep replaying on every restore.
   tiers work — but two facts there are not obvious:
   - `KERN_PROCARGS2` returns a process's exec path, `argv` **and** `environ` in one
     read, which is what makes `TMUX_PANE` (the anchor everything rests on) readable at
-    all. It works for the user's own processes with no privileges.
+    all. It works for the user's own processes with no privileges; another user's is
+    unreadable, exactly as `/proc` hides it.
   - Claude's live registry writes `procStart` in each kernel's own terms: clock ticks
     since boot on Linux, and on macOS the start time formatted `%a %b %e %H:%M:%S %Y`
     **in UTC**. `procinfo.claude_proc_start_matches` compares parsed instants rather
@@ -101,7 +104,8 @@ already inside `pane_contents.tar.gz` keep replaying on every restore.
   out of `~/.local/share/claude/versions/`. So the executable path, not `comm`, is what
   identifies an agent.
 - **Python ≥ 3.9.** `extractall(filter=)` falls back when the kwarg is unsupported (it
-  arrived in 3.12, backported to 3.11.4 / 3.10.12 / 3.9.17). Reading a compressed Codex
+  arrived in 3.12, backported to 3.11.4 / 3.10.12 / 3.9.17), so an older interpreter
+  loses nothing there. Reading a compressed Codex
   rollout needs `compression.zstd`, which is 3.14+. Without it — macOS's stock `python3`
   is 3.9 — such a session is still indexed and resumable but its directory is unknown,
   so `agent-resume` resumes it from the pane's own directory, as it does for any row
@@ -162,7 +166,8 @@ execution.
 
 - The config file is `~/.codex/hooks.json`; one at `~/.codex/hooks/hooks.json` is
   silently ignored, even if malformed. Event keys are PascalCase. The timeout key is
-  `timeout`, in seconds, and unknown keys inside a handler are dropped without warning.
+  `timeout`, in seconds, and unknown keys inside a handler are dropped without warning,
+  so a typo just yields the default.
   `SessionEnd` is clamped to 3 s (1 s if omitted). A failing Codex hook is invisible.
 - **`$HOME` in a hook command does expand.** Measured on 0.146.1 with two handlers on
   one `SessionStart`, one naming `$HOME/...` and one a literal absolute path: under
@@ -170,7 +175,8 @@ execution.
   like `claude/settings.json`.
 - **Hooks need trust on first run.** They are discovered as `untrusted` and do not run
   until approved in the TUI ("Hooks need review" → "Trust all and continue"), which
-  writes `[hooks.state]` into `~/.codex/config.toml` — a symlink into this repo.
+  writes `[hooks.state]` into `~/.codex/config.toml` — a symlink into this repo, where
+  Codex already writes its `[projects]` trust levels.
 - **Trust is not sufficient: the interactive TUI cannot bind a pane.** Measured on
   0.146.0: an interactive session hands its hooks to the shared `app-server` daemon,
   which is started once at login *outside* tmux, so the hook inherits neither
@@ -213,7 +219,8 @@ Three sources feed one record per session, folded by `(pane id, agent, session i
 | this script's own block, parsed back out of the capture | everything a previous save wrote down — the only source for a session that was killed or lost to a reboot | whatever the block recorded |
 
 The harvest reads `pane_contents.tar.gz`, not `tmux capture-pane`: the hook already
-opens it, it holds each pane's *whole* history with wrapped lines rejoined, and the hook
+opens it, it holds each pane's *whole* history with wrapped lines rejoined
+(`capture-pane -epJ -S -<history_size>`), and the hook
 runs inline with the save and freezes the client that triggered it, so a subprocess per
 pane is the one thing it must not do. On a 78-pane server: 14 ms to unpack in memory,
 115 ms to scan 5.6 MB, 0.35 s for the whole hook.
@@ -269,8 +276,9 @@ pane is the one thing it must not do. On a 78-pane server: 14 ms to unpack in me
   (killed, or lost to a reboot) *and* was never running at any save. Continuum saves
   every 15 min while a client is attached, so in practice that is a short session while
   nothing was attached. Everything else is covered by the sidecar, a banner, or the
-  title lookup. `agent-scrollback-ids` is the by-hand tool for what is left; its index
-  is the broad one, so it can offer a best guess where the hook refuses to.
+  title lookup — unless the title names more than one session. `agent-scrollback-ids`
+  is the by-hand tool for what is left; its index is the broad one, so it can offer a
+  best guess where the hook refuses to.
 
 ### The block is read as well as written
 
@@ -313,8 +321,9 @@ every Claude session that ever ran in the pane.
   is no longer live means something moved. As a write a misfiled block lasts until the
   next save; as a *record* it would be permanent.
 - **No harvest, no strip.** The strip is a delete, and for a Claude session the block
-  may be the only place its id was ever written. So `cmd_save` leaves the archive
-  exactly as it found it when the harvest was refused or the sidecar write failed, and
+  may be the only place its id was ever written. So a save whose harvest was refused
+  still writes its sidecar but leaves the archive exactly as it found it, as does one
+  whose sidecar write failed — `cmd_save` enforces both — and
   `inject()` is handed the archive's identity from the harvest pass and refuses if it no
   longer holds.
 - **Both harvest passes are capped per pane, and a cap ranks — it never slices.**
@@ -348,8 +357,9 @@ every Claude session that ever ran in the pane.
   `run-shell`, whose stdout is the job pipe: one printed line drops the active pane into
   view-mode and renames the window `[tmux]`. stderr is `/dev/null` on every trigger
   path, so `save` sends both to `<resurrect dir>/agent_sessions.log` whenever stdout is
-  not a tty. That log is the only observability there is — **every** failure path must
-  reach it or it does not exist.
+  not a tty. That log is the only observability there is — tmux-resurrect discards the
+  hook's exit status entirely, so **every** failure path must reach the log or it does
+  not exist.
 - **Never run `save` or `purge` without `$TMUX`.** Every `tmux` call would resolve
   against the *default* server, so `@resurrect-dir` falls back to the real one and a
   stray manual run rewrites a live session's archive. The script refuses; keep it that
@@ -386,7 +396,7 @@ every Claude session that ever ran in the pane.
 - **Panes whose session name contains `/`, `:` or `'` are skipped.** tmux-resurrect
   already mishandles all three (a failed write, no content file, and a `cat '<file>'`
   that kills the pane). They still land in the sidecar.
-- **Do not set `@resurrect-processes` to `':all:'`.** Restore does not respawn agent
+- **Do not set `@resurrect-processes` to `':all:'`.** Restore currently does not respawn agent
   panes — `restore_pane_process` uses `send-keys`, and neither `node` nor `codex` is in
   the default list — which is why the block survives above whatever restore types.
 
@@ -426,8 +436,8 @@ It reads three sources and writes to none of them.
   rules apply identically. The per-pane caps are borrowed for the same reason: here they
   cost only a screenful, but the two tools disagreeing about what a pane holds would be
   worse than either bound. `check_borrowed_names` resolves every borrowed attribute,
-  because a rename in the lender still imports cleanly and raises `AttributeError` on
-  the one path that starts a session.
+  because a rename in the lender leaves `agent-resume` importing cleanly and raising
+  `AttributeError` on the one path that starts a session.
 
 ## Commands
 
@@ -439,7 +449,7 @@ It reads three sources and writes to none of them.
 | `agent-panes-resurrect purge [--dry-run]` | remove every block, sidecar, log |
 | `agent-resume [-n] [-l] [--pane %N]` | resume this pane's session, if it has exactly one |
 | `agent-scrollback-ids` | recover ids exited agents printed into scrollback |
-| `claude-sessions [-n]` | every running Claude session, in tmux or not, with uptime, CPU and memory |
+| `claude-sessions [-n]` | running Claude sessions, in tmux or not, with uptime, CPU and memory |
 
 `list`'s `LAST SEEN` is when the agent was last observed *running* there, and `-` where
 the id was recovered from text, which carries no such time. It is never invented: a
@@ -470,7 +480,8 @@ rather than written over: to the merge an empty read and a damaged file look ide
 and publishing a fresh record over it would take every id along. The test is "are these
 bytes a sidecar", never "does it hold anything" — a well-formed file with empty `panes`
 is what a machine with no agent panes writes, and treating that as damage renamed it
-aside on every save. The scratch sweep leaves the kept file alone; `purge` removes it.
+aside on every save. The scratch sweep leaves the kept file alone, since a promise to
+keep it that expires after an hour is not one; `purge` removes it.
 
 | Env | Effect |
 |---|---|
