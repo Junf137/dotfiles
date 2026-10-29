@@ -22,7 +22,7 @@ effect only once it reaches `local` in the live checkout.
 - `msg/`: bootstrap banner and shell welcome messages
 - `nvim/`: kickstart.nvim submodule (`nvim-kickstart/`) and `markdownlint.jsonc`
 - `scripts/`: `check-dotfiles.sh` (all repo checks) and `test-codex-config.sh`
-- `tmpfiles/` (Linux), `launchd/` (macOS): prune `~/hf` handoffs; see `tmpfiles/README.md`
+- `tmpfiles/` (Linux): prune `~/hf` handoffs; see `tmpfiles/README.md`
 - `utils/`: helpers on `PATH`; `tmux-refit-windows` is the resurrect restore hook, and
   yazi calls `clip` and `view-image`
 - `wezterm/`: wezterm-config submodule

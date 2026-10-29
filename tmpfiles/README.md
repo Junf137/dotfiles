@@ -1,8 +1,6 @@
 # Handoff cleanup (`~/hf`)
 
-> **Linux only.** On macOS, `lib/link_manifest.sh` links `launchd/com.junf.prune-handoffs.plist`
-> instead. It applies the same policy through a launchd agent, and its header has the one-time
-> `launchctl bootstrap` step.
+> **Linux only.**
 
 ## What it is for
 
@@ -83,7 +81,7 @@ The timer serves every user tmpfiles rule. To stop pruning only `~/hf`, change t
 
 ## Removing it completely
 
-1. Unload it from the live config. On Linux:
+1. Unload it from the live config:
 
    ```bash
    systemctl --user disable --now systemd-tmpfiles-clean.timer
@@ -91,14 +89,7 @@ The timer serves every user tmpfiles rule. To stop pruning only `~/hf`, change t
    rmdir ~/.config/user-tmpfiles.d
    ```
 
-   On macOS (`bootout` is harmless if the agent is not loaded):
-
-   ```bash
-   launchctl bootout gui/$(id -u)/com.junf.prune-handoffs
-   rm ~/Library/LaunchAgents/com.junf.prune-handoffs.plist
-   ```
-
-2. In this repo, delete `tmpfiles/`, `launchd/` and the handoff block in `lib/link_manifest.sh`,
-   and drop the handoff-pruning lines from `AGENTS.md` and `README.md`.
+2. In this repo, delete `tmpfiles/` and the handoff entry in `lib/link_manifest.sh`, and drop the
+   handoff-pruning lines from `AGENTS.md` and `README.md`.
 3. `~/hf` itself is left alone. The handoff skill in `agent-skills` still writes there and says
    files are pruned automatically, so change it there too.

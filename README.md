@@ -17,8 +17,7 @@ Coding agents: see [AGENTS.md](AGENTS.md).
 - [`agent-sessions/`](agent-sessions/README.md): maps running Claude/Codex sessions to
   their tmux pane and carries them across a reboot, so a restored pane shows what ran
   there and how to resume it
-- [`~/hf` handoff pruning](tmpfiles/README.md): systemd-tmpfiles on Linux, a launchd
-  agent on macOS
+- [`~/hf` handoff pruning](tmpfiles/README.md) on Linux, through systemd-tmpfiles
 - macOS: Homebrew packages (`Brewfile`) and system preferences (`macos-defaults.sh`)
 
 ## Install
@@ -56,8 +55,7 @@ Then, once per machine:
 
 - In tmux, press `prefix + I` (the prefix is `Alt+a`) to install the plugins.
 - Linux: `systemctl --user enable --now systemd-tmpfiles-clean.timer`.
-- macOS: `launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.junf.prune-handoffs.plist`,
-  and optionally `./macos-defaults.sh`.
+- macOS: optionally `./macos-defaults.sh`.
 - Codex: approve its hooks when it asks ("Hooks need review"). Every edit to
   `codex/hooks.json` needs that approval again, on each machine.
 
