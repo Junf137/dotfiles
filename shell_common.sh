@@ -65,9 +65,9 @@ if [ "${DOTFILES_DISABLE_WELCOME:-0}" != "1" ] \
     if [ -z "${SSH_CONNECTION:-}" ] \
         && [ "${DOTFILES_DISABLE_ANIMATED_WELCOME:-0}" != "1" ] \
         && command -v lolcat &> /dev/null; then
-      echo -e "$msg\n" | lolcat --animate --duration=1 --speed=120 --freq=0.05 --truecolor
+      printf '%s\n\n' "$msg" | lolcat --animate --duration=1 --speed=120 --freq=0.05 --truecolor
     else
-      echo -e "$msg\n"
+      printf '%s\n\n' "$msg"
     fi
   fi
 fi
