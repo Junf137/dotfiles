@@ -698,23 +698,44 @@ def harvest_cases(tool):
     # file's tail keeps the oldest -- and a flood pasted in from another server
     # generation, which the binding check cannot judge, would evict the pane's
     # own records from its own block.
+    #
+    # So the pane's own pair is bound to this server, a day older than the
+    # flood and in the middle of the file: only its binding can rank it first.
+    # By date, or by position from either end of the file, the flood wins.
     mine = b"".join(
         block_of(
-            [dict(EXITED_ROW, pane_id="%12", session_id=f"aaaa{i:04x}-0000-4000-8000-000000000000")],
+            [
+                dict(
+                    EXITED_ROW,
+                    pane_id="%12",
+                    server=SERVER,
+                    last_seen=EXITED_ROW["last_seen"] - 86400,
+                    session_id=f"aaaa{i:04x}-0000-4000-8000-000000000000",
+                )
+            ],
             STAMP,
         )
         for i in range(2)
     )
-    alien = b"".join(
+    alien = [
         block_of(
-            [dict(EXITED_ROW, pane_id="%77", session_id=f"bbbb{i:04x}-0000-4000-8000-000000000000")],
+            [
+                dict(
+                    EXITED_ROW,
+                    pane_id="%77",
+                    last_seen=EXITED_ROW["last_seen"] + 60 * i,
+                    session_id=f"bbbb{i:04x}-0000-4000-8000-000000000000",
+                )
+            ],
             STAMP,
         )
         for i in range(tool["MAX_STANZAS"] + 10)
-    )
+    ]
+    half = len(alien) // 2
+    buried = b"".join(alien[:half]) + mine + b"".join(alien[half:])
     survivors = {
         row["session_id"]
-        for row in tool["harvest"]({"s:1.0": mine + alien}, {"s:1.0": "%12"}, SERVER).get("s:1.0", [])
+        for row in tool["harvest"]({"s:1.0": buried}, {"s:1.0": "%12"}, SERVER).get("s:1.0", [])
     }
     add(
         "a flood of foreign stanzas cannot evict the pane's own",
@@ -803,9 +824,21 @@ def harvest_cases(tool):
     # `cat` of a capture that already held one -- used to put two rows per
     # session in front of the cap, so N duplicates evicted N distinct ids and
     # the strip then removed their only remaining evidence.
+    #
+    # The sessions are an hour apart, so the ranking puts each one's two copies
+    # side by side and a cap without its dedupe spends two slots on one id. On
+    # one shared date the sort keeps file order, the copies stay a block apart,
+    # and the first six rows are distinct with or without the dedupe.
     six = b"".join(
         block_of(
-            [dict(EXITED_ROW, pane_id="%12", session_id=f"cccc{i:04x}-0000-4000-8000-000000000000")],
+            [
+                dict(
+                    EXITED_ROW,
+                    pane_id="%12",
+                    last_seen=EXITED_ROW["last_seen"] - 3600 * i,
+                    session_id=f"cccc{i:04x}-0000-4000-8000-000000000000",
+                )
+            ],
             STAMP,
         )
         for i in range(tool["MAX_STANZAS"])
