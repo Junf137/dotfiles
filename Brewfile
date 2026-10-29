@@ -14,6 +14,8 @@ brew "fd"
 brew "ffmpeg"
 # Command-line fuzzy finder written in Go
 brew "fzf"
+# GitHub command-line tool
+brew "gh"
 # Distributed revision control system
 brew "git"
 # Tool to convert a Wallpaper's color scheme / palette
@@ -70,8 +72,6 @@ cask "1password"
 cask "clash-verge-rev"
 # Anthropic's official Claude AI desktop app
 cask "claude"
-# OpenAI's Codex desktop app for managing coding agents
-cask "codex-app"
 # Voice and text chat software
 cask "discord"
 # Web browser
