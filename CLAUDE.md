@@ -17,6 +17,7 @@ dotfiles/
 ├── agent-sessions/         # Claude/Codex session <-> tmux pane tooling (see its README.md)
 │   ├── bin/                # agent-panes, agent-pane-register, agent-panes-resurrect, agent-resume, ...
 │   ├── lib/                # agent_ids.py (resume-marker patterns), claude_names.py (title -> uuid),
+│   │                       #   agents.py (agent processes, transcript index + cwd),
 │   │                       #   procinfo.py (process facts: /proc on Linux, libproc+sysctl on macOS)
 │   └── tests/              # test-agent-tools.py
 ├── alacritty/              # Alacritty terminal emulator configs
