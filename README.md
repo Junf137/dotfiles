@@ -40,16 +40,17 @@ git clone --recurse-submodules git@github.com:Junf137/dotfiles.git ~/Documents/d
 cd ~/Documents/dotfiles        # existing clone: git submodule update --init --recursive
 brew bundle --file=Brewfile    # macOS only; provides ya, which bootstrap uses
 
-./scripts/check-dotfiles.sh    # read-only repo checks
 ./bootstrap.sh --check         # validate sources, audit destinations
 ./bootstrap.sh --dry-run       # preview every action
 ./bootstrap.sh                 # link (backing up what it replaces), ya pkg install, backup report
 ./cleanup_backups.sh -f        # delete the redundant backups that report lists
-./bootstrap.sh --restore       # undo: remove the managed links, restore the newest backups
+./scripts/check-dotfiles.sh    # read-only repo checks; needs the status line link
 ```
 
-`DOTFILES_SKIP_CLEANUP=1` skips the backup report and `DOTFILES_SKIP_YAZI=1` skips
-`ya pkg install`. Create, dry-run and restore runs are logged to `logs/` (gitignored).
+Undo with `./bootstrap.sh --restore`, which removes the managed links and restores the
+newest backups. `DOTFILES_SKIP_CLEANUP=1` skips the backup report and
+`DOTFILES_SKIP_YAZI=1` skips `ya pkg install`. Create, dry-run and restore runs are
+logged to `logs/` (gitignored).
 
 Then, once per machine:
 
