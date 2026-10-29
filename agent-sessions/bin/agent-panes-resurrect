@@ -1790,6 +1790,12 @@ def recorded_names(sidecar, server):
     Only this generation's records: a `%N` from an earlier server names a pane
     this one never issued, so a match would suppress a lookup on the strength of
     an unrelated pane's history. Records with no title say nothing about titles.
+
+    normalise() writes the pane id, agent and title as strings, so a record
+    holding anything else there was edited by hand. It is skipped rather than
+    hashed: a list or a dict cannot go into these sets, and raising here would
+    cost the hook its harvest and agent-resume, which borrows this function,
+    its whole run.
     """
     names = {}
     for rows in (sidecar or {}).values():
@@ -1800,7 +1806,10 @@ def recorded_names(sidecar, server):
                 continue
             if not server or row.get("server") != server:
                 continue
-            names.setdefault(row.get("pane_id"), set()).add((row.get("agent"), row.get("name")))
+            pane_id, agent, name = row.get("pane_id"), row.get("agent"), row.get("name")
+            if not all(isinstance(field, str) for field in (pane_id, agent, name)):
+                continue
+            names.setdefault(pane_id, set()).add((agent, name))
     return names
 
 

@@ -832,6 +832,23 @@ def harvest_cases(tool):
         builds.clear()
         tool["harvest"]({"z:9.9": miss}, {"z:9.9": "%99"}, "another-server", None, refused)
         add("a refusal holds on a different pane and server", builds == [])
+
+        # The sidecar is a file people edit by hand, and normalise() writes these
+        # three fields only as strings. A list or a dict in one of them cannot be
+        # hashed, so recorded_names() skips that record -- not the whole sidecar:
+        # the well-formed record beside it still keeps its title from the index.
+        named = dict(agent="claude", session_id=TITLE_UUID, name="a-real-title", pane_id="%7", server=SERVER)
+        for field, value in (("name", ["a-real-title"]), ("pane_id", ["%7"]), ("agent", {"kind": "claude"})):
+            builds.clear()
+            try:
+                known = tool["recorded_names"]({"s:1.0": [dict(named, **{field: value}), named]}, SERVER)
+                found = tool["harvest"]({"s:1.0": titled}, {"s:1.0": "%7"}, SERVER, known)
+            except Exception:  # noqa: BLE001 - raising is the failure under test
+                found = None
+            add(
+                f"a hand-edited sidecar record with a {type(value).__name__} {field} does not break the harvest",
+                found == {} and builds == [],
+            )
     finally:
         tool["name_index"] = previous_index
 
@@ -1345,6 +1362,21 @@ def resume_cases(tool):
             "a title longer than a record keeps is matched as it is stored",
             read_pane(own_long + f'\nclaude --resume "{long_title}"\n'.encode(), server) == {real} and builds == [],
         )
+        # The records are read through the hook's recorded_names(), which skips
+        # one that was edited by hand to hold a list or a dict where the hook
+        # writes a string, rather than raising: the well-formed record beside it
+        # still keeps `rm` from the index.
+        named = recorded["s:1.0"][0]
+        for field, value in (("name", ["rm"]), ("pane_id", ["%7"]), ("agent", {"kind": "claude"})):
+            builds.clear()
+            try:
+                ids = read_pane(banner, server, {"s:1.0": [dict(named, **{field: value}), named]})
+            except Exception:  # noqa: BLE001 - raising is the failure under test
+                ids = None
+            add(
+                f"a hand-edited sidecar record with a {type(value).__name__} {field} is skipped, not raised on",
+                ids == set() and builds == [],
+            )
     finally:
         resurrect.name_index = previous_index
 
