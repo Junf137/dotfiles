@@ -11,7 +11,8 @@ Coding agents: see [AGENTS.md](AGENTS.md).
 - Editors: `vimrc`, and Neovim from the `nvim/nvim-kickstart` submodule (a
   kickstart.nvim fork) with `nvim/markdownlint.jsonc`
 - Terminals: WezTerm from the `wezterm/wezterm-config` submodule, and Alacritty
-- tmux (`tmux.conf`, `tmux/`) with tmuxp layouts (`tmuxp/`), Yazi (`yazi/`), git, conda
+- tmux (`tmux.conf`, `tmux/`, and on Linux its systemd user unit in `systemd/`) with
+  tmuxp layouts (`tmuxp/`), Yazi (`yazi/`), git, conda
 - Claude Code and Codex: global instructions and settings (`claude/`, `codex/`), and
   skills from the private `agent-skills` submodule
 - [`agent-sessions/`](agent-sessions/README.md): maps running Claude/Codex sessions to
