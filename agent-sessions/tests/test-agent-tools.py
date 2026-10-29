@@ -742,6 +742,17 @@ def harvest_cases(tool):
         {"aaaa0000-0000-4000-8000-000000000000", "aaaa0001-0000-4000-8000-000000000000"} <= survivors,
     )
     add("and the cap still holds", len(survivors) == tool["MAX_STANZAS"])
+    # The binding only decides the pane's own slots; the rest of the cap goes to
+    # the most recently seen. In a restored pane no stanza carries this server's
+    # tag, so there the date is all that decides.
+    newest = {
+        f"bbbb{i:04x}-0000-4000-8000-000000000000"
+        for i in range(len(alien) - tool["MAX_STANZAS"] + 2, len(alien))
+    }
+    add(
+        "and the rest of the cap goes to the most recently seen",
+        survivors == {"aaaa0000-0000-4000-8000-000000000000", "aaaa0001-0000-4000-8000-000000000000"} | newest,
+    )
 
     # Claude prints the session's custom title instead of its uuid when it has
     # one, so about a third of its exit banners carry no id at all. Resolving one
