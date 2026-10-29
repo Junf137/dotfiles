@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
-# Claude Code statusLine script
-# Mirrors the ys_customized zsh theme: user@host in [dir] on git:BRANCH STATE
+# Claude Code statusLine: <dir>  git:<branch> x|o  ✻ <model> · ctx:N% · 5h:N%
 
 input=$(cat)
 
@@ -16,10 +15,6 @@ else
     five_pct=""
 fi
 cwd="${cwd:-${PWD:-$HOME}}"
-
-# User and host
-user=$(whoami)
-host=$(hostname -s)
 
 # Short path: replace $HOME with ~
 short_path=$(echo "$cwd" | sed "s|^$HOME|~|")
@@ -50,12 +45,8 @@ if [ -n "$five_pct" ]; then
 fi
 
 # Assemble output with ANSI colors
-# yellow bold box-drawing, cyan user, green host, bold-yellow dir,
-# blue git, dim conda, dim model info
 RESET='\033[0m'
 BOLD='\033[1m'
-YELLOW='\033[33m'
-CYAN='\033[36m'
 GREEN='\033[32m'
 BLUE='\033[34m'
 RED='\033[31m'
