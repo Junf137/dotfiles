@@ -1229,7 +1229,7 @@ def archive_cases(tool):
     def add(label, ok):
         cases.append((label, bool(ok)))
 
-    def build(tmp, contents, double=None):
+    def build(tmp, contents, double=None, double_name="./._pane_contents"):
         """A resurrect dir holding an archive shaped like tmux-resurrect's.
 
         With double, also the AppleDouble member macOS's tar writes ahead of a
@@ -1238,7 +1238,7 @@ def archive_cases(tool):
         buf = io.BytesIO()
         with tarfile.open(fileobj=buf, mode="w") as tar:
             if double is not None:
-                info = tarfile.TarInfo("./._pane_contents")
+                info = tarfile.TarInfo(double_name)
                 info.size = len(double)
                 tar.addfile(info, io.BytesIO(double))
             root = tarfile.TarInfo("./pane_contents")
@@ -1299,10 +1299,21 @@ def archive_cases(tool):
             build(tmp, {"a:1.1": CAPTURE + old_block}, double=double)
             written, _ = tool["inject"](tmp, {"a:1.1": new_block})
             add("an AppleDouble sibling does not block the rewrite", written == 1)
-            rebuilt = members(tmp)
-            add("and is carried over first, byte-exact", rebuilt[0] == ("./._pane_contents", double))
-            add("ahead of the directory it describes", rebuilt[1][0] == "./pane_contents")
+            # Read only from a rewrite: the original already has this order.
+            rebuilt = members(tmp) if written else []
+            add("and is carried over first, byte-exact", rebuilt[:1] == [("./._pane_contents", double)])
+            add("ahead of the directory it describes", [name for name, _ in rebuilt[1:2]] == ["./pane_contents"])
             add("and the pane is still rewritten", pane_of(tmp, "a:1.1").endswith(new_block))
+
+            # Only that exact name is carried over. A near miss is still a member
+            # the rebuild cannot reproduce, so it is refused as before.
+            build(tmp, {"a:1.1": CAPTURE + old_block}, double=double, double_name="._pane_contents")
+            with open(os.path.join(tmp, "pane_contents.tar.gz"), "rb") as fh:
+                before = fh.read()
+            refused = tool["inject"](tmp, {"a:1.1": new_block})
+            add("a near-miss AppleDouble name still fails the member-set check", refused == (0, "rebuilt member set differs"))
+            with open(os.path.join(tmp, "pane_contents.tar.gz"), "rb") as fh:
+                add("and leaves the archive alone", fh.read() == before)
 
             build(tmp, {"a:1.1": CAPTURE + old_block})
             with open(os.path.join(tmp, "pane_contents.tar.gz"), "r+b") as fh:

@@ -152,16 +152,20 @@ except Exception as err:  # noqa: BLE001 - reported through the log, never raise
 ARCHIVE_NAME = "pane_contents.tar.gz"
 ARCHIVE_MEMBER_DIR = "./pane_contents"
 CONTENT_DIR = "pane_contents"
-# macOS's tar -- bsdtar 3.5.3 on macOS 27 -- writes a directory's xattrs twice:
-# as pax headers, and as an AppleDouble `./._pane_contents` member *beside*
-# ./pane_contents, ahead of it. tar.add(content_dir) cannot reproduce a sibling,
-# so inject() carries it over; without that, every save fails the rebuilt-member-
-# set check and publishes nothing. One xattr is enough, and on the MacBook the
-# capture directory carries com.apple.provenance, which macOS sets on its own and
-# which stays because tmux-resurrect reuses the directory: 194 of its 219 saves
-# from 2026-08-07 on were lost this way. macOS's own `tar t` does not list the
-# member, which is how an earlier check here concluded it was never written.
-# GNU tar writes none.
+# macOS's tar -- bsdtar 3.5.3 on macOS 27 -- writes an entry's xattrs twice: as
+# pax headers, and as an AppleDouble `._<name>` member just ahead of it. The
+# directory's, `./._pane_contents`, sits *beside* ./pane_contents, where
+# tar.add(content_dir) cannot reproduce it, so inject() carries it over; without
+# that, every rewrite fails the rebuilt-member-set check and publishes nothing.
+# One xattr is enough, and on the MacBook the capture directory carries
+# com.apple.provenance, which macOS sets on its own and which stays because
+# tmux-resurrect reuses the directory: 194 of its 219 saves from 2026-08-07 on
+# published no block this way, though each still wrote its sidecar. A pane file's
+# own `._pane-*` would sit inside the directory and pass the check, only out of
+# position, so a restore would hand its xattrs to another capture file, which is
+# read once and deleted; none has been seen. macOS's own `tar t` does not list
+# these members, which is how an earlier check here concluded they were never
+# written. GNU tar writes none.
 APPLEDOUBLE_NAME = f"._{CONTENT_DIR}"
 SIDECAR_NAME = "agent_sessions.json"
 # A sidecar that would not parse, kept rather than written over. Named with a
