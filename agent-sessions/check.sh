@@ -9,9 +9,6 @@
 # runtime: tmux-resurrect discards its hook's exit status and its stderr, Codex
 # ignores a missing hooks file without a word, and the resume-marker patterns
 # match another program's terminal output and rot when it changes wording.
-#
-# It derives its own root rather than inheriting one, so it keeps working if this
-# directory is ever extracted to a repo of its own.
 
 SELF_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
 REPO_ROOT="$(cd -- "$SELF_DIR/.." && pwd -P)"

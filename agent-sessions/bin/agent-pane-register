@@ -4,8 +4,8 @@
 
 """Hook target: record or erase the tmux-pane -> agent-session binding.
 
-Invoked from a Claude Code SessionStart/SessionEnd hook or the Codex
-session_start/session_end equivalents, with the hook JSON payload on stdin:
+Invoked from a Claude Code or Codex SessionStart/SessionEnd hook, with the hook
+JSON payload on stdin:
 
     agent-pane-register <claude|codex> <start|end>
 

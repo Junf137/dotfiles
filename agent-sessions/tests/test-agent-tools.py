@@ -189,8 +189,8 @@ def resurrect_cases(tool):
         re.sub(r"\x1b\[[0-9;]*m", "", over.splitlines()[-1]).startswith("#[agent-session] "),
     )
 
-    # A pane whose agent has exited is the case the feature exists for: Claude
-    # draws on the alternate screen, so its id is recoverable from nothing else.
+    # A pane whose agent has exited is the case the feature exists for: one that
+    # was killed leaves no banner, so its id is recoverable from nothing else.
     gone = tool["marker_block"]([EXITED_ROW], STAMP).decode()
     add("an exited session is still rendered", "claude --resume 1a03df5b-6a91-49de-927c-6920a34539c2" in gone)
     add("an exited session is not claimed as current", "ran in this pane until tmux was saved" not in gone)

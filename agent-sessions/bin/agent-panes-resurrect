@@ -1114,8 +1114,8 @@ def harvest(captures, loc_to_pane, server="", known_names=None, refused=None):
     blocks. The block would elide them behind its own cap anyway, so the bound
     belongs here, where it also keeps them out of the file.
 
-    What the cap keeps is the *last* ids in the capture, ordered by where they
-    appear in it -- the bottom of a pane's scrollback is what happened most
+    The genuine-text cap keeps the *last* ids in the capture, ordered by where
+    they appear in it -- the bottom of a pane's scrollback is what happened most
     recently. extract() reports hits pattern by pattern rather than in reading
     order, so the order has to be recovered from the text itself.
 
@@ -1279,7 +1279,7 @@ def annotatable(sidecar, index, live_keys, server):
 
 
 def sidecar_state(path):
-    """(are these bytes a sidecar?, the records in it).
+    """(are these bytes a sidecar?, the records in it, its refused titles).
 
     Two questions the merge conflates and preserve_unreadable_sidecar() must
     not: a file that *is* a sidecar and holds nothing, and a file that is not

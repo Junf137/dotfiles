@@ -20,7 +20,7 @@ late, so every doubt is spent on refusing:
 
   * an id that is not a well-formed uuid is not a candidate;
   * a session whose transcript is no longer on disk cannot be resumed, so it is
-    listed but never chosen;
+    listed but never chosen, and never makes a pane ambiguous;
   * a stanza in this pane's scrollback that claims this server but a different
     pane is text that arrived here, not history that happened here, and is
     dropped whole;
@@ -39,19 +39,10 @@ others cannot:
     window between a restore and the first save after it, and the only one for a
     session that started and exited between two saves;
   * the hook cache, `~/.cache/agent-panes/<pane>.json` -- live-only and pruned,
-    but between an agent being *killed* and the next save it is the sole place
-    that session's id exists, and killing an agent while keeping its pane is the
-    case this whole family of tools is built around.
-
-A candidate whose transcript is no longer on disk cannot be resumed -- Claude
-prunes ~/.claude/projects at 30 days -- so it is shown but never chosen. That is
-also what makes "one and only one" answerable more often than the raw history
-would suggest.
-
-The block-reading is agent-panes-resurrect's own marker_line()/parse_stanzas(),
-imported rather than reimplemented: they carry the rules deciding which stanzas a
-pane may claim as its own, and a second copy would drift exactly where drift is
-silent.
+    but for an agent *killed* before any save saw it, it is the sole place that
+    session's id exists until the next hook run in any pane prunes it, and
+    killing an agent while keeping its pane is the case this whole family of
+    tools is built around.
 
 Usage: agent-resume [-n|--dry-run] [-l|--list] [--pane %N] [--force]
 Env:   SCROLLBACK_DEPTH  value passed to `tmux capture-pane -S` (default '-',

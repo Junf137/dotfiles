@@ -76,9 +76,9 @@ touching any of it.
 - After editing the tmux hook, `tmux source-file ~/.tmux.conf`: the running server keeps
   the old value otherwise, and nothing warns.
 - **Editing `codex/hooks.json` revokes Codex's hook trust.** `[hooks.state]` in
-  `codex/config.toml` stores a content hash of each handler that covers its `command`,
-  so any change flips it back to untrusted until re-approved in the TUI. Nothing warns;
-  sessions just fall back to the inferred `meta~Ns` tier.
+  `~/.codex/config.toml` stores a content hash of each handler that covers its
+  `command`, so any change flips it back to untrusted until re-approved in the TUI on
+  each machine. Nothing warns; sessions just fall back to the inferred `meta~Ns` tier.
 
 **Uninstall:** `agent-panes-resurrect purge` strips every block out of the archive and
 removes the sidecar, log and lock. Removing the tmux hook alone does **not** — blocks
@@ -161,9 +161,9 @@ already inside `pane_contents.tar.gz` keep replaying on every restore.
   `~/.cache/agent-panes/<pane>.json` with the agent PID and its kernel start time, so a
   session that died without firing its end hook is detected as stale instead of being
   attributed to the next agent in that pane. **Hooks only affect newly started
-  sessions.** The cache is live-only — `end` deletes the record and prunes any whose
-  process is gone — so it is not, and cannot be, a source of history. That is what the
-  sidecar is for.
+  sessions.** The cache is live-only — `end` deletes its record, and every hook run in
+  a pane prunes any whose process is gone — so it is not, and cannot be, a source of
+  history. That is what the sidecar is for.
 - **Claude `SessionEnd` needs an explicit `timeout`**: without one it gets only a
   ~1.5 s shutdown budget and may be killed mid-write.
 
@@ -183,8 +183,7 @@ execution.
   like `claude/settings.json`.
 - **Hooks need trust on first run.** They are discovered as `untrusted` and do not run
   until approved in the TUI ("Hooks need review" → "Trust all and continue"), which
-  writes `[hooks.state]` into `~/.codex/config.toml` — a symlink into this repo, where
-  Codex already writes its `[projects]` trust levels.
+  writes `[hooks.state]` into `~/.codex/config.toml`, a private file outside this repo.
 - **Trust is not sufficient: the interactive TUI cannot bind a pane.** Measured on
   0.146.0: an interactive session hands its hooks to the shared `app-server` daemon,
   which is started once at login *outside* tmux, so the hook inherits neither
@@ -254,8 +253,8 @@ for the whole hook.
 ### What gets annotated
 
 - **Live and exited sessions alike**, an exited one dated by when it was last seen
-  rather than by the save. An exited pane is the one that most needs the block: Claude
-  leaves nothing in scrollback to replay.
+  rather than by the save. An exited pane is the one that most needs the block: a
+  killed agent leaves no banner to replay.
 - **The block is printed even when the agent printed its own banner**, so such a pane
   says it twice, on purpose. Suppressing it would mean parsing another tool's output to
   decide whether our own record is worth printing, and the block carries more: the `cd`
@@ -282,11 +281,12 @@ for the whole hook.
   archive exists.
 - **Coverage gap**, stated exactly: a session is lost only when it left no banner
   (killed, or lost to a reboot) *and* was never running at any save. Continuum saves
-  every 15 min while a client is attached, so in practice that is a short session while
-  nothing was attached. Everything else is covered by the sidecar, a banner, or the
-  title lookup — unless the title names more than one session. `agent-scrollback-ids`
-  is the by-hand tool for what is left; its index is the broad one, so it can offer a
-  best guess where the hook refuses to.
+  every 15 min while a client is attached, so in practice that is a session killed
+  before its first save — within 15 min of starting, or while nothing was attached.
+  Everything else is covered by the sidecar, a banner, or the title lookup — unless the
+  title names more than one session. `agent-scrollback-ids` is the by-hand tool for
+  what is left; its index is the broad one, so it can offer a best guess where the hook
+  refuses to.
 
 ### The block is read as well as written
 
@@ -419,7 +419,7 @@ It reads three sources and writes to none of them.
 |---|---|
 | the sidecar, filtered to this server's own `%N` | every session a save saw running here |
 | this pane's scrollback: our block, then the agents' own banners | the window between a restore and the first save after it, and a session that started and exited between two saves |
-| the hook cache, `~/.cache/agent-panes/<pane>.json` | a **killed** agent, between the kill and the next save — the only place that id exists |
+| the hook cache, `~/.cache/agent-panes/<pane>.json` | a **killed** agent no save saw running — the only place its id exists, until the next hook run in any pane prunes it |
 
 - **It starts a session only where the pane maps to one, and no flag names one.**
   Anything selecting a candidate would be a way to start a session the tool could not
@@ -457,8 +457,8 @@ It reads three sources and writes to none of them.
 | `agent-panes-resurrect save [--dry-run]` | the hook target; silent by design |
 | `agent-panes-resurrect list [--json]` | read the sidecar |
 | `agent-panes-resurrect purge [--dry-run]` | remove every block, sidecar, log |
-| `agent-resume [-n] [-l] [--pane %N]` | resume this pane's session, if it has exactly one |
-| `agent-scrollback-ids` | recover ids exited agents printed into scrollback |
+| `agent-resume [-n] [-l] [--pane %N] [--force]` | resume this pane's session, if it has exactly one |
+| `agent-scrollback-ids [--json]` | recover ids exited agents printed into scrollback |
 | `claude-sessions [-n]` | running Claude sessions, in tmux or not, with uptime, CPU and memory |
 
 `list`'s `LAST SEEN` is when the agent was last observed *running* there, and `-` where
@@ -510,7 +510,7 @@ keep it that expires after an hour is not one; `purge` removes it.
 `check.sh` derives its own repo root and is dispatched from `./scripts/check-dotfiles.sh`
 as one entry, so a failure here fails the repo checks. Two things stay in the parent:
 resolving the hook `command` strings in `claude/settings.json` and `codex/hooks.json`
-(jq-gated), and linting `claude-sessions` with the generic bash/shfmt/shellcheck lists.
+(jq-gated), and checking `claude-sessions` with the generic bash syntax list.
 **Re-run after upgrading Claude or Codex.** The resume-marker patterns, the title index
 and the rollout index read those tools' output and records and rot silently when either
 changes; the run also covers the marker rendering, stripping, parsing and placement,
