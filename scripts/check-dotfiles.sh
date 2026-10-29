@@ -234,8 +234,6 @@ check_manifest_sources() {
 
     cd "$REPO_ROOT" || return 1
     export DOT_FILES="$REPO_ROOT"
-    export ZSH="${ZSH:-$HOME/.local/share/oh-my-zsh}"
-    export ZSH_CUSTOM="${ZSH_CUSTOM:-$ZSH/custom}"
 
     # shellcheck source=../lib/link_manifest.sh
     source "$REPO_ROOT/lib/link_manifest.sh"
