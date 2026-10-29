@@ -923,13 +923,15 @@ def agents_cases():
     add("a compressed rollout yields its session id", rollout_id(f"/s/{stamp}{CODEX_UUID}.jsonl.zst") == CODEX_UUID)
     add("a half-written rollout is not one", rollout_id(f"/s/{stamp}{CODEX_UUID}.jsonl.tmp") is None)
 
-    saved = agents.CLAUDE_PROJECTS, agents.CODEX_SESSIONS
+    saved = agents.CLAUDE_PROJECTS, agents.CODEX_SESSIONS, agents.CODEX_ARCHIVED
     with tempfile.TemporaryDirectory() as tmp:
         agents.CLAUDE_PROJECTS = os.path.join(tmp, "projects")
         agents.CODEX_SESSIONS = os.path.join(tmp, "sessions")
+        agents.CODEX_ARCHIVED = os.path.join(tmp, "archived_sessions")
         try:
             day = os.path.join(agents.CODEX_SESSIONS, "2026", "10", "01")
             os.makedirs(day)
+            os.makedirs(agents.CODEX_ARCHIVED)
             os.makedirs(os.path.join(agents.CLAUDE_PROJECTS, "p"))
             # A thread can span several rollouts and the newest must win, however
             # the directory happens to list them -- so both orders are tried. The
@@ -939,6 +941,19 @@ def agents_cases():
             rollout = os.path.join(day, f"{later}{thread}_{other}.jsonl")
             packed = os.path.join(day, f"{later}{CODEX_UUID}.jsonl.zst")
             transcript = os.path.join(agents.CLAUDE_PROJECTS, "p", f"{UUID}.jsonl")
+            # Archived threads live in one flat directory, which sorts before the
+            # dated ones; one of these also left an empty older rollout behind.
+            shelved = "01a13a61-06e2-7d13-a184-39edc5983f5f"
+            moved = "01a13daf-d27e-78a1-88f0-ae39fa2dcab4"
+            archived = os.path.join(agents.CODEX_ARCHIVED, f"{stamp}{shelved}.jsonl.zst")
+            newest = os.path.join(agents.CODEX_ARCHIVED, f"{later}{moved}_{other}.jsonl.zst")
+            # Ties, never seen on disk but possible mid-move: one name in both
+            # trees, and one rollout in both forms. Pinned, so that a key on the
+            # stamp alone cannot leave the pick to the directory listing.
+            tied = "01a14c02-5b3e-7f10-9d2a-6e8b4c1f0a37"
+            paired = "01a14c9e-0d71-7c42-8a15-3f6e2b9d4c80"
+            dated = os.path.join(day, f"{stamp}{tied}.jsonl.zst")
+            both = os.path.join(day, f"{stamp}{paired}.jsonl")
             for path in (
                 os.path.join(day, f"{stamp}{thread}.jsonl.zst"),
                 rollout,
@@ -947,6 +962,13 @@ def agents_cases():
                 os.path.join(day, f"{decoy}{thread}.jsonl.tmp"),
                 os.path.join(day, f"{decoy}{CODEX_UUID}_notes.jsonl"),
                 transcript,
+                archived,
+                newest,
+                os.path.join(day, f"{stamp}{moved}.jsonl"),
+                dated,
+                os.path.join(agents.CODEX_ARCHIVED, os.path.basename(dated)),
+                both,
+                f"{both}.zst",
             ):
                 open(path, "w").close()
             listed = glob.glob
@@ -957,10 +979,14 @@ def agents_cases():
                 index = agents.transcript_index()
                 add(f"the index keys a suffixed rollout by its thread, {order}", index["codex"].get(thread) == rollout)
                 add(f"the index counts a compressed rollout, {order}", index["codex"].get(CODEX_UUID) == packed)
-                add(f"the index holds nothing else, {order}", len(index["codex"]) == 2)
+                add(f"the index counts an archived rollout, {order}", index["codex"].get(shelved) == archived)
+                add(f"the index keeps a newer archived rollout, {order}", index["codex"].get(moved) == newest)
+                add(f"a name in both trees goes to the dated copy, {order}", index["codex"].get(tied) == dated)
+                add(f"a rollout in both forms goes to the .zst, {order}", index["codex"].get(paired) == f"{both}.zst")
+                add(f"the index holds nothing else, {order}", len(index["codex"]) == 6)
             add("the index finds a Claude transcript", index["claude"] == {UUID: transcript})
         finally:
-            agents.CLAUDE_PROJECTS, agents.CODEX_SESSIONS = saved
+            agents.CLAUDE_PROJECTS, agents.CODEX_SESSIONS, agents.CODEX_ARCHIVED = saved
             agents.glob = glob
 
         # Codex's session_meta header carries its whole system prompt on line 1:

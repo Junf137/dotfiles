@@ -36,6 +36,10 @@ READ_ERRORS = (OSError, EOFError) + ((zstd.ZstdError,) if zstd else ())
 AGENTS = ("claude", "codex")
 
 CODEX_SESSIONS = os.path.expanduser("~/.codex/sessions")
+# Archiving a thread moves its rollouts here, into one flat directory -- 757 of
+# 1805 threads here, 2026-10-28. `codex resume <id>` still opens one, after
+# asking whether to unarchive it (0.165), so it still counts.
+CODEX_ARCHIVED = os.path.expanduser("~/.codex/archived_sessions")
 CODEX_INDEX = os.path.expanduser("~/.codex/session_index.jsonl")
 
 # The session id is the first uuid after the timestamp. Codex (seen from 0.158
@@ -46,7 +50,7 @@ CODEX_INDEX = os.path.expanduser("~/.codex/session_index.jsonl")
 # for exactly those files.
 #
 # Codex also compresses a rollout to `.jsonl.zst` once it has sat idle for about
-# a week -- 1035 of 1092 rollout files here, 2026-10-28 -- while its own thread
+# a week -- 1829 of 1954 rollout files here, 2026-10-28 -- while its own thread
 # table goes on naming the `.jsonl`. Such a session is still resumable, so it
 # still counts.
 #
@@ -93,8 +97,10 @@ def rollout_id(path):
 
 
 def rollouts():
-    """(path, ROLLOUT_RE match) for every Codex rollout on disk, compressed or not."""
-    for path in glob.glob(f"{CODEX_SESSIONS}/*/*/*/rollout-*.jsonl*"):
+    """(path, ROLLOUT_RE match) for every Codex rollout on disk, compressed,
+    archived or neither."""
+    paths = glob.glob(f"{CODEX_SESSIONS}/*/*/*/rollout-*.jsonl*") + glob.glob(f"{CODEX_ARCHIVED}/rollout-*.jsonl*")
+    for path in paths:
         match = ROLLOUT_RE.search(path)
         if match:
             yield path, match
@@ -110,13 +116,13 @@ def transcript_index():
     index = {"claude": {}, "codex": {}}
     for path in glob.glob(f"{CLAUDE_PROJECTS}/*/*.jsonl"):
         index["claude"][os.path.basename(path)[:-6]] = path
-    # One thread can span several rollouts -- 19 here have 2 to 4. Keep the
-    # newest, which is the one Codex's own thread table names; the path sorts by
-    # date directory and then start stamp, so that is the greatest.
-    for path, match in rollouts():
-        sid = match.group(5)
-        if path > index["codex"].get(sid, ""):
-            index["codex"][sid] = path
+    # One thread can span several rollouts -- 92 here have 2 to 7. Keep the
+    # newest, which is the one Codex's own thread table names: the greatest file
+    # name, which sorts by start stamp. Not the greatest path -- the flat archive
+    # directory sorts before every dated one, and a thread can leave an empty
+    # rollout behind in sessions/ when it is archived. A tie goes to the dated copy.
+    for path, match in sorted(rollouts(), key=lambda item: (os.path.basename(item[0]), item[0])):
+        index["codex"][match.group(5)] = path
     return index
 
 
