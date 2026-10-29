@@ -58,7 +58,6 @@ Env:   SCROLLBACK_DEPTH  value passed to `tmux capture-pane -S` (default '-',
                          the pane's whole history; one pane, so it is cheap).
 """
 
-import glob
 import importlib.machinery
 import importlib.util
 import json
@@ -362,26 +361,6 @@ def merge(rows):
     return list(out.values())
 
 
-def transcript_index():
-    """agent -> session id -> transcript path, by name only.
-
-    The same two globs enrich() uses, so what this calls resumable and what the
-    save hook calls datable can never disagree. Names only: a couple of
-    milliseconds over ~2000 files.
-    """
-    index = {"claude": {}, "codex": {}}
-    try:
-        for path in glob.glob(f"{RESURRECT.CLAUDE_PROJECTS}/*/*.jsonl"):
-            index["claude"][os.path.basename(path)[:-6]] = path
-        for path in glob.glob(f"{RESURRECT.CODEX_SESSIONS}/*/*/*/rollout-*.jsonl"):
-            match = re.search("(" + RESURRECT.UUID + r")\.jsonl$", os.path.basename(path))
-            if match:
-                index["codex"][match.group(1)] = path
-    except OSError:
-        pass
-    return index
-
-
 def resolve(rows):
     """Mark each row resumable or not, and give it the cwd its resume needs.
 
@@ -391,8 +370,11 @@ def resolve(rows):
     has aged out is better than being told nothing -- but it is never chosen and
     never counted, so a pane holding one of those and one live id still answers
     "exactly one".
+
+    The index is the save hook's own, so what this calls resumable and what the
+    hook calls datable can never disagree.
     """
-    index = transcript_index()
+    index = RESURRECT.transcript_index()
     for row in rows:
         path = index.get(row["agent"], {}).get(row["session_id"], "")
         row["transcript"] = path

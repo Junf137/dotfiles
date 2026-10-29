@@ -128,6 +128,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(HERE), "lib"))
 try:
     import procinfo  # noqa: E402
     from agent_ids import UUID, extract  # noqa: E402
+    from agents import transcript_cwd, transcript_index  # noqa: E402
     from claude_names import name_index  # noqa: E402
 
     IMPORT_ERROR = ""
@@ -142,8 +143,11 @@ except Exception as err:  # noqa: BLE001 - reported through the log, never raise
     def name_index(**_kwargs):
         return {}
 
-CLAUDE_PROJECTS = os.path.expanduser("~/.claude/projects")
-CODEX_SESSIONS = os.path.expanduser("~/.codex/sessions")
+    def transcript_index():
+        return {"claude": {}, "codex": {}}
+
+    def transcript_cwd(_path):
+        return ""
 
 ARCHIVE_NAME = "pane_contents.tar.gz"
 ARCHIVE_MEMBER_DIR = "./pane_contents"
@@ -990,45 +994,6 @@ def saved_locations(rdir):
     return found or None
 
 
-# How far into a transcript to look for the directory it was opened in. Codex
-# puts it in the session_meta header on line 1; Claude's first records are
-# mode/permission/bridge entries and the cwd shows up around line 5. Ten is well
-# clear of both and still only a few kilobytes per session.
-TRANSCRIPT_HEAD_LINES = 10
-TRANSCRIPT_LINE_BYTES = 64 * 1024
-
-
-def transcript_cwd(path):
-    """The directory a session was opened in, read from its own transcript.
-
-    This is the part of the resume line that the agents' exit banners leave out
-    and that `claude --resume` cannot do without -- it resolves the id inside the
-    project directory of the current cwd, so a recovered row with no `cd` in
-    front of it produces a command that quietly fails wherever it is pasted.
-    """
-    try:
-        with open(path, errors="ignore") as fh:
-            for _ in range(TRANSCRIPT_HEAD_LINES):
-                line = fh.readline(TRANSCRIPT_LINE_BYTES)
-                if not line:
-                    break
-                try:
-                    record = json.loads(line)
-                except ValueError:
-                    continue
-                if not isinstance(record, dict):
-                    continue
-                payload = record.get("payload")
-                # Codex nests it under session_meta's payload, Claude has it at
-                # the top level of most records.
-                for cwd in (record.get("cwd"), (payload or {}).get("cwd") if isinstance(payload, dict) else None):
-                    if isinstance(cwd, str) and cwd:
-                        return cwd
-    except OSError:
-        pass
-    return ""
-
-
 def enrich(rows):
     """Give text-recovered rows the two things a banner does not print.
 
@@ -1038,23 +1003,14 @@ def enrich(rows):
     sorts against the observed ones instead of falling to the bottom undated.
 
     Only rows matched in genuine text need this -- one read back out of a block
-    already carries both. The two globs are names only and cost a couple of
+    already carries both. The index is names only and costs a couple of
     milliseconds; a file is opened only for a row that actually matched, and then
     only its first few lines.
     """
     todo = [row for row in rows if row.get("source") == SCROLLBACK_SOURCE and row.get("session_id")]
     if not todo:
         return
-    paths = {"codex": {}, "claude": {}}
-    try:
-        for path in glob.glob(f"{CODEX_SESSIONS}/*/*/*/rollout-*.jsonl"):
-            match = re.search("(" + UUID + r")\.jsonl$", os.path.basename(path))
-            if match:
-                paths["codex"][match.group(1)] = path
-        for path in glob.glob(f"{CLAUDE_PROJECTS}/*/*.jsonl"):
-            paths["claude"][os.path.basename(path)[:-6]] = path
-    except OSError:
-        return
+    paths = transcript_index()
     for row in todo:
         path = paths.get(row["agent"], {}).get(row["session_id"])
         if not path:
