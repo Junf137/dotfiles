@@ -15,12 +15,12 @@ let mapleader=","
 "   - Neovim (Linux/macOS/Windows): stdpath('data') . '/plugged'
 call plug#begin()
     Plug 'preservim/nerdtree'                       " display directory
-    Plug 'ryanoasis/vim-devicons'                   " add file icon in NERDTree
     Plug 'tiagofumo/vim-nerdtree-syntax-highlight'  " highlight file in NERDTree
     Plug 'mhinz/vim-startify'                       " display most recently used file when vim started with no arguments
     Plug 'vim-airline/vim-airline'                  " modify display in bottom status line and head line, display buffer
     Plug 'vim-airline/vim-airline-themes'           " theme for air-line
     Plug 'christoomey/vim-tmux-navigator'           " unify pane navigation in vim and tmux
+    Plug 'ryanoasis/vim-devicons'                   " file icons (NERDTree, airline, startify); must load last
 call plug#end()
 
 
@@ -190,6 +190,7 @@ set wildignore+=*/.git/*,*/tmp/*,*.swp  " Ignore files for completion
 " ---* Undo
 set undofile " Maintain undo history between sessions
 set undodir=~/.vim/undodir
+call mkdir(&undodir, 'p', 0700)
 
 
 " ---* auto type mached (){}[]
