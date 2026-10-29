@@ -75,9 +75,6 @@ fi
 # ============================================================
 # FZF Configuration
 # ============================================================
-# Setup fzf (installed with git)
-add_path "$HOME/.local/share/fzf/bin"
-
 # Shell-specific fzf initialization
 if command -v fzf &> /dev/null; then
   if [ -n "$ZSH_VERSION" ]; then
@@ -88,8 +85,8 @@ if command -v fzf &> /dev/null; then
 fi
 
 if command -v fd &> /dev/null; then
-  export FZF_DEFAULT_COMMAND='fd --unrestricted'
-  export FZF_CTRL_T_COMMAND='fd --unrestricted'
+  export FZF_DEFAULT_COMMAND='fd --unrestricted --exclude .git'
+  export FZF_CTRL_T_COMMAND='fd --unrestricted --exclude .git'
   export FZF_ALT_C_COMMAND='fd --type d'
 else
   export FZF_DEFAULT_COMMAND='find . -path "*/.git" -prune -o -print'
@@ -120,7 +117,6 @@ export FZF_COMPLETION_TRIGGER='~~'
 export FZF_COMPLETION_OPTS='--border --info=inline'
 
 export FZF_CTRL_T_OPTS="
-  --walker-skip .git
   --preview '$_DOTFILES_FZF_FILE_PREVIEW'
   --bind 'ctrl-/:toggle-preview'"
 
@@ -130,7 +126,6 @@ export FZF_CTRL_R_OPTS="
   --bind 'ctrl-/:toggle-preview'"
 
 export FZF_ALT_C_OPTS="
-  --walker-skip .git
   --preview '$_DOTFILES_FZF_DIR_PREVIEW'
   --bind 'ctrl-/:toggle-preview'"
 

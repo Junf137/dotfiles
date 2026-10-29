@@ -69,7 +69,6 @@ HIST_STAMPS="yyyy-mm-dd"
 # Add wisely, as too many plugins slow down shell startup.
 plugins=(
     z
-    fzf
     git
     sudo
     zsh-bat
