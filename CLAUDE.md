@@ -272,8 +272,19 @@ all three are absolute paths that must change atomically with the scripts they n
 5. Run `./bootstrap.sh` to create the symlink
 
 ### Git Conventions
-- **Default branch**: `main`
-- **Commit message prefixes**: `feat:`, `update:`, `fix:` (lowercase, imperative)
+Full rules: `README.md` → *Branch and commit conventions*. In short:
+- **`main`** holds shared changes and follows `origin/main`. Prepare them in a separate
+  worktree based on the latest `origin/main` — the main checkout is the live, symlinked
+  config, so switching its branch changes the running setup
+- **`local`** is each machine's branch of machine-specific commits, kept as clean
+  history directly on top of `main`. Never push it, never merge it into `main`, and
+  never merge `main` into it
+- **After anything lands on `main`**, update this machine: fetch, fast-forward `main`,
+  rebase `local` onto it, and check that only `local(...)` commits remain on top.
+  Preserve uncommitted work first; submodules have their own history and dirty state
+- **Commit messages**: `type(scope): summary` for shared commits (`feat`, `fix`, `docs`,
+  `refactor`, `test`, `chore`), `local(scope): summary` for commits that stay on
+  `local`; lowercase, imperative
 - Keep `.gitignore` updated: `*.log`, `*.swp`, `.vscode/`, `.cursor/`, `.claude/settings.local.json`, `CLAUDE.local.md`
 
 ### Platform Awareness
