@@ -151,7 +151,8 @@ already inside `pane_contents.tar.gz` keep replaying on every restore.
   (`<session>:@<window>.%<pane>`) and `name`, but only while the process is alive, and a
   killed agent is the case that matters. Codex's `state_5.sqlite` `threads` table and
   its `thread-writer-locks/` belong to the `app-server` daemon, which runs outside tmux,
-  so neither names a pane. Checked against Claude Code 2.1.312 and codex-cli 0.165.
+  so neither names a pane. (`check.sh` does read that table, but only as a list of
+  threads to hold the rollout index against — see Tests.) Checked against Claude Code 2.1.312 and codex-cli 0.165.
 - **Do not rely on open file descriptors**: both agents open → append → close their
   transcript per turn. Only the Codex app-server keeps rollout files open (the `fd`
   tier).
@@ -522,11 +523,15 @@ broken one degrades to "no harvest" and this is the only place it would be notic
   defined`); `ast.parse` was blind to it, and the tests exercised 13 of 18 top-level
   imports.
 - **The rollout index against Codex's own.** `check.sh` reads Codex's thread table (the
-  newest `~/.codex/state_*.sqlite`, read-only) and fails if a thread whose rollout is
+  highest-numbered `~/.codex/state_*.sqlite`) and fails if a thread whose rollout is
   still on disk is missing from `transcript_index()` — what the compressed and the
   archived rollouts both were before they were found by hand. It compares ids, not
   paths: the table keeps the `.jsonl` name after Codex compresses the file. A thread
-  with no rollout left is counted, not failed.
+  with no rollout left is counted, not failed, but a table with no thread left to verify
+  fails. It skips only where Codex has left neither a table nor a rollout, since
+  `bootstrap.sh` creates `~/.codex` on machines that have never run Codex. The read is
+  `readonly_shm` or `immutable`, never a plain read-only open: that one rebuilds the
+  `-shm` in `~/.codex`, and creates it and the `-wal` where they are missing.
 - **The exec is out of reach.** `agent-resume`'s two commands are spelled out in the
   tests as well as the tool, so changing one alone fails. To exercise the clear, the
   `chdir` and the argv for real, put a script named `claude` or `codex` ahead on `PATH`

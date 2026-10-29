@@ -426,12 +426,16 @@ check_codex_threads_indexed() {
     # here, 2026-10-29, whose file was the .jsonl.zst -- so comparing paths fails
     # on a correct tree. The recorded path only tells a missed rollout from a
     # deleted one: a thread whose file is gone is resumable by nobody, so it is
-    # counted rather than failed. That leaves one blind spot, a Codex that moves
-    # rollouts without updating the table, which shows up as that count jumping.
+    # counted rather than failed -- pruning old rollouts by hand is a correct
+    # tree. A table with no thread left to verify fails, though. That leaves one
+    # blind spot, a Codex that moves some rollouts without updating the table,
+    # which shows up as the gone count jumping.
     #
     # The file name carries a schema version (state_5.sqlite on codex-cli 0.165),
-    # so the newest is read, and finding none under an existing ~/.codex fails
-    # rather than skips: a skip is exactly what a rename would look like.
+    # so the highest-numbered one is read, and finding none fails rather than
+    # skips unless Codex has left no rollout either: a skip is exactly what a
+    # rename would look like, and ~/.codex itself proves nothing, since
+    # bootstrap.sh creates it on machines that have never run Codex.
     cd "$REPO_ROOT" || return 1
 
     python3 - agent-sessions/lib <<'PY'
@@ -446,9 +450,7 @@ sys.path.insert(0, sys.argv[1])
 import agents
 
 home = os.path.dirname(agents.CODEX_SESSIONS)
-if not os.path.isdir(home):
-    print(f"SKIP: no {home} (nothing asserted)")
-    sys.exit(0)
+index = agents.transcript_index()["codex"]
 
 databases = {}
 for path in glob.glob(os.path.join(home, "state_*.sqlite")):
@@ -456,15 +458,22 @@ for path in glob.glob(os.path.join(home, "state_*.sqlite")):
     if match:
         databases[int(match.group(1))] = path
 if not databases:
+    if not index:
+        print(f"SKIP: Codex has not run here, no state_*.sqlite or rollout under {home} (nothing asserted)")
+        sys.exit(0)
     print(f"no state_*.sqlite in {home}: Codex's thread table has moved", file=sys.stderr)
     sys.exit(1)
 database = databases[max(databases)]
 
-# With no -wal beside it, every row is in the main file, so read that as-is:
-# macOS's own SQLite cannot open a WAL database read-only while its -wal and
-# -shm are missing, as they are whenever Codex has it closed, and Linux's
-# creates both in ~/.codex instead.
-flags = "mode=ro" if os.path.exists(f"{database}-wal") else "mode=ro&immutable=1"
+# Nothing here may write to ~/.codex, and a plain mode=ro open does: it rebuilds
+# the -shm whenever it is the first connection, and creates the -wal and -shm
+# where they are missing. readonly_shm reads the WAL through the -shm as it
+# stands, but cannot open without one, and macOS's own SQLite cannot open a WAL
+# database read-only at all without both. So with either missing, the main
+# file is read as-is. With no -wal that holds every row; a -wal orphaned
+# without its -shm can only hide rows from it.
+wal, shm = f"{database}-wal", f"{database}-shm"
+flags = "mode=ro&readonly_shm=1" if os.path.exists(wal) and os.path.exists(shm) else "mode=ro&immutable=1"
 try:
     connection = sqlite3.connect(f"file:{urllib.parse.quote(database)}?{flags}", uri=True)
     rows = connection.execute("SELECT id, rollout_path FROM threads").fetchall()
@@ -472,27 +481,40 @@ except sqlite3.Error as err:
     print(f"{database}: cannot read threads(id, rollout_path): {err}", file=sys.stderr)
     sys.exit(1)
 
-index = agents.transcript_index()["codex"]
 missed = []
 gone = 0
 for thread, recorded in rows:
     if thread in index:
         continue
-    # Any suffix, since the recorded name outlives compression.
-    found = sorted(glob.glob(glob.escape(recorded) + "*"))
+    # Against ~/.codex, should Codex ever store it relative, as some of its other
+    # tables already do. Either suffix: the recorded name outlives compression,
+    # and resuming a compressed thread turns its .zst back into a .jsonl.
+    found = sorted(glob.glob(glob.escape(os.path.join(home, re.sub(r"\.zst$", "", recorded))) + "*")) if recorded else []
     if found:
         missed.append((thread, found[-1]))
     else:
         gone += 1
 
+if missed:
+    # A rollout written after the index was built is not a miss.
+    index = agents.transcript_index()["codex"]
+    missed = [(thread, path) for thread, path in missed if thread not in index]
 for thread, path in missed[:5]:
     print(f"{thread}: {path} is on disk but not in transcript_index()", file=sys.stderr)
 if missed:
     print(f"{len(missed)} of {len(rows)} Codex threads are not indexed", file=sys.stderr)
     sys.exit(1)
 
+checked = len(rows) - gone
+if not checked:
+    if not rows and not index:
+        print(f"SKIP: no thread in {database} and no rollout under {home} (nothing asserted)")
+        sys.exit(0)
+    print(f"no thread in {database} has a rollout at its recorded path ({len(rows)} threads): nothing verified", file=sys.stderr)
+    sys.exit(1)
+
 note = f", {gone} with no rollout left" if gone else ""
-print(f"OK every Codex thread in {os.path.basename(database)} is indexed ({len(rows) - gone}{note})")
+print(f"OK {checked} Codex thread(s) in {os.path.basename(database)} indexed{note}")
 PY
 }
 
