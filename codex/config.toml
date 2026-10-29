@@ -7,10 +7,8 @@ approval_policy = "never"
 
 [features]
 multi_agent = true
-terminal_resize_reflow = true
 memories = true
 goals = true
-js_repl = false
 
 [tui]
 status_line = ["thread-title", "git-branch", "model-with-reasoning", "context-used", "five-hour-limit", "weekly-limit"]
