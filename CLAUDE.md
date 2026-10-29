@@ -272,8 +272,23 @@ all three are absolute paths that must change atomically with the scripts they n
 5. Run `./bootstrap.sh` to create the symlink
 
 ### Git Conventions
-- **Default branch**: `main`
-- **Commit message prefixes**: `feat:`, `update:`, `fix:` (lowercase, imperative)
+Full rules: `README.md` → *Branch and commit conventions*. In short:
+- **`main`** holds shared changes and follows `origin/main`. Prepare them in a separate
+  worktree based on the latest `origin/main` — the main checkout is the live, symlinked
+  config, so switching its branch changes the running setup
+- **`local`** is each machine's branch of machine-specific commits, kept as clean
+  history directly on top of `main`. Never push it, never merge it into `main`, and
+  never merge `main` into it. To share one of its commits, cherry-pick only that
+  reviewed commit onto `main`, fix its message if needed, test it, and push `main`
+- **After anything lands on `main`**, update this machine: fetch, fast-forward `main`,
+  rebase `local` onto it, and check that only `local(...)` commits remain on top. A
+  commit that disappears in the rebase was already promoted (Git drops patch-equivalent
+  commits) — expected, not something to recover. Preserve uncommitted work first and
+  verify it afterwards; a parent-repo `git stash` does not protect submodule changes
+- **Commit messages**: `type(scope): summary` for shared commits, with a type such as
+  `feat`, `fix`, `docs`, `refactor`, `test` or `chore`; `local(scope): summary` for
+  commits that stay on `local`; lowercase, imperative. Do not rewrite already-published
+  history to fix older messages that predate this (`update:`, `[feat]`, and so on)
 - Keep `.gitignore` updated: `*.log`, `*.swp`, `.vscode/`, `.cursor/`, `.claude/settings.local.json`, `CLAUDE.local.md`
 
 ### Platform Awareness
