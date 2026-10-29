@@ -1332,6 +1332,19 @@ def resume_cases(tool):
             "a title the pane's sidecar records name is not looked up",
             read_pane(banner, server, recorded) == set() and builds == [],
         )
+        # A record keeps a title cut to 60 characters, and the banner prints it
+        # whole, so the two are compared in the stored form, as the hook does.
+        long_title = "deploy the long-running migration for the analytics warehouse cluster"
+        titles[long_title] = survivor
+        own_long = resurrect.marker_block(
+            [dict(agent="claude", session_id=real, name=long_title, cwd="/tmp", source="sessions", live=False, last_seen=1785600000.0)],
+            STAMP,
+        )
+        builds.clear()
+        add(
+            "a title longer than a record keeps is matched as it is stored",
+            read_pane(own_long + f'\nclaude --resume "{long_title}"\n'.encode(), server) == {real} and builds == [],
+        )
     finally:
         resurrect.name_index = previous_index
 
