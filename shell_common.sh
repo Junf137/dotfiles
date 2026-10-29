@@ -34,9 +34,6 @@ if [[ "$(uname -s)" == "Darwin" ]]; then
     export HOMEBREW_NO_ANALYTICS=1
 fi
 
-# fixing color code output in man command
-export MANROFFOPT="-c"
-
 # disable virtualenv prompt
 export VIRTUAL_ENV_DISABLE_PROMPT=1
 
@@ -200,11 +197,6 @@ alias zshConfig="nvim $HOME/.zshrc"
 alias vimConfig="nvim $HOME/.vimrc"
 alias nvimConfig="nvim $HOME/.config/nvim/init.lua"
 alias tmuxConfig="nvim $HOME/.tmux.conf"
-alias ohmyzshConfig="nvim $HOME/.oh-my-zsh"
-
-# Add an "alert" alias for long running commands.  Use like so:
-#   sleep 10; alert
-alias alert='notify-send --urgency=low -i "$([ $? = 0 ] && echo terminal || echo error)" "$(history|tail -n1|sed -e '\''s/^\s*[0-9]\+\s*//;s/[;&|]\s*alert$//'\'')"'
 
 # git-short-command
 alias gs="git status"
