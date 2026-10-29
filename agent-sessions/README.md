@@ -29,15 +29,15 @@ Nothing in `lib/` is a tool. `procinfo.py` is the platform layer: the only Pytho
 that knows whether this is Linux or macOS. (Two others carry kernel knowledge of their
 own: `claude-sessions` is bash and probes for itself, `/proc` when present and
 `ps`/`lsof` otherwise, and `agent-panes-resurrect` knows about bsdtar's AppleDouble
-members.) The other three each read something another program produced —
-`agent_ids.py` Claude's and Codex's terminal output, `claude_names.py` the records
-Claude writes into its transcripts, `agents.py` what an agent process looks like and
-where its transcripts live — and each rots silently when that program changes. So
-there is exactly one copy of each, for `tests/` to cover: `agent-scrollback-ids` sweeps
-live panes and `agent-panes-resurrect` the archived captures with the same code, so a
-change to one changes both. `agents.py` exists because
-that rule was not followed at first: its contents had been written out up to four
-times, and the copies disagreed with each other and with Codex (see *Rollout files*).
+members.) The other three each read something another program produced — `agent_ids.py`
+Claude's and Codex's terminal output, `claude_names.py` the records Claude writes into
+its transcripts, `agents.py` what an agent process looks like and where its transcripts
+live — and each rots silently when that program changes. So there is exactly one copy of
+each, for `tests/` to cover: `agent-scrollback-ids` sweeps live panes and
+`agent-panes-resurrect` the archived captures with the same code, so a change to one
+changes both. `agents.py` exists because that rule was not followed at first: its
+contents had been written out up to four times, and the copies disagreed with each other
+and with Codex (see *Rollout files*).
 
 **Title lookups are broad by hand and narrow in the hook.** `claude_names.name_index()`
 serves two callers. `agent-scrollback-ids` is interactive and takes the broadest index:
@@ -105,11 +105,10 @@ already inside `pane_contents.tar.gz` keep replaying on every restore.
   identifies an agent.
 - **Python ≥ 3.9.** `extractall(filter=)` falls back when the kwarg is unsupported (it
   arrived in 3.12, backported to 3.11.4 / 3.10.12 / 3.9.17), so an older interpreter
-  loses nothing there. Reading a compressed Codex
-  rollout needs `compression.zstd`, which is 3.14+. Without it — macOS's stock `python3`
-  is 3.9 — such a session is still indexed and resumable but its directory is unknown,
-  so `agent-resume` resumes it from the pane's own directory, as it does for any row
-  whose directory is unknown or gone.
+  loses nothing there. Reading a compressed Codex rollout needs `compression.zstd`,
+  which is 3.14+. Without it — macOS's stock `python3` is 3.9 — such a session is still
+  indexed and resumable but its directory is unknown, so `agent-resume` resumes it from
+  the pane's own directory, as it does for any row whose directory is unknown or gone.
 - **tmux-resurrect**, installed by TPM. Verified against `cff343cf`.
 
 ## Session mapping
@@ -220,10 +219,10 @@ Three sources feed one record per session, folded by `(pane id, agent, session i
 
 The harvest reads `pane_contents.tar.gz`, not `tmux capture-pane`: the hook already
 opens it, it holds each pane's *whole* history with wrapped lines rejoined
-(`capture-pane -epJ -S -<history_size>`), and the hook
-runs inline with the save and freezes the client that triggered it, so a subprocess per
-pane is the one thing it must not do. On a 78-pane server: 14 ms to unpack in memory,
-115 ms to scan 5.6 MB, 0.35 s for the whole hook.
+(`capture-pane -epJ -S -<history_size>`), and the hook runs inline with the save and
+freezes the client that triggered it, so a subprocess per pane is the one thing it must
+not do. On a 78-pane server: 14 ms to unpack in memory, 115 ms to scan 5.6 MB, 0.35 s
+for the whole hook.
 
 - **Claude's banner may name a title instead of a uuid.** Its conversation draws on the
   alternate screen and leaves nothing, but a graceful exit writes `Resume this session
@@ -396,9 +395,9 @@ every Claude session that ever ran in the pane.
 - **Panes whose session name contains `/`, `:` or `'` are skipped.** tmux-resurrect
   already mishandles all three (a failed write, no content file, and a `cat '<file>'`
   that kills the pane). They still land in the sidecar.
-- **Do not set `@resurrect-processes` to `':all:'`.** Restore currently does not respawn agent
-  panes — `restore_pane_process` uses `send-keys`, and neither `node` nor `codex` is in
-  the default list — which is why the block survives above whatever restore types.
+- **Do not set `@resurrect-processes` to `':all:'`.** Restore currently does not respawn
+  agent panes — `restore_pane_process` uses `send-keys`, and neither `node` nor `codex`
+  is in the default list — which is why the block survives above whatever restore types.
 
 ## Resuming: `agent-resume`
 
