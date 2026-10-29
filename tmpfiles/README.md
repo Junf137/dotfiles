@@ -98,6 +98,7 @@ The timer serves every user tmpfiles rule. To stop pruning only `~/hf`, change t
    rm ~/Library/LaunchAgents/com.junf.prune-handoffs.plist
    ```
 
-2. In this repo, delete `tmpfiles/`, `launchd/` and the handoff block in `lib/link_manifest.sh`.
+2. In this repo, delete `tmpfiles/`, `launchd/` and the handoff block in `lib/link_manifest.sh`,
+   and drop the handoff-pruning lines from `AGENTS.md` and `README.md`.
 3. `~/hf` itself is left alone. The handoff skill in `agent-skills` still writes there and says
    files are pruned automatically, so change it there too.
