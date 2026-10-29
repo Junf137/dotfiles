@@ -15,7 +15,7 @@ mkdir -p ~/hf && f=$(mktemp ~/hf/handoff-XXXXXX) && mv "$f" "$f.md" && echo "$f.
 `~/hf` is used instead of `/tmp` so handoffs survive reboots. This tmpfiles rule is what keeps
 that directory from growing forever:
 
-```
+```text
 d %h/hf 0755 - - 10d -
 ```
 
@@ -24,7 +24,7 @@ Create `~/hf` if missing; prune entries older than 10 days. Linked to
 
 ## How it triggers
 
-```
+```text
 login  →  systemd --user  →  timers.target
                                   ↓  (enable symlink in ~/.config/systemd/user/timers.target.wants/)
                     systemd-tmpfiles-clean.timer     OnStartupSec=5min, then every 1d
