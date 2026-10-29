@@ -189,7 +189,10 @@ def resurrect_cases(tool):
     gone = tool["marker_block"]([EXITED_ROW], STAMP).decode()
     add("an exited session is still rendered", "claude --resume 1a03df5b-6a91-49de-927c-6920a34539c2" in gone)
     add("an exited session is not claimed as current", "ran in this pane until tmux was saved" not in gone)
-    add("an exited session says when it was last seen", "last seen 2026-08-01" in gone)
+    # The block dates in local time, and 16:00 UTC is already the next day from
+    # UTC+8 on.
+    seen_on = time.strftime("%Y-%m-%d", time.localtime(EXITED_ROW["last_seen"]))
+    add("an exited session says when it was last seen", f"last seen {seen_on}" in gone)
     add("an exited session is labelled exited", "· exited ·" in gone)
     add("a live session is labelled running", "still running at save" in text)
 
