@@ -58,8 +58,8 @@ def agent_process():
     return None, None
 
 
-def pane_root(pane):
-    """The pid tmux started that pane with (`#{pane_pid}`), or None.
+def pane_info(pane):
+    """(the pid tmux started that pane with, its terminal's device number), or None.
 
     Asked of tmux rather than read off the processes: the pane's own process is
     the one carrying TMUX_PANE as tmux set it, but on macOS it is usually
@@ -67,27 +67,41 @@ def pane_root(pane):
     """
     try:
         out = subprocess.run(
-            ["tmux", "display-message", "-p", "-t", pane, "#{pane_pid}"],
+            ["tmux", "display-message", "-p", "-t", pane, "#{pane_pid}\t#{pane_tty}"],
             capture_output=True,
             text=True,
             timeout=TMUX_TIMEOUT_S,
         ).stdout.strip()
-        return int(out)
+        root, tty = out.split("\t")
+        return int(root), os.stat(tty).st_rdev & 0xFFFFFFFF
     except (OSError, ValueError, subprocess.SubprocessError):
         return None
 
 
 def in_pane(pid, pane):
-    """Whether pid runs inside that pane: at or below the pane's own process.
+    """Whether pid is an agent running in that pane: below its process, on its terminal.
 
-    The live scan's rule too. TMUX_PANE is inherited, not assigned: an editor
-    window opened by `code .` from a pane hands it to every terminal it opens,
-    and an agent started there would otherwise be filed under this pane -- and,
-    once killed, kept and folded into its history as a session that ran here.
-    One tmux call, on session start only, and never in the save hook.
+    TMUX_PANE is inherited, not assigned, and a killed agent's record is kept
+    and folded into the pane's history -- so it has to be an agent that really
+    ran there. Two ways one inherits the id without being one:
+
+      * a window opened from the pane -- `code .`, a GUI terminal -- hands it to
+        every terminal it opens. Those are not below the pane's own process,
+        which is the live scan's rule too;
+      * an agent started from another agent's shell tool (a skill eval's
+        `claude -p`) is below it, but that tool runs commands in a new session
+        with no terminal, and such agents are routinely killed.
+
+    The terminal also excludes an agent in an editor's own terminal inside the
+    pane, which then goes without a record -- what every agent had before
+    records were kept. One tmux call, on session start only, never in the save
+    hook.
     """
-    root = pane_root(pane)
-    if root is None:
+    info = pane_info(pane)
+    if info is None:
+        return False
+    root, tty = info
+    if procinfo.ctty(pid) != tty:
         return False
     for _ in range(64):
         if pid == root:

@@ -88,6 +88,13 @@ if not IS_DARWIN:
         except (OSError, IndexError, ValueError):
             return None
 
+    def ctty(pid):
+        """The controlling terminal's device number (tty_nr), or None for none."""
+        try:
+            return int(_stat_fields(pid)[1][4]) or None
+        except (OSError, IndexError, ValueError):
+            return None
+
     def start_epoch(pid, boot=None):
         try:
             ticks = int(_stat_fields(pid)[1][19])
@@ -236,6 +243,14 @@ else:
     def start_token(pid):
         info = _bsdinfo(pid)
         return str(info[2]) if info else None
+
+    def ctty(pid):
+        """The controlling terminal's device number (e_tdev), or None for none."""
+        buf = ctypes.create_string_buffer(BSDINFO_SIZE)
+        if _libc.proc_pidinfo(pid, PROC_PIDTBSDINFO, 0, buf, BSDINFO_SIZE) != BSDINFO_SIZE:
+            return None
+        tdev = struct.unpack_from("I", buf.raw, 108)[0]  # e_tdev; NODEV is (dev_t)-1
+        return None if tdev in (0, 0xFFFFFFFF) else tdev
 
     def start_epoch(pid, boot=None):
         """Wall-clock start time of a process, in epoch seconds.

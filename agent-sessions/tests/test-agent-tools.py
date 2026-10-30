@@ -1450,20 +1450,25 @@ def hook_cache_cases(resume):
     add("a date after the server started is this server's", procinfo.tmux_server_running(running, now))
     add("one before it is an earlier boot's", not procinfo.tmux_server_running(running, began - 60))
 
-    # Inside the pane means at or below the pid tmux started the pane with.
-    # Fake process tree: pane %9 was started as 200, pane %8 as 210.
-    tree = {300: 200, 200: 100, 210: 100, 400: 1, 500: 400}
-    saved = (register.procinfo, register.pane_root)
-    register.procinfo = types.SimpleNamespace(ppid=tree.get)
-    register.pane_root = {"%9": 200, "%8": 210}.get
+    # In the pane means at or below the pid tmux started the pane with, and on
+    # the pane's terminal. Fake tree: pane %9 started as 200 on tty 77, pane %8
+    # as 210 on tty 88; 600 is a `claude -p` from 300's shell tool (new session,
+    # no terminal); 700 is an agent in an editor's own terminal inside %9.
+    tree = {300: 200, 200: 100, 210: 100, 400: 1, 500: 400, 600: 300, 700: 300}
+    ttys = {300: 77, 200: 77, 210: 88, 500: 77, 700: 99}
+    saved = (register.procinfo, register.pane_info)
+    register.procinfo = types.SimpleNamespace(ppid=tree.get, ctty=ttys.get)
+    register.pane_info = {"%9": (200, 77), "%8": (210, 88)}.get
     try:
         add("an agent below the pane's own process is in the pane", register.in_pane(300, "%9"))
         add("the pane's own process is in the pane", register.in_pane(200, "%9"))
         add("one below another pane is not", not register.in_pane(300, "%8"))
         add("one that only inherited the pane id is not", not register.in_pane(500, "%9"))
+        add("one started from an agent's shell tool is not", not register.in_pane(600, "%9"))
+        add("one on another terminal inside the pane is not", not register.in_pane(700, "%9"))
         add("a pane tmux cannot name has nothing in it", not register.in_pane(300, "%7"))
     finally:
-        register.procinfo, register.pane_root = saved
+        register.procinfo, register.pane_info = saved
 
     live = dict(
         agent="claude", pane_id="%3", session_id=UUID, name="", cwd="/repo",
