@@ -5,11 +5,17 @@
 """Resume the Claude Code / Codex session that belongs to this tmux pane.
 
 Run it in any pane. If exactly one agent session maps to that pane -- and only
-then -- the pane is cleared and that session is resumed in place, in the
+then -- that session is resumed in a new pane split off to its right, in the
 directory it was opened in:
 
     claude --dangerously-skip-permissions --resume <uuid>
     codex resume <uuid> --yolo
+
+Once the agent is up, the old pane's history is compared with the session's
+transcript. If they match, the old pane is closed; if not, both panes stay and
+the old one says why, so a wrong mapping costs a pane to close rather than the
+history it was read from. `--here` resumes in place instead: the old pane is
+cleared (its scrollback kept) and becomes the session's pane.
 
 There is deliberately no way to start a session this could not map on its own.
 If the pane maps to none, or to more than one, nothing is run: `--list` prints
@@ -45,7 +51,10 @@ others cannot:
     killing an agent while keeping its pane is the case this whole family of
     tools is built around.
 
-Usage: agent-resume [-n|--dry-run] [-l|--list] [--pane %N] [--force]
+Usage: agent-resume [-n|--dry-run] [-l|--list] [--here] [--pane %N] [--force]
+Exit:  0 resumed (and the old pane closed), 1 nothing resumable here, 2 more
+       than one session maps here, 3 refused, 4 resumed beside the old pane,
+       which was kept.
 Env:   SCROLLBACK_DEPTH  value passed to `tmux capture-pane -S` (default '-',
                          the pane's whole history; one pane, so it is cheap).
 """
@@ -66,6 +75,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 # platform layer is not theirs to re-export, and going through them would hide
 # these calls from check.sh's borrowed-name pass.
 sys.path.insert(0, os.path.join(os.path.dirname(HERE), "lib"))
+import agents  # noqa: E402
 import procinfo  # noqa: E402
 
 # What resuming actually runs. Spelled out as literal argv rather than composed,
@@ -408,6 +418,137 @@ def order(rows):
     )
 
 
+# ---* Does the pane's history match the session? *---
+
+# The pane's history and the resumed session's transcript are compared on the
+# pane's last MATCH_PROBES lines long enough to say something; MATCH_HITS of them
+# must appear in the transcript word for word. Most lines on an agent's screen
+# never reach its transcript -- status bars, rendered markdown, shell prompts,
+# reboot broadcasts -- so the bar is a few hits, not most of them. Measured on 12
+# restored panes against 267 transcripts: the right session held 5 to 24 of the
+# last 60, an unrelated one at most 2. A fork shares its parent's lines, so the
+# two cannot be told apart this way; nor can a session that printed the pane.
+MATCH_PROBES = 60
+MATCH_HITS = 5
+PROBE_MIN_ALNUM = 20
+PROBE_CHARS = 60
+# What the agents draw in front of a line: bullets, tool-output gutters, prompts.
+DECORATION = " \t┃●•◦⎿✻※›❯>$"
+
+
+def probes(plain):
+    """The pane's recent lines its session's transcript should hold, oldest first.
+
+    Only the first PROBE_CHARS of each, since the agents render markdown and
+    re-wrap paragraphs, and the further a line runs the likelier it crosses a
+    `code` span or a bold the screen dropped.
+    """
+    out = []
+    for line in plain.splitlines():
+        # A rendered table's cells, each of which the transcript holds as text
+        # between markdown pipes; the row as drawn appears nowhere.
+        for cell in line.split("│"):
+            text = cell.strip().lstrip(DECORATION).rstrip()
+            if sum(char.isalnum() for char in text) >= PROBE_MIN_ALNUM:
+                out.append(text[:PROBE_CHARS])
+    return out[-MATCH_PROBES:]
+
+
+def hits(lines, transcript):
+    """How many of those lines the transcript holds, in the form JSON stores them."""
+    return sum(json.dumps(line, ensure_ascii=False)[1:-1] in transcript for line in lines)
+
+
+# ---* Resuming beside the pane *---
+
+START_TIMEOUT_S = 20
+# A resume that cannot find its session exits within a second or two of starting.
+SETTLE_S = 3
+
+
+def tmux(*args):
+    """A tmux command's output, or None where it failed."""
+    try:
+        out = subprocess.run(["tmux", *args], capture_output=True, text=True, timeout=TMUX_TIMEOUT_S)
+    except (OSError, subprocess.SubprocessError):
+        return None
+    return out.stdout.strip() if out.returncode == 0 else None
+
+
+def pane_agent(pane):
+    """The agent running in `pane` right now, anywhere below its shell, or "".
+
+    By process rather than by #{pane_current_command}: an installed Claude on
+    macOS runs as its version number, and a shell's own startup puts other
+    commands in the foreground first.
+    """
+    root = tmux("display", "-p", "-t", pane, "#{pane_pid}")
+    if not root or not root.isdigit():
+        return ""
+    kids, comms = procinfo.process_table()
+    stack = [int(root)]
+    while stack:
+        pid = stack.pop()
+        kind = agents.agent_kind(pid, comms.get(pid, ""))
+        if kind:
+            return kind
+        stack.extend(kids.get(pid, []))
+    return ""
+
+
+def started(pane, agent):
+    """Whether `agent` came up in `pane`, and was still up SETTLE_S later."""
+    deadline = time.monotonic() + START_TIMEOUT_S
+    while time.monotonic() < deadline:
+        if pane_agent(pane) == agent:
+            time.sleep(SETTLE_S)
+            return pane_agent(pane) == agent
+        time.sleep(0.5)
+    return False
+
+
+def resume_beside(pane, row, line):
+    """Resume `row` in a new pane split off `pane`; close `pane` if its history matches.
+
+    The way it is done by hand, so that a wrong mapping costs nothing: split,
+    type the resume command into the new pane, and keep the old pane until it is
+    clear the right session came up. Here "clear" is the old pane's history
+    matching the session's transcript (see probes()). Anything short of that --
+    the agent not starting, too few lines in common, nothing to compare -- keeps
+    both panes and says why in the old one.
+
+    The history is read before the split, so it is what the reader was looking
+    at. The transcript is read after the agent is up, under whatever name it has
+    then: resuming a Codex session rewrites a compressed rollout as plain jsonl.
+    On a match `pane` is killed, and this process with it when it runs there.
+    """
+    lines = probes(RESURRECT.split_capture(capture(pane))[1])
+    new = tmux("split-window", "-h", "-t", pane, "-c", row.get("cwd") or "#{pane_current_path}", "-P", "-F", "#{pane_id}")
+    if not new:
+        fail(f"could not split {pane}")
+        return 3
+    tmux("send-keys", "-t", new, "-l", line)
+    tmux("send-keys", "-t", new, "Enter")
+
+    up = started(new, row["agent"])
+    path = agents.transcript_index().get(row["agent"], {}).get(row["session_id"]) or row["transcript"]
+    found = hits(lines, agents.transcript_text(path)) if up else 0
+    if up and found >= MATCH_HITS:
+        tmux("kill-pane", "-t", pane)
+        return 0
+
+    if not up:
+        why = f"{row['agent']} was not running in {new} after {START_TIMEOUT_S}s"
+    elif not lines:
+        why = "this pane's history has nothing to compare it with"
+    else:
+        why = f"{found} of this pane's last {len(lines)} lines are in its transcript, {MATCH_HITS} needed"
+    print(f"agent-resume: resumed {row['agent']} {row['session_id']} in {new}, and kept this pane:")
+    print(f"  {why}.")
+    print("  Compare the two, and close whichever you do not need.")
+    return 4
+
+
 # ---* Output *---
 
 
@@ -457,7 +598,7 @@ def argv_for(row):
 
 
 def parse_args(argv):
-    """(options, error). Hand-parsed: four flags, and argparse's own -h output
+    """(options, error). Hand-parsed: five flags, and argparse's own -h output
     would replace a docstring that is the tool's only documentation.
 
     There is no flag naming a session, by number or by id. Anything that selects
@@ -465,12 +606,14 @@ def parse_args(argv):
     the single thing it is not allowed to do -- `--list` prints the commands, and
     pasting one puts the decision back where it belongs.
     """
-    opts = dict(pane="", dry_run=False, listing=False, force=False)
+    opts = dict(pane="", dry_run=False, listing=False, here=False, force=False)
     rest = list(argv)
     while rest:
         arg = rest.pop(0)
         if arg in ("-n", "--dry-run"):
             opts["dry_run"] = True
+        elif arg == "--here":
+            opts["here"] = True
         elif arg in ("-l", "--list"):
             opts["listing"] = True
         elif arg == "--force":
@@ -517,7 +660,7 @@ def run(argv):
     opts, error = parse_args(argv)
     if error:
         fail(error)
-        fail("usage: agent-resume [-n|--dry-run] [-l|--list] [--pane %N] [--force]")
+        fail("usage: agent-resume [-n|--dry-run] [-l|--list] [--here] [--pane %N] [--force]")
         return 3
 
     # Without $TMUX every tmux call resolves against the *default* server, so the
@@ -580,9 +723,25 @@ def run(argv):
         print(line)
         return 0
 
+    if chosen.get("cwd") and not os.path.isdir(chosen["cwd"]):
+        fail(f"recorded directory is gone, resuming from the pane's: {chosen['cwd']}")
+        chosen["cwd"] = ""
+        line = command_line(chosen)
+
+    if not opts["here"]:
+        # A pane with an agent in it is not one whose session needs resuming, and
+        # closing it on a match would close that agent too -- the case when an
+        # agent runs this from its own shell tool without --pane.
+        running = pane_agent(pane)
+        if running and not opts["force"]:
+            fail(f"{running} is already running in {pane}")
+            print("  --dry-run prints the command instead; --force runs it anyway.", file=sys.stderr)
+            return 3
+        return resume_beside(pane, chosen, line)
+
     # Running inside an agent's own shell tool is the one context where the pane
-    # mapping is right and resuming is still wrong: it would start a second agent
-    # inside the first one's tool call, on a terminal that is not a terminal.
+    # mapping is right and resuming in place is still wrong: it would start a
+    # second agent inside the first one's tool call, on a terminal that is not one.
     agent_pid, _ = REGISTER.agent_process()
     if agent_pid and not opts["force"]:
         fail(f"an agent is already running above this shell (pid {agent_pid})")
@@ -590,10 +749,6 @@ def run(argv):
         return 3
 
     argv_out = argv_for(chosen)
-    if chosen.get("cwd") and not os.path.isdir(chosen["cwd"]):
-        fail(f"recorded directory is gone, resuming from here: {chosen['cwd']}")
-        chosen["cwd"] = ""
-        line = command_line(chosen)
     clear_pane()
     # After the clear, so the one line the pane keeps says what is about to run.
     print(f"agent-resume: {line}", file=sys.stderr)

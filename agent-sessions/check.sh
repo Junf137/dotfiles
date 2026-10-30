@@ -214,11 +214,11 @@ check_borrowed_names() {
     # cleanly, passing the name-binding pass, and then raising AttributeError on
     # the one path that starts a session. This resolves each of them for real.
     #
-    # procinfo is in the list for the same reason even though it is imported
-    # rather than borrowed: agent-resume is the one tool no check can run, so an
-    # attribute lookup is all there is to resolve. The walk is one level deep, so
-    # a name must be reached as `MODULE.name` -- writing it as
-    # `REGISTER.procinfo.name` would put it back out of sight.
+    # agents and procinfo are in the list for the same reason even though they
+    # are imported rather than borrowed: agent-resume is the one tool no check
+    # can run, so an attribute lookup is all there is to resolve. The walk is
+    # one level deep, so a name must be reached as `MODULE.name` -- writing it
+    # as `REGISTER.procinfo.name` would put it back out of sight.
     cd "$REPO_ROOT" || return 1
 
     python3 - agent-sessions/bin/agent-resume <<'PY'
@@ -241,7 +241,7 @@ status = 0
 wanted = {}
 for node in ast.walk(ast.parse(source, filename=path)):
     if isinstance(node, ast.Attribute) and isinstance(node.value, ast.Name):
-        if node.value.id in ("RESURRECT", "REGISTER", "procinfo"):
+        if node.value.id in ("RESURRECT", "REGISTER", "agents", "procinfo"):
             wanted.setdefault((node.value.id, node.attr), node.lineno)
 
 for (module, attr), lineno in sorted(wanted.items(), key=lambda item: item[1]):

@@ -432,10 +432,13 @@ every session that left no banner (killed, or lost to a reboot).
 
 ## Resuming: `agent-resume`
 
-Run in any pane: if exactly one agent session maps to it, it clears the screen and
-resumes that session in the directory it was opened in —
-`claude --dangerously-skip-permissions --resume <uuid>` or `codex resume <uuid> --yolo`.
-It reads three sources and writes to none of them.
+Run in any pane: if exactly one agent session maps to it, it splits the pane, types the
+resume command into the new pane on the right, in the directory the session was opened
+in — `claude --dangerously-skip-permissions --resume <uuid>` or
+`codex resume <uuid> --yolo` — and once the agent is up compares the old pane's history
+with the session's transcript. A match closes the old pane; anything else keeps both and
+says why in the old one. `--here` resumes in place instead: it clears the screen and
+execs the agent in the old pane. It reads three sources and writes to none of them.
 
 | Source | Covers what the others cannot |
 |---|---|
@@ -448,21 +451,42 @@ It reads three sources and writes to none of them.
   map by itself — a wrong id resumes somebody else's conversation and reads exactly like
   a right one. `--list` prints the command for each candidate instead, so choosing is a
   person's act. Exit status: `0` resumed, `1` nothing resumable here, `2` ambiguous,
-  `3` refused to run at all.
+  `3` refused to run at all, `4` resumed beside the old pane, which was kept.
+- **Splitting is what makes a wrong mapping cheap.** A recorded id can be confidently
+  wrong — a pane that was showing a Claude background session records the pane's own
+  session, an empty stub, while the conversation on screen lives under another id — and
+  resumed in place, the wrong session takes over the pane its history was read from.
+  Beside it, the cost is a pane to close.
+- **The match is evidence about text.** The old pane's last 60 lines with 20 or more
+  letters and digits (a drawn table cell by cell, each cut to 60 characters) are looked
+  up in the transcript as JSON stores them, and 5 must be there. Most screen lines never
+  reach a transcript — status bars, rendered markdown, prompts, reboot broadcasts — so
+  the bar is low; measured on 12 restored panes against 267 transcripts, the right
+  session held 5 to 24, an unrelated one at most 2. Text cannot tell a fork from its
+  parent, or a session from one that printed the pane, so a match closes the pane only
+  for the session `agent-resume` mapped by itself. A pane whose history never showed the
+  conversation — the agent exited, or was killed, on its alternate screen — has nothing
+  to match and is kept. The history is read before the split, and the transcript after
+  the agent is up, since resuming Codex rewrites a compressed rollout as `.jsonl`.
 - **A candidate whose transcript is gone is listed but never chosen**, and never makes a
   pane ambiguous. Both agents resolve `--resume` out of those files and Claude prunes its
   own at 30 days, so an id with nothing behind it is not a candidate at all. That is
   what makes "exactly one" answerable as often as it is: 53 of 66 panes here. An
   archived Codex thread is not gone — `codex resume` still opens it — so it is a
   candidate like any other, and can make a pane ambiguous.
-- **The clear is `ESC[H ESC[2J` and deliberately not `ESC[3J`.** tmux answers the third
-  by dropping the pane's history, which is a source this tool reads: for a session that
-  started and exited between two saves, the banner there is the only record and nothing
-  has folded it into the sidecar yet. `clear(1)` sends both on most terminfo entries.
-- **It refuses to run from inside an agent's own shell tool**, detected by
-  `agent-pane-register`'s ancestor walk. The pane mapping is right there and resuming is
-  still wrong: it would start a second agent inside the first one's tool call, on a
-  terminal that is not one. `--dry-run` prints the command instead; `--force` overrides.
+- **`--here`'s clear is `ESC[H ESC[2J` and deliberately not `ESC[3J`.** tmux answers
+  the third by dropping the pane's history, which is a source this tool reads: for a
+  session that started and exited between two saves, the banner there is the only record
+  and nothing has folded it into the sidecar yet. `clear(1)` sends both on most terminfo
+  entries. Measured with Claude 2.1.312 and codex-cli 0.165: neither agent touches the
+  pane's history either, running or on exit, and a save taken while one runs keeps it.
+- **It refuses a pane with an agent already running in it**, found by walking the pane's
+  process tree, since closing that pane on a match would close the agent too — which is
+  what an agent running this from its own shell tool without `--pane` would do.
+  `--here` refuses instead when an agent is running above it (`agent-pane-register`'s
+  ancestor walk): it would start a second agent inside the first one's tool call, on a
+  terminal that is not one. `--dry-run` prints the command instead; `--force` overrides
+  either.
 - **The block parsing is borrowed, not copied.** `marker_line()`, `parse_stanzas()` and
   `split_capture()` come from `agent-panes-resurrect` by import, so the stanza binding
   rules apply identically. The per-pane caps are borrowed for the same reason: here they
@@ -485,7 +509,7 @@ It reads three sources and writes to none of them.
 | `agent-panes-resurrect save [--dry-run]` | the hook target; silent by design |
 | `agent-panes-resurrect list [--json]` | read the sidecar |
 | `agent-panes-resurrect purge [--dry-run]` | remove every block, sidecar, log |
-| `agent-resume [-n] [-l] [--pane %N] [--force]` | resume this pane's session, if it has exactly one |
+| `agent-resume [-n] [-l] [--here] [--pane %N] [--force]` | resume this pane's session beside it, if it has exactly one; close this pane if its history matches |
 | `agent-scrollback-ids [--json]` | recover ids exited agents printed into scrollback |
 | `claude-sessions [-n]` | running Claude sessions, in tmux or not, with uptime, CPU and memory |
 
@@ -558,11 +582,15 @@ broken one degrades to "no harvest" and this is the only place it would be notic
   `bootstrap.sh` creates `~/.codex` on machines that have never run Codex. The read is
   `readonly_shm` or `immutable`, never a plain read-only open: that one rebuilds the
   `-shm` in `~/.codex`, and creates it and the `-wal` where they are missing.
-- **The exec is out of reach.** `agent-resume`'s two commands are spelled out in the
-  tests as well as the tool, so changing one alone fails. To exercise the clear, the
-  `chdir` and the argv for real, put a script named `claude` or `codex` ahead on `PATH`
-  that echoes its argv and `$PWD`, and run `agent-resume` in a pane on a throwaway
-  server (`tmux -L test`, with `@resurrect-dir` pointed somewhere scratch).
+- **The exec and the split are out of reach.** `agent-resume`'s two commands are
+  spelled out in the tests as well as the tool, so changing one alone fails, and the
+  match it closes a pane on is unit-tested; the tmux side is not. To exercise it for
+  real, run `agent-resume` in a pane on a throwaway server (`tmux -L test`) whose
+  history shows a throwaway session — `claude -p` one, then `cat` its lines and its exit
+  banner into the pane. A real `claude --resume` sends no prompt. Burn the throwaway
+  server's first few hundred pane ids first (`new-window -d true` in a loop): the hook
+  cache is keyed by pane number, and the agent's session hook would otherwise overwrite
+  the real server's record for that number.
 - **So is whether a hook had any effect.** `check_hook_wiring` resolves each `command`
   to a real executable, and Codex's Hooks TUI reports the handler installed and active;
   neither says it did anything, and believing otherwise is exactly what hid the
