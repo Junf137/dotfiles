@@ -172,13 +172,16 @@ already inside `pane_contents.tar.gz` keep replaying on every restore.
     editor window opened by `code .` from a pane hands it to every terminal it opens,
     and an agent's shell tool hands it to a `claude -p` a skill eval starts and then
     kills. The hook writes nothing unless the agent runs at or below the pane's own
-    process, which is the live scan's rule too, *and* on the pane's terminal. The
-    shell tool runs commands in a new session with no terminal. It asks tmux for both
-    (`#{pane_pid}`, `#{pane_tty}`), one call per session start, because on macOS the
-    pane's process is usually `/bin/zsh`, whose environment no other process may read.
-    An agent in an editor's own terminal inside the pane gets no record either, which
-    is what every agent had before records were kept. `end` deletes only its own
-    agent's record. A graceful exit leaves a banner, so nothing is lost there.
+    process, which is the live scan's rule too, *and* on the pane's terminal. Both
+    agents' shell tools run commands in a new session, without the pane's terminal.
+    It asks tmux for both (`#{pane_pid}`, `#{pane_tty}`), one call per session start,
+    because on macOS the pane's process is usually `/bin/zsh`, whose environment no
+    other process may read. An agent behind any wrapper that allocates its own pty
+    gets no record either: an editor's terminal, `script`, or `sudo` with `use_pty`.
+    Killed, it is lost as before records were kept; live, `agent-panes` places it
+    by its next tier (exact `sessions` for Claude, inferred for Codex). `end` deletes
+    only its own agent's record. A graceful exit leaves a banner, so nothing is lost
+    there.
   - The cache is keyed by pane number alone, so a second server running alongside
     this one can overwrite a record, and so can a new agent started in the same pane.
     The stamp stops anything reading a record against the wrong server's pane.

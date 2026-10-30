@@ -18,8 +18,9 @@ user's own processes with no privileges and no shelling out:
     sysctl KERN_PROCARGS2 <pid>     exec path, argv and environ in one read,
                                     replacing /proc/<pid>/{cmdline,environ}
     libproc proc_listpids           the pid table, replacing os.listdir("/proc")
-    libproc PROC_PIDTBSDINFO        ppid, comm and start time, replacing the
-                                    parts of /proc/<pid>/stat that are read
+    libproc PROC_PIDTBSDINFO        ppid, comm, start time and controlling
+                                    terminal, replacing the parts of
+                                    /proc/<pid>/stat that are read
     libproc proc_pidpath            replacing /proc/<pid>/exe
     libproc PROC_PIDVNODEPATHINFO   replacing /proc/<pid>/cwd
     libproc PROC_PIDLISTFDS         replacing /proc/<pid>/fd/

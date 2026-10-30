@@ -89,13 +89,14 @@ def in_pane(pid, pane):
         every terminal it opens. Those are not below the pane's own process,
         which is the live scan's rule too;
       * an agent started from another agent's shell tool (a skill eval's
-        `claude -p`) is below it, but that tool runs commands in a new session
-        with no terminal, and such agents are routinely killed.
+        `claude -p`) is below it, but both agents' shell tools run commands in a
+        new session without the pane's terminal, and such agents are routinely
+        killed.
 
-    The terminal also excludes an agent in an editor's own terminal inside the
-    pane, which then goes without a record -- what every agent had before
-    records were kept. One tmux call, on session start only, never in the save
-    hook.
+    The terminal also excludes an agent behind any wrapper with a pty of its
+    own -- an editor's terminal, `script`, `sudo` with use_pty -- which then
+    goes without a record, as every agent did before records were kept. One
+    tmux call, on session start only, never in the save hook.
     """
     info = pane_info(pane)
     if info is None:
