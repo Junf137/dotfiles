@@ -371,3 +371,42 @@ def process_table():
         comms[pid] = comm(pid)
         kids.setdefault(parent, []).append(pid)
     return kids, comms
+
+
+def tmux_server_id():
+    """Which tmux server generation $TMUX names: `socket:pid:start token`, or "".
+
+    `%N` pane ids are a per-server counter that restarts at 0, so a pane id
+    means something only alongside this. The session hook stamps its cache
+    records with it and the resurrect hook its sidecar records, and the two must
+    agree to the byte or every record is silently refused -- hence one copy, in
+    the one module both already import. The start token is in it because a pid
+    alone is reused: a server started by systemd at boot gets nearly the same
+    pid every time.
+    """
+    parts = (os.environ.get("TMUX") or "").split(",")
+    if len(parts) < 2:
+        return ""
+    sock, pid = parts[0], parts[1]
+    try:
+        start = start_token(int(pid)) or "?"
+    except (TypeError, ValueError):
+        start = "?"
+    return f"{sock}:{pid}:{start}"
+
+
+def tmux_server_running(server):
+    """Whether the server a tmux_server_id() names is still that same server.
+
+    False for an id recorded without a start token, since nothing then tells it
+    apart from a later server that reused the pid.
+    """
+    if not isinstance(server, str):
+        return False
+    parts = server.rsplit(":", 2)
+    if len(parts) != 3 or parts[2] in ("", "?"):
+        return False
+    try:
+        return start_token(int(parts[1])) == parts[2]
+    except (TypeError, ValueError):
+        return False

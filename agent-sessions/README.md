@@ -159,9 +159,16 @@ already inside `pane_contents.tar.gz` keep replaying on every restore.
   `~/.cache/agent-panes/<pane>.json` with the agent PID and its kernel start time, so a
   session that died without firing its end hook is detected as stale instead of being
   attributed to the next agent in that pane. **Hooks only affect newly started
-  sessions.** The cache is live-only — `end` deletes its record, and every hook run in
-  a pane prunes any whose process is gone — so it is not, and cannot be, a source of
-  history. That is what the sidecar is for.
+  sessions.** Each record also carries the id of the tmux server that issued its pane
+  id (`socket:pid:start`, from `procinfo.tmux_server_id()`, the same id the sidecar
+  uses). That is what lets a killed agent's record outlive it: every hook run prunes a
+  record whose process is gone only once that server has exited too, since the pane
+  number names this pane only while it runs. Until then `agent-resume` offers the
+  record, and each save folds it into the sidecar, which is what carries it past
+  that. `end` still deletes its own record, because a graceful exit leaves a banner.
+  The cache is keyed by pane number alone, so a second server running alongside this
+  one can overwrite a record, and so can a new agent started in the same pane. The
+  stamp stops anything reading a record against the wrong server's pane.
 - **Claude `SessionEnd` needs an explicit `timeout`**: without one it gets only a
   ~1.5 s shutdown budget and may be killed mid-write.
 
@@ -215,11 +222,12 @@ all six of them.
 
 ### Where the ids come from
 
-Three sources feed one record per session, folded by `(pane id, agent, session id)`:
+Four sources feed one record per session, folded by `(pane id, agent, session id)`:
 
 | Source | Covers | Tier |
 |---|---|---|
 | `agent-panes`, the live process scan | whatever is running at the moment of the save | `hook`, `sessions`, `env`, `cmdline`, `fd`, or an inferred `meta~Ns` / `btime~Ns` |
+| the hook cache, for a record whose agent has died | a session **killed** since its hook ran, even one no save saw running, while this server still has its pane | `hook` |
 | the agent's own exit banner in the archived capture | every session either agent exited *gracefully* out of and the pane's scrollback still holds, including ones that started and ended between two saves | `scrollback` |
 | this script's own block, parsed back out of the capture | everything a previous save wrote down — the only source for a session that was killed or lost to a reboot | whatever the block recorded |
 
@@ -274,13 +282,17 @@ for the whole hook.
   hook before the capture, and `post-save-layout`, the only candidate, fires before the
   archive exists.
 - **Coverage gap**, stated exactly: a session is lost only when it left no banner
-  (killed, or lost to a reboot) *and* was never running at any save. Continuum saves
-  every 15 min while a client is attached, so in practice that is a session killed
-  before its first save — within 15 min of starting, or while nothing was attached.
-  Everything else is covered by the sidecar, a banner, or the title lookup — unless the
-  title names more than one session. `agent-scrollback-ids` is the by-hand tool for
-  what is left; its index is the broad one, so it can offer a best guess where the hook
-  refuses to.
+  (killed, or lost to a reboot), was never running at any save, *and* its hook record
+  was gone by the first save after it died. That record survives the agent while its
+  tmux server runs, so in practice what is lost is a session killed before its first
+  save whose server then stopped, or whose pane started another agent, before the next
+  save. Continuum saves every 15 min while a client is attached. Two cases have no hook
+  record at all: an interactive Codex session, whose hooks cannot bind a pane (see
+  *Codex hook gotchas*), and one started before the hooks were installed. For those
+  the old gap stands: killed before its first save means lost. Everything else is
+  covered by the sidecar, a banner, or the title lookup, unless the title names more
+  than one session. `agent-scrollback-ids` is the by-hand tool for what is left. Its
+  index is the broad one, so it can offer a best guess where the hook refuses to.
 
 ### The block is read as well as written
 
@@ -413,7 +425,7 @@ It reads three sources and writes to none of them.
 |---|---|
 | the sidecar, filtered to this server's own `%N` | every session a save saw running here |
 | this pane's scrollback: our block, then the agents' own banners | the window between a restore and the first save after it, and a session that started and exited between two saves |
-| the hook cache, `~/.cache/agent-panes/<pane>.json` | a **killed** agent no save saw running — the only place its id exists, until the next hook run in any pane prunes it |
+| the hook cache, `~/.cache/agent-panes/<pane>.json`, this server's records only | a **killed** agent no save has seen yet — the only place its id exists until the next save folds it into the sidecar |
 
 - **It starts a session only where the pane maps to one, and no flag names one.**
   Anything selecting a candidate would be a way to start a session the tool could not

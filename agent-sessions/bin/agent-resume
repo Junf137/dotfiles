@@ -38,9 +38,10 @@ others cannot:
     whatever exit banner the agent itself printed. This is the only source in the
     window between a restore and the first save after it, and the only one for a
     session that started and exited between two saves;
-  * the hook cache, `~/.cache/agent-panes/<pane>.json` -- live-only and pruned,
-    but for an agent *killed* before any save saw it, it is the sole place that
-    session's id exists until the next hook run in any pane prunes it, and
+  * the hook cache, `~/.cache/agent-panes/<pane>.json` -- for an agent *killed*
+    before any save saw it, the only place that session's id exists until the
+    next save folds it into the sidecar. The session hook keeps such a record
+    for as long as the tmux server that issued its pane id runs, because
     killing an agent while keeping its pane is the case this whole family of
     tools is built around.
 
@@ -109,17 +110,6 @@ UUID_RE = re.compile(RESURRECT.UUID)
 
 
 # ---* Where a pane's sessions come from *---
-
-
-def server_started():
-    """This tmux server's start time in epoch seconds, or None."""
-    parts = (os.environ.get("TMUX") or "").split(",")
-    if len(parts) < 2:
-        return None
-    try:
-        return procinfo.start_epoch(int(parts[1]))
-    except (TypeError, ValueError):
-        return None
 
 
 def sidecar_path():
@@ -246,21 +236,22 @@ def capture_rows(pane, server):
     return [dict(row, origin="scrollback") for row in rows + RESURRECT.cap_recovered(recovered, plain)]
 
 
-def cache_row(pane, since):
-    """The record this pane's session-start hook wrote, if it is this server's.
+def cache_row(pane, server):
+    """The record this pane's session-start hook wrote, if this server issued its pane.
 
-    The cache is keyed by pane number with no server stamp -- it is live-only, so
-    it never needed one -- which means a record written before a reboot would be
-    read against whichever restored pane inherited its number. `updated`
-    predating this server's own start is what rejects that, and without a usable
-    server start time the source is skipped rather than trusted.
+    The cache is keyed by pane number, which every tmux server counts from 0, so
+    the record's own server stamp is what ties it to this pane. One stamped by
+    an earlier server -- before a reboot -- or by another server running beside
+    this one names whatever pane held that number there. One with no stamp
+    predates it and cannot be tied to anything, so it is skipped too.
 
-    A record whose process is gone is kept rather than pruned: that is a killed
-    agent, which is precisely the session worth resuming here. One whose process
-    is still there is kept too, and marked, since a `--pane` pointing elsewhere
-    can reach a pane that really does have an agent in it.
+    A record whose process is gone is the point of this source: that is a killed
+    agent, which the session hook keeps for as long as its server runs precisely
+    so it can be resumed here. One whose process is still there is kept too, and
+    marked, since a `--pane` pointing elsewhere can reach a pane that really does
+    have an agent in it.
     """
-    if since is None:
+    if not server:
         return []
     path = os.path.join(REGISTER.REG, f'{pane.lstrip("%")}.json')
     try:
@@ -268,9 +259,9 @@ def cache_row(pane, since):
             record = json.load(fh)
     except (OSError, ValueError):
         return []
-    if not isinstance(record, dict) or record.get("pane_id") != pane:
+    if not isinstance(record, dict) or record.get("pane_id") != pane or record.get("server") != server:
         return []
-    if not record.get("session_id") or (RESURRECT.as_epoch(record.get("updated")) or 0) < since:
+    if not record.get("session_id") or not isinstance(record["session_id"], str):
         return []
     return [
         dict(
@@ -548,7 +539,7 @@ def run(argv):
                 merge(
                     sidecar_rows(pane, server)
                     + capture_rows(pane, server)
-                    + cache_row(pane, server_started())
+                    + cache_row(pane, server)
                 )
             )
         )

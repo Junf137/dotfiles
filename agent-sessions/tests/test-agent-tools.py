@@ -18,6 +18,7 @@ title, always double quoted, with \\ and " backslash-escaped.
 """
 
 import glob
+import io
 import json
 import os
 import re
@@ -1399,29 +1400,150 @@ def resume_cases(tool):
     finally:
         resurrect.name_index = previous_index
 
-    # The hook cache is keyed by pane number with no server stamp, so a record
-    # written before a reboot would otherwise be read against whichever restored
-    # pane inherited that number.
+    return cases
+
+
+def hook_cache_cases(resume):
+    """The hook cache: which records agent-pane-register keeps, and who reads them.
+
+    A killed agent's record is the only place its id exists until a save folds
+    it into the sidecar, so it has to outlive the agent. But the cache is keyed
+    by pane number, which every tmux server counts from 0, so a record means
+    something only to the server that issued its pane id.
+    """
+    cases = []
+
+    def add(label, ok):
+        cases.append((label, bool(ok)))
+
+    register, resurrect, procinfo = resume["REGISTER"], resume["RESURRECT"], resume["procinfo"]
+    # This process stands in for a running tmux server; the same pid with any
+    # other start token is a server that exited and had its pid reused.
+    me = os.getpid()
+    token = procinfo.start_token(me)
+    running = f"/tmp/tmux-test/default:{me}:{token}"
+    stopped = f"/tmp/tmux-test/default:{me}:x{token}"
+    env = {name: os.environ.get(name) for name in ("TMUX", "TMUX_PANE")}
+
+    def restore_env():
+        for name, value in env.items():
+            if value is None:
+                os.environ.pop(name, None)
+            else:
+                os.environ[name] = value
+
+    try:
+        os.environ["TMUX"] = f"/tmp/tmux-test/default,{me},0"
+        add("the server id is socket:pid:start token", procinfo.tmux_server_id() == running)
+        add("the save hook uses the same server id", resurrect.server_id() == running)
+        os.environ.pop("TMUX")
+        add("no $TMUX, no server id", procinfo.tmux_server_id() == "")
+    finally:
+        restore_env()
+    add("a running server is running", procinfo.tmux_server_running(running))
+    add("a reused pid is not the same server", not procinfo.tmux_server_running(stopped))
+    add("an id with no start token cannot be checked", not procinfo.tmux_server_running(f"/tmp/s:{me}:?"))
+    add("no id is not a running server", not procinfo.tmux_server_running("") and not procinfo.tmux_server_running(None))
+
+    live = dict(
+        agent="claude", pane_id="%3", session_id=UUID, name="", cwd="/repo",
+        pid=me, proc_start=token, server=running, updated=1000.0,
+    )
+    killed = dict(live, proc_start=f"x{token}")
+    unstamped = {key: value for key, value in killed.items() if key != "server"}
+
+    def put(directory, name, record):
+        with open(os.path.join(directory, name), "w") as fh:
+            json.dump(record, fh)
+
+    # What the session hook writes.
     with tempfile.TemporaryDirectory() as tmp:
-        register = tool["REGISTER"]
+        saved = (register.REG, register.agent_process, sys.stdin, sys.argv)
+        register.REG = tmp
+        register.agent_process = lambda: (me, token)
+        sys.stdin = io.StringIO(json.dumps({"session_id": UUID, "cwd": "/repo"}))
+        sys.argv = ["agent-pane-register", "claude", "start"]
+        os.environ["TMUX"] = f"/tmp/tmux-test/default,{me},0"
+        os.environ["TMUX_PANE"] = "%9"
+        try:
+            register.run()
+            with open(os.path.join(tmp, "9.json")) as fh:
+                written = json.load(fh)
+            add("the session hook stamps its record with the server id", written.get("server") == running)
+        except (OSError, ValueError):
+            add("the session hook stamps its record with the server id", False)
+        finally:
+            register.REG, register.agent_process, sys.stdin, sys.argv = saved
+            restore_env()
+
+    # What every hook run prunes.
+    with tempfile.TemporaryDirectory() as tmp:
+        put(tmp, "1.json", dict(live, pane_id="%1"))
+        put(tmp, "2.json", dict(killed, pane_id="%2"))
+        put(tmp, "3.json", dict(killed, pane_id="%3", server=stopped))
+        put(tmp, "4.json", dict(unstamped, pane_id="%4"))
+        put(tmp, "5.json", dict(killed, pane_id="%5", session_id=""))
+        put(tmp, "6.json", [1, 2])
+        register.prune(tmp)
+        left = set(os.listdir(tmp))
+        add("prune keeps a running agent's record", "1.json" in left)
+        add("prune keeps a killed agent's record while its server runs", "2.json" in left)
+        add("prune drops it once that server has exited", "3.json" not in left)
+        add("prune drops a killed agent's record with no server stamp", "4.json" not in left)
+        add("prune drops a killed agent's record with no session id", "5.json" not in left)
+        add("prune drops a file that is not a record", "6.json" not in left)
+
+    # What agent-resume reads.
+    with tempfile.TemporaryDirectory() as tmp:
         previous = register.REG
         register.REG = tmp
+        cache_row = resume["cache_row"]
         try:
-            record = dict(
-                agent="claude", pane_id="%3", session_id=UUID, name="", cwd="/repo",
-                pid=1, proc_start=2, updated=1000.0,
-            )
-            with open(os.path.join(tmp, "3.json"), "w") as fh:
-                json.dump(record, fh)
-            add("a cache record from this server is read", len(tool["cache_row"]("%3", 900.0)) == 1)
-            add("one predating the server is dropped", tool["cache_row"]("%3", 1100.0) == [])
-            add("no server start time means no cache source", tool["cache_row"]("%3", None) == [])
-            add("a record naming another pane is dropped", tool["cache_row"]("%4", 900.0) == [])
-            with open(os.path.join(tmp, "3.json"), "w") as fh:
-                json.dump(dict(record, session_id=""), fh)
-            add("a record with no session id is dropped", tool["cache_row"]("%3", 900.0) == [])
+            put(tmp, "3.json", killed)
+            rows = cache_row("%3", running)
+            add("a killed agent's record from this server is offered", len(rows) == 1 and not rows[0]["live"])
+            add("another server's record for the same pane number is not", cache_row("%3", stopped) == [])
+            add("no server id means no cache source", cache_row("%3", "") == [])
+            add("a record naming another pane is dropped", cache_row("%4", running) == [])
+            put(tmp, "3.json", unstamped)
+            add("a record with no server stamp is dropped", cache_row("%3", running) == [])
+            put(tmp, "3.json", dict(killed, session_id=""))
+            add("a record with no session id is dropped", cache_row("%3", running) == [])
+            put(tmp, "3.json", dict(killed, session_id=[UUID]))
+            add("a hand-edited session id is dropped, not raised on", cache_row("%3", running) == [])
+            put(tmp, "3.json", live)
+            rows = cache_row("%3", running)
+            add("a running agent's record is marked live", len(rows) == 1 and rows[0]["live"])
         finally:
             register.REG = previous
+
+    # What the save folds into the sidecar.
+    with tempfile.TemporaryDirectory() as tmp:
+        previous = resurrect.HOOK_CACHE
+        resurrect.HOOK_CACHE = tmp
+        try:
+            put(tmp, "2.json", dict(killed, pane_id="%2"))
+            put(tmp, "3.json", dict(live, pane_id="%3"))
+            put(tmp, "4.json", dict(killed, pane_id="%4", server=stopped))
+            put(tmp, "5.json", dict(killed, pane_id="%5"))
+            put(tmp, "6.json", dict(killed, pane_id="%6", session_id="not-a-uuid"))
+            put(tmp, "7.json", dict(killed, pane_id="%7", agent="unknown"))
+            put(tmp, "8.json", dict(killed, pane_id=8))
+            index = {f"%{n}": f"main:1.{n}" for n in (2, 3, 4, 6, 7, 8)}
+            got = resurrect.cache_rows(running, index)
+            add("the save folds in only this server's killed agents, on live panes", sorted(got) == ["main:1.2"])
+            row = (got.get("main:1.2") or [{}])[0]
+            add(
+                "as an exited hook row dated by the hook, not the save",
+                row.get("source") == "hook" and row.get("live") is False and row.get("last_seen") == 1000.0,
+            )
+            add("no server id, nothing folded", resurrect.cache_rows("", index) == {})
+            merged = resurrect.merge_sidecar({}, got, 2000.0, running, index)
+            placed = resurrect.annotatable(merged, index, set(), running)
+            text = resurrect.marker_block(placed.get("main:1.2", []), "2026-10-30 12:00").decode()
+            add("and the next block offers it, as exited", f"--resume {UUID}" in text and "exited" in text)
+        finally:
+            resurrect.HOOK_CACHE = previous
 
     return cases
 
@@ -1672,7 +1794,19 @@ def main():
             print(f"FAIL  resume  {label}")
 
     passed = len(resume) - (failures - resume_failures)
-    print(f"\n{passed}/{len(resume)} agent-resume cases passed")
+    print(f"\n{passed}/{len(resume)} agent-resume cases passed\n")
+
+    cache = hook_cache_cases(load_tool(RESUME_TOOL))
+    cache_failures = failures
+    for label, ok in cache:
+        if ok:
+            print(f"PASS  cache   {label}")
+        else:
+            failures += 1
+            print(f"FAIL  cache   {label}")
+
+    passed = len(cache) - (failures - cache_failures)
+    print(f"\n{passed}/{len(cache)} hook cache cases passed")
     return 1 if failures else 0
 
 

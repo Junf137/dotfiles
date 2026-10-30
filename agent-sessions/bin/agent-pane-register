@@ -13,7 +13,11 @@ Writes ~/.cache/agent-panes/<pane>.json, keyed by tmux's stable %N pane id, whic
 is what agent-panes reads back. Alongside the session id the record carries the
 agent pid and its kernel start time, so a record left behind by a session that
 died without firing its end hook can be recognised as stale rather than
-misattributed to whatever agent occupies that pane next.
+misattributed to whatever agent occupies that pane next -- and the id of the
+tmux server that issued the pane id, because that record is not thrown away.
+A killed agent's record is the only place its session id exists until a save
+has seen it, so it is kept for as long as that server runs: agent-resume
+offers it, and the resurrect save hook folds it into its sidecar.
 
 Exits quietly when TMUX_PANE is unset: the session is not running under tmux and
 there is no pane to bind it to. It exits 0 on every other failure too -- this is
@@ -53,11 +57,15 @@ def agent_process():
 
 
 def prune(reg):
-    """Drop records whose agent process is gone, so dead panes do not linger.
+    """Drop the records nothing can use any more.
 
-    A record without a usable (pid, proc_start) pair cannot be checked against a
-    live process, so it is removed rather than kept: agent-panes would otherwise
-    have to trust it forever.
+    One whose agent is still running stays, and so does one whose agent is gone
+    while the server that issued its pane id still runs: that is a killed agent,
+    and until a save folds it into the sidecar this file is the only place its
+    session id exists. The pane number pins it only within that server, so once
+    the server has exited the record goes. So does one missing either identity
+    pair, which nothing could ever check: agent-panes would have to trust it
+    forever.
     """
     for name in os.listdir(reg):
         if not name.endswith(".json"):
@@ -69,8 +77,12 @@ def prune(reg):
                 rec = json.load(fh)
         except (OSError, ValueError):
             continue
+        if not isinstance(rec, dict):
+            rec = {}
         pid, start = rec.get("pid"), rec.get("proc_start")
         if pid and start and str(procinfo.start_token(pid)) == str(start):
+            continue
+        if pid and start and rec.get("session_id") and procinfo.tmux_server_running(rec.get("server")):
             continue
         try:
             # Re-check mtime: a session that claimed this pane after the read
@@ -136,6 +148,9 @@ def run():
         transcript=payload.get("transcript_path") or payload.get("rollout_path") or "",
         pid=pid,
         proc_start=proc_start,
+        # Which server issued TMUX_PANE. The record outlives a killed agent, and
+        # its pane number names this pane only while this server runs.
+        server=procinfo.tmux_server_id(),
         updated=time.time(),
     )
 
