@@ -240,10 +240,11 @@ def cache_row(pane, server):
     """The record this pane's session-start hook wrote, if this server issued its pane.
 
     The cache is keyed by pane number, which every tmux server counts from 0, so
-    the record's own server stamp is what ties it to this pane. One stamped by
-    an earlier server -- before a reboot -- or by another server running beside
-    this one names whatever pane held that number there. One with no stamp
-    predates it and cannot be tied to anything, so it is skipped too.
+    the record's own server stamp, and a date after this server started, are
+    what tie it to this pane. One from an earlier server -- before a reboot --
+    or from another server running beside this one names whatever pane held
+    that number there. One with no stamp predates it and cannot be tied to
+    anything, so it is skipped too.
 
     A record whose process is gone is the point of this source: that is a killed
     agent, which the session hook keeps for as long as its server runs precisely
@@ -262,6 +263,11 @@ def cache_row(pane, server):
     if not isinstance(record, dict) or record.get("pane_id") != pane or record.get("server") != server:
         return []
     if not record.get("session_id") or not isinstance(record["session_id"], str):
+        return []
+    # The id alone cannot tell two boots apart on Linux, where a server systemd
+    # starts at boot can return with the same pid at the same tick; a record
+    # dated before this server started is not from it.
+    if not procinfo.tmux_server_running(server, RESURRECT.as_epoch(record.get("updated")) or 0):
         return []
     return [
         dict(

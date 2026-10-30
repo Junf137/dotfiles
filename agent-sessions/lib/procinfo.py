@@ -395,11 +395,16 @@ def tmux_server_id():
     return f"{sock}:{pid}:{start}"
 
 
-def tmux_server_running(server):
+def tmux_server_running(server, since=None):
     """Whether the server a tmux_server_id() names is still that same server.
 
     False for an id recorded without a start token, since nothing then tells it
-    apart from a later server that reused the pid.
+    apart from a later server that reused the pid. And, given `since`, false
+    unless that server was already running then. On Linux the token counts
+    clock ticks since boot, so a server systemd starts at boot can come back
+    after a reboot with the same pid at the same tick -- the id alone cannot
+    tell two boots apart, but a record dated before the server started cannot
+    be from it.
     """
     if not isinstance(server, str):
         return False
@@ -407,6 +412,12 @@ def tmux_server_running(server):
     if len(parts) != 3 or parts[2] in ("", "?"):
         return False
     try:
-        return start_token(int(parts[1])) == parts[2]
-    except (TypeError, ValueError):
+        pid = int(parts[1])
+    except ValueError:
         return False
+    if start_token(pid) != parts[2]:
+        return False
+    if since is None:
+        return True
+    started = start_epoch(pid)
+    return started is not None and since >= started

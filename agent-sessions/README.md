@@ -165,10 +165,19 @@ already inside `pane_contents.tar.gz` keep replaying on every restore.
   record whose process is gone only once that server has exited too, since the pane
   number names this pane only while it runs. Until then `agent-resume` offers the
   record, and each save folds it into the sidecar, which is what carries it past
-  that. `end` still deletes its own record, because a graceful exit leaves a banner.
-  The cache is keyed by pane number alone, so a second server running alongside this
-  one can overwrite a record, and so can a new agent started in the same pane. The
-  stamp stops anything reading a record against the wrong server's pane.
+  that. Every reader also requires the record to be dated after the server started:
+  on Linux the start token counts ticks since boot, so a server systemd starts at
+  boot can return after a reboot with the same id.
+  - **Only an agent inside the pane gets a record.** `TMUX_PANE` is inherited, so an
+    editor window opened by `code .` from a pane hands it to every terminal it opens.
+    The hook writes nothing unless the agent runs at or below the pane's own process,
+    which is the live scan's rule too. It asks tmux for that pid (`#{pane_pid}`), one
+    call per session start, because on macOS the pane's process is usually `/bin/zsh`,
+    whose environment no other process may read. `end` deletes only its own agent's
+    record. A graceful exit leaves a banner, so nothing is lost there.
+  - The cache is keyed by pane number alone, so a second server running alongside
+    this one can overwrite a record, and so can a new agent started in the same pane.
+    The stamp stops anything reading a record against the wrong server's pane.
 - **Claude `SessionEnd` needs an explicit `timeout`**: without one it gets only a
   ~1.5 s shutdown budget and may be killed mid-write.
 
@@ -229,7 +238,7 @@ Four sources feed one record per session, folded by `(pane id, agent, session id
 | `agent-panes`, the live process scan | whatever is running at the moment of the save | `hook`, `sessions`, `env`, `cmdline`, `fd`, or an inferred `meta~Ns` / `btime~Ns` |
 | the hook cache, for a record whose agent has died | a session **killed** since its hook ran, even one no save saw running, while this server still has its pane | `hook` |
 | the agent's own exit banner in the archived capture | every session either agent exited *gracefully* out of and the pane's scrollback still holds, including ones that started and ended between two saves | `scrollback` |
-| this script's own block, parsed back out of the capture | everything a previous save wrote down — the only source for a session that was killed or lost to a reboot | whatever the block recorded |
+| this script's own block, parsed back out of the capture | everything a previous save wrote down — once the server it ran under has exited, the only source for a session that was killed or lost to a reboot | whatever the block recorded |
 
 The harvest reads `pane_contents.tar.gz`, not `tmux capture-pane`: the hook already
 opens it, it holds each pane's *whole* history with wrapped lines rejoined

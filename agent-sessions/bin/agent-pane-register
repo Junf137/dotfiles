@@ -27,6 +27,7 @@ never be the reason a session start reports an error.
 
 import json
 import os
+import subprocess
 import sys
 import time
 
@@ -35,6 +36,7 @@ import procinfo  # noqa: E402
 from agents import agent_kind  # noqa: E402
 
 REG = os.path.expanduser("~/.cache/agent-panes")
+TMUX_TIMEOUT_S = 2
 
 
 def agent_process():
@@ -54,6 +56,46 @@ def agent_process():
             return pid, procinfo.start_token(pid)
         pid = parent
     return None, None
+
+
+def pane_root(pane):
+    """The pid tmux started that pane with (`#{pane_pid}`), or None.
+
+    Asked of tmux rather than read off the processes: the pane's own process is
+    the one carrying TMUX_PANE as tmux set it, but on macOS it is usually
+    /bin/zsh, a platform binary whose environment no other process may read.
+    """
+    try:
+        out = subprocess.run(
+            ["tmux", "display-message", "-p", "-t", pane, "#{pane_pid}"],
+            capture_output=True,
+            text=True,
+            timeout=TMUX_TIMEOUT_S,
+        ).stdout.strip()
+        return int(out)
+    except (OSError, ValueError, subprocess.SubprocessError):
+        return None
+
+
+def in_pane(pid, pane):
+    """Whether pid runs inside that pane: at or below the pane's own process.
+
+    The live scan's rule too. TMUX_PANE is inherited, not assigned: an editor
+    window opened by `code .` from a pane hands it to every terminal it opens,
+    and an agent started there would otherwise be filed under this pane -- and,
+    once killed, kept and folded into its history as a session that ran here.
+    One tmux call, on session start only, and never in the save hook.
+    """
+    root = pane_root(pane)
+    if root is None:
+        return False
+    for _ in range(64):
+        if pid == root:
+            return True
+        pid = procinfo.ppid(pid)
+        if not pid or pid <= 1:
+            return False
+    return False
 
 
 def prune(reg):
@@ -79,11 +121,19 @@ def prune(reg):
             continue
         if not isinstance(rec, dict):
             rec = {}
-        pid, start = rec.get("pid"), rec.get("proc_start")
-        if pid and start and str(procinfo.start_token(pid)) == str(start):
-            continue
-        if pid and start and rec.get("session_id") and procinfo.tmux_server_running(rec.get("server")):
-            continue
+        pid, start, updated = rec.get("pid"), rec.get("proc_start"), rec.get("updated")
+        # Only what run() writes counts as an identity pair. A hand-edited pid
+        # of another type raises out of the macOS backend, which would stop the
+        # prune on every hook run with this file still in place.
+        if isinstance(pid, int) and not isinstance(pid, bool) and pid > 0 and start:
+            if str(procinfo.start_token(pid)) == str(start):
+                continue
+            if (
+                rec.get("session_id")
+                and isinstance(updated, (int, float))
+                and procinfo.tmux_server_running(rec.get("server"), updated)
+            ):
+                continue
         try:
             # Re-check mtime: a session that claimed this pane after the read
             # above must not have its fresh record deleted.
@@ -105,9 +155,16 @@ def run():
     path = os.path.join(REG, f'{pane.lstrip("%")}.json')
 
     if action == "end":
+        # Only this agent's own record. Another agent can end with the same
+        # pane id -- a parallel `claude -p`, or one in a window opened from this
+        # pane -- and the record may be a killed agent's, the only copy of its id.
+        pid, _ = agent_process()
         try:
-            os.remove(path)
-        except OSError:
+            with open(path) as fh:
+                rec = json.load(fh)
+            if pid and isinstance(rec, dict) and rec.get("pid") == pid:
+                os.remove(path)
+        except (OSError, ValueError):
             pass
         prune(REG)
         return 0
@@ -130,10 +187,12 @@ def run():
             break
 
     pid, proc_start = agent_process()
-    if not pid or not proc_start:
+    if not pid or not proc_start or not in_pane(pid, pane):
         # Without the identity pair the record could never be checked against a
         # live process, so agent-panes would serve it to whatever agent occupies
-        # this pane next. No record is better than an unguardable one.
+        # this pane next. No record is better than an unguardable one -- or than
+        # one for an agent that only inherited this pane's id, which would also
+        # overwrite the record of the agent that really ran here.
         prune(REG)
         return 0
 

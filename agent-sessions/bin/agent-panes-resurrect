@@ -875,9 +875,9 @@ def cache_rows(server, index):
     folding it in here is what carries it further -- into the sidecar, the
     block, and across a reboot.
 
-    Only this server's records, for panes it still has: the cache is keyed by
-    pane number, and every server counts those from 0. A live agent's record is
-    left to the live scan. `last_seen` is when the hook last ran for that
+    Only this server's records, dated after it started, for panes it still has:
+    the cache is keyed by pane number, and every server counts those from 0. A
+    live agent's record is left to the live scan. `last_seen` is when the hook last ran for that
     session, the last moment anything saw the agent running -- never this save.
     """
     if not server or procinfo is None:
@@ -903,8 +903,16 @@ def cache_rows(server, index):
         loc = index.get(pane_id)
         if not loc or agent not in RESUME or not re.fullmatch(UUID, session_id):
             continue
+        # Only what the hook writes: a pid of any other type was edited by hand,
+        # and raises out of the macOS backend before this save could log it.
         pid, start = record.get("pid"), record.get("proc_start")
-        if pid and start and str(procinfo.start_token(pid)) == str(start):
+        if not isinstance(pid, int) or isinstance(pid, bool) or pid <= 0 or not start:
+            continue
+        if str(procinfo.start_token(pid)) == str(start):
+            continue
+        # Dated after this server started, since its id alone cannot tell two
+        # boots apart on Linux; see procinfo.tmux_server_running().
+        if not procinfo.tmux_server_running(server, as_epoch(record.get("updated")) or 0):
             continue
         panes.setdefault(loc, []).append(
             dict(
