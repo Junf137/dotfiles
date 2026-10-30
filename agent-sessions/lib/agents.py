@@ -122,6 +122,22 @@ def transcript_index():
     return index
 
 
+def transcript_text(path):
+    """A transcript's whole text, or "" where it cannot be read -- a compressed
+    rollout without compression.zstd included, as in transcript_cwd()."""
+    try:
+        if not path.endswith(".zst"):
+            fh = open(path, errors="ignore")
+        elif zstd:
+            fh = zstd.open(path, "rt", errors="ignore")
+        else:
+            return ""
+        with fh:
+            return fh.read()
+    except READ_ERRORS:
+        return ""
+
+
 def transcript_cwd(path):
     """The directory a session was opened in, read from its own transcript.
 

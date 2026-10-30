@@ -1276,6 +1276,55 @@ def resume_cases(tool):
     add("--pane normalises to %N", tool["parse_args"](["--pane", "7"])[0]["pane"] == "%7")
     add("--pane keeps an explicit %N", tool["parse_args"](["--pane=%13"])[0]["pane"] == "%13")
     add("an unknown flag is refused", tool["parse_args"](["--resume-anyway"])[1] != "")
+    add("resuming beside the pane is the default", tool["parse_args"]([])[0]["here"] is False)
+    add("--here resumes in place", tool["parse_args"](["--here"])[0]["here"] is True)
+
+    # Resuming beside the pane closes the old one only when its history matches
+    # the session's transcript. What counts as a line worth comparing:
+    probes = tool["probes"]
+    said = "Both docs now record the posted review and the merge discussion."
+    add("a decorated line is compared without its bullet", probes(f"  ● {said}") == [said[: tool["PROBE_CHARS"]]])
+    add(
+        "rules, prompts and short lines are not compared",
+        probes("─" * 80 + "\n❯ \n✻ Baked for 19m 24s\n  ⎿  done") == [],
+    )
+    add(
+        "a drawn table is compared cell by cell",
+        probes("│ 3 │ ~/Mecka/mecka-datasets-dvc/.dvc/cache │ 59 GB │ Only safe if everything has been dvc pushed. │")
+        == ["~/Mecka/mecka-datasets-dvc/.dvc/cache", "Only safe if everything has been dvc pushed."],
+    )
+    many = "\n".join(f"line {n:03d} of a long conversation the pane kept" for n in range(100))
+    add("only the most recent lines are compared", probes(many)[-1].startswith("line 099") and len(probes(many)) == tool["MATCH_PROBES"])
+    # A shell prompt repeated down the pane, against a wrong session that holds
+    # it once, pasted: one piece of evidence, not five hits.
+    prompt = "┏ >> junf@bigyaboom2 in [~/Documents/dotfiles] on git:feat/agent-resume-split x"
+    repeated = probes("\n".join([prompt, "┗ $ ls"] * 5))
+    add("a repeated line counts once", tool["hits"](repeated, json.dumps({"t": "pasted: " + prompt}, ensure_ascii=False)) == 1)
+    # Transcripts are JSON: a quote is stored escaped, anything else verbatim.
+    quoted = 'he said "resume the session now, please" and then left'
+    add("a quoted line matches as JSON stores it", tool["hits"]([quoted], json.dumps({"text": quoted})) == 1)
+    add("a non-ASCII line matches as stored", tool["hits"](["déjà vu → the calibration ran twice today"], json.dumps({"t": "déjà vu → the calibration ran twice today"}, ensure_ascii=False)) == 1)
+
+    # The case that motivated it: a pane whose recorded id named an empty stub
+    # while the conversation on screen lived in another session. The block naming
+    # the stub must not count as evidence for it.
+    stub_id = "3fa9598c-0ad6-42fa-8ca7-fdaaa2677ebe"
+    screen = [
+        "  Alex and Kevin believe the issue is a keypoint convention mismatch,",
+        "  verified on hot3d; the remainder are calibration issues after that.",
+        "● Kaiwen is carrying on with the selection policy to raise the hand size,",
+        "  since some of the hand pose results are not good enough to keep as they are.",
+        "  The retrospective goes in the doc, with the details in an attachment.",
+        "Broadcast message from root@bigyaboom2 on pts/76 (Wed 2026-10-21 23:18:08 EDT):",
+    ]
+    stanza = dict(agent="claude", session_id=stub_id, name="ml-data-ops-7e", cwd="/repo", source="hook", last_seen=1.0)
+    capture = ("\n".join(screen) + "\n").encode() + tool["RESURRECT"].marker_block([stanza], STAMP)
+    seen = probes(tool["RESURRECT"].split_capture(capture)[1])
+    real = json.dumps({"message": {"content": "\n".join(line.strip().lstrip("● ") for line in screen[:5])}})
+    stub = json.dumps({"type": "continued-in", "sessionId": stub_id})
+    add("the injected block is not compared", not any("agent-session" in line or stub_id in line for line in seen))
+    add("the right session's transcript matches", tool["hits"](seen, real) >= tool["MATCH_HITS"])
+    add("a stub with the same id does not", tool["hits"](seen, stub) == 0)
 
     # The same session arrives from several sources; the merge has to keep the
     # best-attested version of each field rather than whichever arrived first.
