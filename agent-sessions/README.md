@@ -433,7 +433,7 @@ every session that left no banner (killed, or lost to a reboot).
 ## Resuming: `agent-resume`
 
 Run in any pane: if exactly one agent session maps to it, it splits the pane and types
-the resume command into the new pane on the right, in the directory the session was opened
+the resume command into a new pane below it, in the directory the session was opened
 in — `claude --dangerously-skip-permissions --resume <uuid>` or
 `codex resume <uuid> --yolo` — and once the agent is up compares the old pane's history
 with the session's transcript. A match closes the old pane; anything else keeps both and
@@ -475,6 +475,19 @@ fresh shell with no job to `fg`.
   conversation — the agent exited, or was killed, on its alternate screen — has nothing
   to match and is kept. The history is read before the split, and the transcript after
   the agent is up, since resuming Codex rewrites a compressed rollout as `.jsonl`.
+- **Where the screen was in the conversation does not matter.** The lines are looked up
+  anywhere in the transcript, and Claude keeps what came before a compaction in the same
+  file, so a pane saved while the agent was scrolled back matches as well as one at the
+  end. Both agents draw on the alternate screen and scroll inside it. Measured on
+  120-entry throwaway sessions resumed in a throwaway pane — Claude: 44 of 47 lines at
+  the end, 44 of 47 scrolled to entries 35–78, 38 of 42 at the top; codex-cli 0.166: 42
+  of 45 at the end, 41 of 44 scrolled to the top, 41 of 44 in its Ctrl-T transcript
+  overlay and 29 of 38 scrolled up in it. Scrolling tmux's own copy mode leaves the
+  capture byte-identical. One gap: a Codex thread is compared against its newest rollout
+  only. That holds the whole conversation when every resume appended to it, as a
+  terminal resume does on codex-cli 0.165+, but not always for a thread resumed on an
+  older Codex or continued in VS Code, so a screen scrolled into such an older part
+  misses, and both panes are kept.
 - **It closes only the pane it runs in, and never one with an agent in it.** Run there,
   the pane's foreground job is `agent-resume` itself; a pane named with `--pane` could be
   running anything, so it is compared and reported, never closed. "Runs in" is the

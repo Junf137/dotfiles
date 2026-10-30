@@ -5,7 +5,7 @@
 """Resume the Claude Code / Codex session that belongs to this tmux pane.
 
 Run it in any pane. If exactly one agent session maps to that pane -- and only
-then -- that session is resumed in a new pane split off to its right, in the
+then -- that session is resumed in a new pane split off below it, in the
 directory it was opened in:
 
     claude --dangerously-skip-permissions --resume <uuid>
@@ -528,7 +528,7 @@ def resume_beside(pane, row, line, keep=""):
     """
     lines = probes(RESURRECT.split_capture(capture(pane))[1])
     cwd = row.get("cwd") or "#{pane_current_path}"
-    new = tmux("split-window", "-h", "-t", pane, "-c", cwd, "-P", "-F", "#{pane_id}")
+    new = tmux("split-window", "-v", "-t", pane, "-c", cwd, "-P", "-F", "#{pane_id}")
     if not new:
         fail(f"could not split {pane}")
         return 3
