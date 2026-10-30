@@ -481,12 +481,13 @@ fresh shell with no job to `fg`.
   end. Both agents draw on the alternate screen and scroll inside it. Measured on
   120-entry throwaway sessions resumed in a throwaway pane — Claude: 44 of 47 lines at
   the end, 44 of 47 scrolled to entries 35–78, 38 of 42 at the top; codex-cli 0.166: 42
-  of 45 at the end, 41 of 44 scrolled to the top, 29 of 38 in its Ctrl-T transcript
-  overlay. Scrolling tmux's own copy mode leaves the capture byte-identical. One gap: a
-  Codex thread is compared against its newest rollout only. That holds the whole
-  conversation when every resume appended to it, as one from a terminal does, but not
-  always for a thread also continued elsewhere (VS Code), so a screen scrolled into such
-  an older part misses, and both panes are kept.
+  of 45 at the end, 41 of 44 scrolled to the top, 41 of 44 in its Ctrl-T transcript
+  overlay and 29 of 38 scrolled up in it. Scrolling tmux's own copy mode leaves the
+  capture byte-identical. One gap: a Codex thread is compared against its newest rollout
+  only. That holds the whole conversation when every resume appended to it, as a
+  terminal resume does on codex-cli 0.165+, but not always for a thread resumed on an
+  older Codex or continued in VS Code, so a screen scrolled into such an older part
+  misses, and both panes are kept.
 - **It closes only the pane it runs in, and never one with an agent in it.** Run there,
   the pane's foreground job is `agent-resume` itself; a pane named with `--pane` could be
   running anything, so it is compared and reported, never closed. "Runs in" is the
