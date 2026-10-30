@@ -433,7 +433,7 @@ every session that left no banner (killed, or lost to a reboot).
 ## Resuming: `agent-resume`
 
 Run in any pane: if exactly one agent session maps to it, it splits the pane and types
-the resume command into the new pane on the right, in the directory the session was opened
+the resume command into a new pane below it, in the directory the session was opened
 in — `claude --dangerously-skip-permissions --resume <uuid>` or
 `codex resume <uuid> --yolo` — and once the agent is up compares the old pane's history
 with the session's transcript. A match closes the old pane; anything else keeps both and
@@ -475,6 +475,14 @@ fresh shell with no job to `fg`.
   conversation — the agent exited, or was killed, on its alternate screen — has nothing
   to match and is kept. The history is read before the split, and the transcript after
   the agent is up, since resuming Codex rewrites a compressed rollout as `.jsonl`.
+- **Where the screen was in the conversation does not matter.** The lines are looked up
+  anywhere in the transcript, and Claude keeps what came before a compaction in the same
+  file, so a pane saved while the agent was scrolled back matches as well as one at the
+  end. Measured on a 120-entry Claude session resumed in a throwaway pane: the end held
+  44 of its 47 lines, scrolled to entries 35–78 also 44 of 47, scrolled to the top 38 of
+  42. Scrolling tmux's own copy mode does not change the capture at all — byte-identical
+  — and Codex prints into the pane's ordinary scrollback, so for it that is the only
+  scrolling there is.
 - **It closes only the pane it runs in, and never one with an agent in it.** Run there,
   the pane's foreground job is `agent-resume` itself; a pane named with `--pane` could be
   running anything, so it is compared and reported, never closed. "Runs in" is the
