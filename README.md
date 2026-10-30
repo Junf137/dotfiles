@@ -73,6 +73,34 @@ put local paths or generated state in `codex/config.toml`. A setting changed in 
 Codex app can land in the user file and override the shared default until you delete
 it there.
 
+## Neovim
+
+`nvim/nvim-kickstart` is a fork of
+[kickstart.nvim](https://github.com/nvim-lua/kickstart.nvim), linked as
+`~/.config/nvim`. It installs plugins with Neovim's built-in `vim.pack`, so it needs
+Neovim 0.12 or newer. The fork's `master` mirrors upstream, and its `local` branch is
+upstream plus a small diff: one-line switches in `init.lua`, and personal plugins and
+settings in `lua/custom/plugins/`, which upstream promises never to conflict with. Put
+new tweaks there too, not in upstream's files. The debug module stays off: it needs Go.
+
+- Plugins: run `:lua vim.pack.update()` in Neovim on each machine, then `:write` to
+  apply. `nvim-pack-lock.json` stays ignored, as upstream ships it, so this needs no
+  commit.
+- Upstream: merge it into `local` in a scratch clone of the fork, never in the live
+  submodule. Merge, don't rebase: `local` is published.
+
+```bash
+git clone git@github.com:Junf137/kickstart.nvim ks && cd ks
+git remote add upstream https://github.com/nvim-lua/kickstart.nvim && git fetch upstream
+git push origin upstream/master:master          # keep the mirror current
+git switch -c chore/upstream-sync origin/local
+git merge upstream/master                       # then open a PR into local and merge it
+```
+
+Then point `nvim/nvim-kickstart` at the merged commit through a normal `main` change.
+On each machine, after rebasing `local`, run `git pull --ff-only` inside
+`nvim/nvim-kickstart`, which stays on its own `local` branch, and start Neovim once.
+
 ## Branch and commit conventions
 
 - `main` contains shared changes suitable for all machines and follows
