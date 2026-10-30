@@ -432,13 +432,16 @@ every session that left no banner (killed, or lost to a reboot).
 
 ## Resuming: `agent-resume`
 
-Run in any pane: if exactly one agent session maps to it, it splits the pane, types the
-resume command into the new pane on the right, in the directory the session was opened
+Run in any pane: if exactly one agent session maps to it, it splits the pane and starts
+the resume command in the new pane on the right, in the directory the session was opened
 in — `claude --dangerously-skip-permissions --resume <uuid>` or
 `codex resume <uuid> --yolo` — and once the agent is up compares the old pane's history
 with the session's transcript. A match closes the old pane; anything else keeps both and
 says why in the old one. `--here` resumes in place instead: it clears the screen and
 execs the agent in the old pane. It reads three sources and writes to none of them.
+The new pane runs `$SHELL -ic '<command>; exec $SHELL -l'` rather than having the
+command typed into it: a zsh still starting up kept typed text and dropped its Enter,
+leaving the command unrun on its prompt line.
 
 | Source | Covers what the others cannot |
 |---|---|
@@ -457,17 +460,29 @@ execs the agent in the old pane. It reads three sources and writes to none of th
   session, an empty stub, while the conversation on screen lives under another id — and
   resumed in place, the wrong session takes over the pane its history was read from.
   Beside it, the cost is a pane to close.
-- **The match is evidence about text.** The old pane's last 60 lines with 20 or more
-  letters and digits (a drawn table cell by cell, each cut to 60 characters) are looked
-  up in the transcript as JSON stores them, and 5 must be there. Most screen lines never
-  reach a transcript — status bars, rendered markdown, prompts, reboot broadcasts — so
-  the bar is low; measured on 12 restored panes against 267 transcripts, the right
-  session held 5 to 24, an unrelated one at most 2. Text cannot tell a fork from its
-  parent, or a session from one that printed the pane, so a match closes the pane only
-  for the session `agent-resume` mapped by itself. A pane whose history never showed the
+- **The match is evidence about text.** The old pane's last 60 distinct lines with 20
+  or more letters and digits (a drawn table cell by cell, each cut to 60 characters) are
+  looked up in the transcript as JSON stores them, and 5 must be there. Distinct,
+  because a repeated shell prompt is one piece of evidence, not one per command. Most
+  screen lines never reach a transcript — status bars, rendered markdown, prompts, reboot
+  broadcasts — so the bar is low; measured on 11 restored panes against 79 session
+  transcripts (55 Claude, 24 Codex), the right session held 5 to 29, an unrelated one at
+  most 2. Text cannot tell a fork from its parent, a session from one that printed the
+  pane, or a pane ending in common shell output (one `git status` is five distinct
+  lines) from any session that ran the same command, so a match closes the pane only for
+  the session `agent-resume` mapped by itself. A pane whose history never showed the
   conversation — the agent exited, or was killed, on its alternate screen — has nothing
   to match and is kept. The history is read before the split, and the transcript after
   the agent is up, since resuming Codex rewrites a compressed rollout as `.jsonl`.
+- **It closes only the pane it runs in, and never one with an agent in it.** Run there,
+  the pane's foreground job is `agent-resume` itself; a pane named with `--pane` could be
+  running anything, so it is compared and reported, never closed. The agent check is
+  repeated right before the close, because `--force` gets past the first one. A session
+  whose directory is gone is resumed from the pane's, where `claude --resume` is expected
+  to fail — perhaps after a prompt that outlasts the 3 s the agent must stay up — so that
+  pane is kept too. After exit `4` the old pane still maps to the session now running
+  beside it: running `agent-resume` there again starts a second copy, and the message
+  says so.
 - **A candidate whose transcript is gone is listed but never chosen**, and never makes a
   pane ambiguous. Both agents resolve `--resume` out of those files and Claude prunes its
   own at 30 days, so an id with nothing behind it is not a candidate at all. That is
@@ -480,13 +495,12 @@ execs the agent in the old pane. It reads three sources and writes to none of th
   and nothing has folded it into the sidecar yet. `clear(1)` sends both on most terminfo
   entries. Measured with Claude 2.1.312 and codex-cli 0.165: neither agent touches the
   pane's history either, running or on exit, and a save taken while one runs keeps it.
-- **It refuses a pane with an agent already running in it**, found by walking the pane's
-  process tree, since closing that pane on a match would close the agent too — which is
-  what an agent running this from its own shell tool without `--pane` would do.
-  `--here` refuses instead when an agent is running above it (`agent-pane-register`'s
-  ancestor walk): it would start a second agent inside the first one's tool call, on a
-  terminal that is not one. `--dry-run` prints the command instead; `--force` overrides
-  either.
+- **It refuses to run under an agent, and to resume beside a pane with one in it.** The
+  first is `agent-pane-register`'s ancestor walk: in place, it would start a second
+  agent inside the first one's tool call, on a terminal that is not one, and beside the
+  pane nobody is there to compare the two. The second walks the target pane's process
+  tree, since that pane's session is not one that needs resuming. `--dry-run` prints
+  the command instead; `--force` overrides both, but never the close.
 - **The block parsing is borrowed, not copied.** `marker_line()`, `parse_stanzas()` and
   `split_capture()` come from `agent-panes-resurrect` by import, so the stanza binding
   rules apply identically. The per-pane caps are borrowed for the same reason: here they

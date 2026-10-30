@@ -1295,6 +1295,11 @@ def resume_cases(tool):
     )
     many = "\n".join(f"line {n:03d} of a long conversation the pane kept" for n in range(100))
     add("only the most recent lines are compared", probes(many)[-1].startswith("line 099") and len(probes(many)) == tool["MATCH_PROBES"])
+    # A shell prompt repeated down the pane, against a wrong session that holds
+    # it once, pasted: one piece of evidence, not five hits.
+    prompt = "┏ >> junf@bigyaboom2 in [~/Documents/dotfiles] on git:feat/agent-resume-split x"
+    repeated = probes("\n".join([prompt, "┗ $ ls"] * 5))
+    add("a repeated line counts once", tool["hits"](repeated, json.dumps({"t": "pasted: " + prompt}, ensure_ascii=False)) == 1)
     # Transcripts are JSON: a quote is stored escaped, anything else verbatim.
     quoted = 'he said "resume the session now, please" and then left'
     add("a quoted line matches as JSON stores it", tool["hits"]([quoted], json.dumps({"text": quoted})) == 1)
