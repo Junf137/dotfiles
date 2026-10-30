@@ -70,8 +70,6 @@ brew "zsh"
 cask "1password"
 # Continuation of Clash Verge - A Clash Meta GUI based on Tauri
 cask "clash-verge-rev"
-# Anthropic's official Claude AI desktop app
-cask "claude"
 # Voice and text chat software
 cask "discord"
 # Web browser
@@ -79,8 +77,6 @@ cask "firefox"
 cask "font-fira-code-nerd-font"
 # Web browser
 cask "google-chrome"
-# AI-powered notepad for meetings
-cask "granola"
 # File system integration
 cask "macfuse"
 # Interactive tool for analyzing MongoDB data
@@ -97,8 +93,6 @@ cask "spotify"
 cask "steam"
 # To-do list and time tracker
 cask "super-productivity"
-# AI voice dictation that turns speech into polished text
-cask "typeless"
 # Open-source code editor
 cask "visual-studio-code"
 # Multimedia player
