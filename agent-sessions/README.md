@@ -432,16 +432,17 @@ every session that left no banner (killed, or lost to a reboot).
 
 ## Resuming: `agent-resume`
 
-Run in any pane: if exactly one agent session maps to it, it splits the pane and starts
-the resume command in the new pane on the right, in the directory the session was opened
+Run in any pane: if exactly one agent session maps to it, it splits the pane and types
+the resume command into the new pane on the right, in the directory the session was opened
 in — `claude --dangerously-skip-permissions --resume <uuid>` or
 `codex resume <uuid> --yolo` — and once the agent is up compares the old pane's history
 with the session's transcript. A match closes the old pane; anything else keeps both and
 says why in the old one. `--here` resumes in place instead: it clears the screen and
 execs the agent in the old pane. It reads three sources and writes to none of them.
-The new pane runs `$SHELL -ic '<command>; exec $SHELL -l'` rather than having the
-command typed into it: a zsh still starting up kept typed text and dropped its Enter,
-leaving the command unrun on its prompt line.
+Typed, not run as the pane's command, so the agent is the new shell's job: Ctrl-Z, which
+both agents offer, leaves it stopped under a shell whose `fg` brings it back. Run as
+`$SHELL -ic '<command>; exec $SHELL -l'` instead, the stopped agent was orphaned under a
+fresh shell with no job to `fg`.
 
 | Source | Covers what the others cannot |
 |---|---|
@@ -476,7 +477,9 @@ leaving the command unrun on its prompt line.
   the agent is up, since resuming Codex rewrites a compressed rollout as `.jsonl`.
 - **It closes only the pane it runs in, and never one with an agent in it.** Run there,
   the pane's foreground job is `agent-resume` itself; a pane named with `--pane` could be
-  running anything, so it is compared and reported, never closed. The agent check is
+  running anything, so it is compared and reported, never closed. "Runs in" is the
+  session hook's own `in_pane()` — below the pane's process, on its terminal — not
+  `TMUX_PANE`, which anything opened from the pane inherits. The agent check is
   repeated right before the close, because `--force` gets past the first one. A session
   whose directory is gone is resumed from the pane's, where `claude --resume` is expected
   to fail — perhaps after a prompt that outlasts the 3 s the agent must stay up — so that
