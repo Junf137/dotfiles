@@ -18,8 +18,9 @@ user's own processes with no privileges and no shelling out:
     sysctl KERN_PROCARGS2 <pid>     exec path, argv and environ in one read,
                                     replacing /proc/<pid>/{cmdline,environ}
     libproc proc_listpids           the pid table, replacing os.listdir("/proc")
-    libproc PROC_PIDTBSDINFO        ppid, comm and start time, replacing the
-                                    parts of /proc/<pid>/stat that are read
+    libproc PROC_PIDTBSDINFO        ppid, comm, start time and controlling
+                                    terminal, replacing the parts of
+                                    /proc/<pid>/stat that are read
     libproc proc_pidpath            replacing /proc/<pid>/exe
     libproc PROC_PIDVNODEPATHINFO   replacing /proc/<pid>/cwd
     libproc PROC_PIDLISTFDS         replacing /proc/<pid>/fd/
@@ -85,6 +86,13 @@ if not IS_DARWIN:
     def start_token(pid):
         try:
             return str(_stat_fields(pid)[1][19])
+        except (OSError, IndexError, ValueError):
+            return None
+
+    def ctty(pid):
+        """The controlling terminal's device number (tty_nr), or None for none."""
+        try:
+            return int(_stat_fields(pid)[1][4]) or None
         except (OSError, IndexError, ValueError):
             return None
 
@@ -237,6 +245,14 @@ else:
         info = _bsdinfo(pid)
         return str(info[2]) if info else None
 
+    def ctty(pid):
+        """The controlling terminal's device number (e_tdev), or None for none."""
+        buf = ctypes.create_string_buffer(BSDINFO_SIZE)
+        if _libc.proc_pidinfo(pid, PROC_PIDTBSDINFO, 0, buf, BSDINFO_SIZE) != BSDINFO_SIZE:
+            return None
+        tdev = struct.unpack_from("I", buf.raw, 108)[0]  # e_tdev; NODEV is (dev_t)-1
+        return None if tdev in (0, 0xFFFFFFFF) else tdev
+
     def start_epoch(pid, boot=None):
         """Wall-clock start time of a process, in epoch seconds.
 
@@ -371,3 +387,53 @@ def process_table():
         comms[pid] = comm(pid)
         kids.setdefault(parent, []).append(pid)
     return kids, comms
+
+
+def tmux_server_id():
+    """Which tmux server generation $TMUX names: `socket:pid:start token`, or "".
+
+    `%N` pane ids are a per-server counter that restarts at 0, so a pane id
+    means something only alongside this. The session hook stamps its cache
+    records with it and the resurrect hook its sidecar records, and the two must
+    agree to the byte or every record is silently refused -- hence one copy, in
+    the one module both already import. The start token is in it because a pid
+    alone is reused: a server started by systemd at boot gets nearly the same
+    pid every time.
+    """
+    parts = (os.environ.get("TMUX") or "").split(",")
+    if len(parts) < 2:
+        return ""
+    sock, pid = parts[0], parts[1]
+    try:
+        start = start_token(int(pid)) or "?"
+    except (TypeError, ValueError):
+        start = "?"
+    return f"{sock}:{pid}:{start}"
+
+
+def tmux_server_running(server, since=None):
+    """Whether the server a tmux_server_id() names is still that same server.
+
+    False for an id recorded without a start token, since nothing then tells it
+    apart from a later server that reused the pid. And, given `since`, false
+    unless that server was already running then. On Linux the token counts
+    clock ticks since boot, so a server systemd starts at boot can come back
+    after a reboot with the same pid at the same tick -- the id alone cannot
+    tell two boots apart, but a record dated before the server started cannot
+    be from it.
+    """
+    if not isinstance(server, str):
+        return False
+    parts = server.rsplit(":", 2)
+    if len(parts) != 3 or parts[2] in ("", "?"):
+        return False
+    try:
+        pid = int(parts[1])
+    except ValueError:
+        return False
+    if start_token(pid) != parts[2]:
+        return False
+    if since is None:
+        return True
+    started = start_epoch(pid)
+    return started is not None and since >= started

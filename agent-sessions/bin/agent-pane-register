@@ -13,7 +13,11 @@ Writes ~/.cache/agent-panes/<pane>.json, keyed by tmux's stable %N pane id, whic
 is what agent-panes reads back. Alongside the session id the record carries the
 agent pid and its kernel start time, so a record left behind by a session that
 died without firing its end hook can be recognised as stale rather than
-misattributed to whatever agent occupies that pane next.
+misattributed to whatever agent occupies that pane next -- and the id of the
+tmux server that issued the pane id, because that record is not thrown away.
+A killed agent's record is the only place its session id exists until a save
+has seen it, so it is kept for as long as that server runs: agent-resume
+offers it, and the resurrect save hook folds it into its sidecar.
 
 Exits quietly when TMUX_PANE is unset: the session is not running under tmux and
 there is no pane to bind it to. It exits 0 on every other failure too -- this is
@@ -23,6 +27,7 @@ never be the reason a session start reports an error.
 
 import json
 import os
+import subprocess
 import sys
 import time
 
@@ -31,6 +36,7 @@ import procinfo  # noqa: E402
 from agents import agent_kind  # noqa: E402
 
 REG = os.path.expanduser("~/.cache/agent-panes")
+TMUX_TIMEOUT_S = 2
 
 
 def agent_process():
@@ -52,12 +58,71 @@ def agent_process():
     return None, None
 
 
-def prune(reg):
-    """Drop records whose agent process is gone, so dead panes do not linger.
+def pane_info(pane):
+    """(the pid tmux started that pane with, its terminal's device number), or None.
 
-    A record without a usable (pid, proc_start) pair cannot be checked against a
-    live process, so it is removed rather than kept: agent-panes would otherwise
-    have to trust it forever.
+    Asked of tmux rather than read off the processes: the pane's own process is
+    the one carrying TMUX_PANE as tmux set it, but on macOS it is usually
+    /bin/zsh, a platform binary whose environment no other process may read.
+    """
+    try:
+        out = subprocess.run(
+            ["tmux", "display-message", "-p", "-t", pane, "#{pane_pid}\t#{pane_tty}"],
+            capture_output=True,
+            text=True,
+            timeout=TMUX_TIMEOUT_S,
+        ).stdout.strip()
+        root, tty = out.split("\t")
+        return int(root), os.stat(tty).st_rdev & 0xFFFFFFFF
+    except (OSError, ValueError, subprocess.SubprocessError):
+        return None
+
+
+def in_pane(pid, pane):
+    """Whether pid is an agent running in that pane: below its process, on its terminal.
+
+    TMUX_PANE is inherited, not assigned, and a killed agent's record is kept
+    and folded into the pane's history -- so it has to be an agent that really
+    ran there. Two ways one inherits the id without being one:
+
+      * a window opened from the pane -- `code .`, a GUI terminal -- hands it to
+        every terminal it opens. Those are not below the pane's own process,
+        which is the live scan's rule too;
+      * an agent started from another agent's shell tool (a skill eval's
+        `claude -p`) is below it, but both agents' shell tools run commands in a
+        new session without the pane's terminal, and such agents are routinely
+        killed.
+
+    The terminal also excludes an agent behind any wrapper with a pty of its
+    own -- an editor's terminal, `script`, `sudo` with use_pty -- which then
+    goes without a record, as every agent did before records were kept. One
+    tmux call, on session start only, never in the save hook.
+    """
+    info = pane_info(pane)
+    if info is None:
+        return False
+    root, tty = info
+    if procinfo.ctty(pid) != tty:
+        return False
+    for _ in range(64):
+        if pid == root:
+            return True
+        pid = procinfo.ppid(pid)
+        if not pid or pid <= 1:
+            return False
+    return False
+
+
+def prune(reg):
+    """Drop the records nothing can use any more.
+
+    One whose agent is still running stays, and so does one whose agent is gone
+    while the server that issued its pane id still runs: that is a killed agent,
+    and until a save folds it into the sidecar this file is the only place its
+    session id exists. The pane number pins it only within that server, so once
+    the server has exited the record goes. So does one missing either identity
+    pair, which nothing could ever check: agent-panes would have to trust it
+    forever.
     """
     for name in os.listdir(reg):
         if not name.endswith(".json"):
@@ -69,9 +134,21 @@ def prune(reg):
                 rec = json.load(fh)
         except (OSError, ValueError):
             continue
-        pid, start = rec.get("pid"), rec.get("proc_start")
-        if pid and start and str(procinfo.start_token(pid)) == str(start):
-            continue
+        if not isinstance(rec, dict):
+            rec = {}
+        pid, start, updated = rec.get("pid"), rec.get("proc_start"), rec.get("updated")
+        # Only what run() writes counts as an identity pair. A hand-edited pid
+        # of another type raises out of the macOS backend, which would stop the
+        # prune on every hook run with this file still in place.
+        if isinstance(pid, int) and not isinstance(pid, bool) and pid > 0 and start:
+            if str(procinfo.start_token(pid)) == str(start):
+                continue
+            if (
+                rec.get("session_id")
+                and isinstance(updated, (int, float))
+                and procinfo.tmux_server_running(rec.get("server"), updated)
+            ):
+                continue
         try:
             # Re-check mtime: a session that claimed this pane after the read
             # above must not have its fresh record deleted.
@@ -93,9 +170,16 @@ def run():
     path = os.path.join(REG, f'{pane.lstrip("%")}.json')
 
     if action == "end":
+        # Only this agent's own record. Another agent can end with the same
+        # pane id -- a parallel `claude -p`, or one in a window opened from this
+        # pane -- and the record may be a killed agent's, the only copy of its id.
+        pid, _ = agent_process()
         try:
-            os.remove(path)
-        except OSError:
+            with open(path) as fh:
+                rec = json.load(fh)
+            if pid and isinstance(rec, dict) and rec.get("pid") == pid:
+                os.remove(path)
+        except (OSError, ValueError):
             pass
         prune(REG)
         return 0
@@ -118,10 +202,12 @@ def run():
             break
 
     pid, proc_start = agent_process()
-    if not pid or not proc_start:
+    if not pid or not proc_start or not in_pane(pid, pane):
         # Without the identity pair the record could never be checked against a
         # live process, so agent-panes would serve it to whatever agent occupies
-        # this pane next. No record is better than an unguardable one.
+        # this pane next. No record is better than an unguardable one -- or than
+        # one for an agent that only inherited this pane's id, which would also
+        # overwrite the record of the agent that really ran here.
         prune(REG)
         return 0
 
@@ -136,6 +222,9 @@ def run():
         transcript=payload.get("transcript_path") or payload.get("rollout_path") or "",
         pid=pid,
         proc_start=proc_start,
+        # Which server issued TMUX_PANE. The record outlives a killed agent, and
+        # its pane number names this pane only while this server runs.
+        server=procinfo.tmux_server_id(),
         updated=time.time(),
     )
 

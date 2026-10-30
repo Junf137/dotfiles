@@ -24,9 +24,11 @@ tmux-resurrect rewrites that archive in place, under no lock, from a save this
 hook cannot see.
 
 Panes are annotated whether or not the agent is still running, and a pane that
-has held several sessions gets a stanza for each. Three sources feed that:
+has held several sessions gets a stanza for each. Four sources feed that:
 
   * the live scan, `agent-panes`, for whatever is running right now;
+  * the session hook's cache, for an agent killed since it started. It printed
+    no banner, and if no save saw it running this is the only record of it;
   * the exit banner the agent itself left in the pane's captured scrollback,
     which reaches back as far as that pane's history does and is the only record
     of a session that started and exited between two saves. Both agents write
@@ -389,18 +391,16 @@ def server_id():
     would land on whichever restored pane inherited its number -- a pane that
     never ran that session. The pid's kernel start time is in the key because a
     pid alone is reused too.
+
+    procinfo owns the format, because the session hook stamps the hook cache
+    with the same id and cache_rows() compares the two.
     """
-    parts = (os.environ.get("TMUX") or "").split(",")
-    if len(parts) < 2:
-        return ""
-    sock, pid = parts[0], parts[1]
-    start = "?"
     if procinfo is not None:
-        try:
-            start = procinfo.start_token(int(pid)) or "?"
-        except (TypeError, ValueError):
-            start = "?"
-    return f"{sock}:{pid}:{start}"
+        return procinfo.tmux_server_id()
+    # The shared import failed. An id with no start token still keeps this
+    # server's records placeable for its own lifetime, which beats none at all.
+    parts = (os.environ.get("TMUX") or "").split(",")
+    return f"{parts[0]}:{parts[1]}:?" if len(parts) >= 2 else ""
 
 
 def server_alive():
@@ -859,6 +859,75 @@ def live_rows():
     for row in rows:
         if isinstance(row, dict) and row.get("pane"):
             panes.setdefault(row["pane"], []).append(dict(row, live=True))
+    return panes
+
+
+# Written by agent-pane-register, from each Claude/Codex session hook.
+HOOK_CACHE = os.path.expanduser("~/.cache/agent-panes")
+
+
+def cache_rows(server, index):
+    """loc -> rows for agents the session hook bound to this server's panes and that have died since.
+
+    That is a killed agent. It printed no banner and this script wrote it no
+    block, so if no save saw it running, the hook's record is the only place
+    its id exists. The hook keeps such a record for as long as this server runs;
+    folding it in here is what carries it further -- into the sidecar, the
+    block, and across a reboot.
+
+    Only this server's records, dated after it started, for panes it still has:
+    the cache is keyed by pane number, and every server counts those from 0. A
+    live agent's record is left to the live scan. `last_seen` is when the hook last ran for that
+    session, the last moment anything saw the agent running -- never this save.
+    """
+    if not server or procinfo is None:
+        return {}
+    try:
+        names = sorted(os.listdir(HOOK_CACHE))
+    except OSError:
+        return {}
+    panes = {}
+    for name in names:
+        if not name.endswith(".json"):
+            continue
+        try:
+            with open(os.path.join(HOOK_CACHE, name)) as fh:
+                record = json.load(fh)
+        except (OSError, ValueError):
+            continue
+        if not isinstance(record, dict) or record.get("server") != server:
+            continue
+        pane_id, agent, session_id = record.get("pane_id"), record.get("agent"), record.get("session_id")
+        if not all(isinstance(field, str) for field in (pane_id, agent, session_id)):
+            continue
+        loc = index.get(pane_id)
+        if not loc or agent not in RESUME or not re.fullmatch(UUID, session_id):
+            continue
+        # Only what the hook writes: a pid of any other type was edited by hand,
+        # and raises out of the macOS backend before this save could log it.
+        pid, start = record.get("pid"), record.get("proc_start")
+        if not isinstance(pid, int) or isinstance(pid, bool) or pid <= 0 or not start:
+            continue
+        if str(procinfo.start_token(pid)) == str(start):
+            continue
+        # Dated after this server started, since its id alone cannot tell two
+        # boots apart on Linux; see procinfo.tmux_server_running().
+        if not procinfo.tmux_server_running(server, as_epoch(record.get("updated")) or 0):
+            continue
+        panes.setdefault(loc, []).append(
+            dict(
+                agent=agent,
+                session_id=session_id,
+                name=record.get("name"),
+                cwd=record.get("cwd"),
+                source="hook",
+                pane_id=pane_id,
+                pid=pid,
+                started="",
+                last_seen=as_epoch(record.get("updated")),
+                live=False,
+            )
+        )
     return panes
 
 
@@ -1769,19 +1838,24 @@ def silence(rdir):
 def collect(now):
     """What this save knows about the server, before any of it is written down.
 
-    Read together and once: the live scan, the pane index that places records on
-    panes, and the (pane, agent, session) keys that are running right now --
-    which is what separates "running here" from "used to run here" in the block.
+    Read together and once: the live scan plus the killed agents the session
+    hook still remembers, the pane index that places records on panes, and the
+    (pane, agent, session) keys that are running right now -- which is what
+    separates "running here" from "used to run here" in the block.
     """
     display = datetime.datetime.fromtimestamp(now).strftime("%Y-%m-%d %H:%M")
     panes = live_rows()
     index = pane_index()
     live_keys = {record_key(row) for rows in panes.values() for row in rows}
+    server = server_id()
+    # After live_keys: a killed agent's record is history, not something running.
+    for loc, rows in cache_rows(server, index).items():
+        panes.setdefault(loc, []).extend(rows)
     # Read here rather than beside inject(), because the harvest needs it too:
     # with it off the plugin writes no archive, so whatever is on disk is a stale
     # one from whenever it was last on. Same subprocess either way.
     capturing = tmux_option("@resurrect-capture-pane-contents", "off") == "on"
-    return panes, index, live_keys, display, server_id(), capturing
+    return panes, index, live_keys, display, server, capturing
 
 
 def recorded_names(sidecar, server):
@@ -2042,8 +2116,7 @@ def cmd_purge(argv):
     # The register cache is written by the session hooks rather than by this
     # script, but it is part of the same feature and nothing else ever cleans it
     # up, so an uninstall that left it would leave the feature half-present.
-    cache = os.path.expanduser("~/.cache/agent-panes")
-    targets += sorted(glob.glob(os.path.join(cache, "*.json")))
+    targets += sorted(glob.glob(os.path.join(HOOK_CACHE, "*.json")))
 
     for path in targets:
         if not os.path.exists(path):
