@@ -478,11 +478,15 @@ fresh shell with no job to `fg`.
 - **Where the screen was in the conversation does not matter.** The lines are looked up
   anywhere in the transcript, and Claude keeps what came before a compaction in the same
   file, so a pane saved while the agent was scrolled back matches as well as one at the
-  end. Measured on a 120-entry Claude session resumed in a throwaway pane: the end held
-  44 of its 47 lines, scrolled to entries 35–78 also 44 of 47, scrolled to the top 38 of
-  42. Scrolling tmux's own copy mode does not change the capture at all — byte-identical
-  — and Codex prints into the pane's ordinary scrollback, so for it that is the only
-  scrolling there is.
+  end. Both agents draw on the alternate screen and scroll inside it. Measured on
+  120-entry throwaway sessions resumed in a throwaway pane — Claude: 44 of 47 lines at
+  the end, 44 of 47 scrolled to entries 35–78, 38 of 42 at the top; codex-cli 0.166: 42
+  of 45 at the end, 41 of 44 scrolled to the top, 29 of 38 in its Ctrl-T transcript
+  overlay. Scrolling tmux's own copy mode leaves the capture byte-identical. One gap: a
+  Codex thread is compared against its newest rollout only. That holds the whole
+  conversation when every resume appended to it, as one from a terminal does, but not
+  always for a thread also continued elsewhere (VS Code), so a screen scrolled into such
+  an older part misses, and both panes are kept.
 - **It closes only the pane it runs in, and never one with an agent in it.** Run there,
   the pane's foreground job is `agent-resume` itself; a pane named with `--pane` could be
   running anything, so it is compared and reported, never closed. "Runs in" is the
