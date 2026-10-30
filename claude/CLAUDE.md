@@ -41,3 +41,7 @@ pytest -q
 
 ## Responding to code reviews
 - Use the `/code-review-response` skill when addressing review feedback.
+
+# Response formatting (readability)
+- Put the answer or conclusion in the first line, with details after it.
+- Keep paragraphs to 2–3 sentences. Prefer short, one-line bullets.
