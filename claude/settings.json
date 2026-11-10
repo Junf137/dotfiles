@@ -45,7 +45,8 @@
     "command": "bash \"$HOME/.claude/statusline-command.sh\""
   },
   "enabledPlugins": {
-    "clangd-lsp@claude-plugins-official": false
+    "clangd-lsp@claude-plugins-official": false,
+    "pstack@pstack-claude": true
   },
   "feedbackDrafts": "off",
   "effortLevel": "xhigh",
@@ -64,5 +65,14 @@
   "remoteControlAtStartup": true,
   "inputNeededNotifEnabled": true,
   "agentPushNotifEnabled": true,
-  "voiceEnabled": true
+  "voiceEnabled": true,
+  "extraKnownMarketplaces": {
+    "pstack-claude": {
+      "source": {
+        "source": "github",
+        "repo": "michael-denyer/pstack-claude",
+        "ref": "v0.9.129"
+      }
+    }
+  }
 }
