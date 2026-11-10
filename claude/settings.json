@@ -9,7 +9,7 @@
     "ask": [],
     "defaultMode": "auto"
   },
-  "model": "opus",
+  "model": "fable",
   "skillOverrides": {
     "production-artifact-provenance": "off",
     "cva-stats": "off",
@@ -48,24 +48,6 @@
     "clangd-lsp@claude-plugins-official": false,
     "pstack@pstack-claude": true
   },
-  "feedbackDrafts": "off",
-  "effortLevel": "xhigh",
-  "modelSettings": {
-    "claude-fable-5-1": {
-      "effortLevel": "xhigh",
-      "autoCompactWindow": 200000
-    },
-    "claude-opus-5-5": {
-      "effortLevel": "xhigh"
-    }
-  },
-  "tui": "fullscreen",
-  "skipDangerousModePermissionPrompt": true,
-  "theme": "auto",
-  "remoteControlAtStartup": true,
-  "inputNeededNotifEnabled": true,
-  "agentPushNotifEnabled": true,
-  "voiceEnabled": true,
   "extraKnownMarketplaces": {
     "pstack-claude": {
       "source": {
@@ -74,5 +56,27 @@
         "ref": "v0.9.129"
       }
     }
-  }
+  },
+  "feedbackDrafts": "off",
+  "effortLevel": "xhigh",
+  "modelSettings": {
+    "claude-fable-5-1": {
+      "effortLevel": "xhigh",
+      "autoCompactWindow": 300000
+    },
+    "claude-opus-5-5": {
+      "effortLevel": "xhigh"
+    },
+    "claude-fable-5-2": {
+      "effortLevel": "xhigh",
+      "autoCompactWindow": 300000
+    }
+  },
+  "tui": "fullscreen",
+  "skipDangerousModePermissionPrompt": true,
+  "theme": "auto",
+  "remoteControlAtStartup": true,
+  "inputNeededNotifEnabled": true,
+  "agentPushNotifEnabled": true,
+  "voiceEnabled": true
 }

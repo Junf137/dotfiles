@@ -19,3 +19,7 @@ CLAUDE.local.md
 # yazi packages — managed by `ya pkg`, materialized by bootstrap.sh from yazi/package.toml
 yazi/flavors/
 yazi/plugins/
+
+# Disposable linked checkouts are managed by Git or the agent app.
+/.claude/worktrees/
+/agent-skills-wt*/
