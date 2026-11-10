@@ -57,6 +57,7 @@ load_link_manifest() {
 
     _link_manifest_add "$DOT_FILES/claude/CLAUDE.md" "$HOME/.claude/CLAUDE.md" required "Claude global instructions"
     _link_manifest_add "$DOT_FILES/claude/settings.json" "$HOME/.claude/settings.json" required "Claude settings"
+    _link_manifest_add "$DOT_FILES/claude/pstack-models.md" "$HOME/.claude/pstack-models.md" required "Claude pstack routing"
     _link_manifest_add "$DOT_FILES/agent-skills/claude" "$HOME/.claude/skills" required "Claude skills"
     _link_manifest_add "$DOT_FILES/claude/statusline-command.sh" "$HOME/.claude/statusline-command.sh" required "Claude statusline"
 
@@ -65,6 +66,7 @@ load_link_manifest() {
     # The override allows bootstrap integration tests to use a temporary directory.
     _link_manifest_add "$DOT_FILES/codex/config.toml" "${DOTFILES_CODEX_SYSTEM_CONFIG:-/etc/codex/config.toml}" required "Codex shared defaults"
     _link_manifest_add "$DOT_FILES/codex/hooks.json" "$HOME/.codex/hooks.json" required "Codex hooks"
+    _link_manifest_add "$DOT_FILES/codex/pstack-models.md" "$HOME/.codex/pstack-models.md" required "Codex pstack routing"
     _link_manifest_add "$DOT_FILES/agent-skills/codex" "$HOME/.agents/skills" required "Codex skills"
 
     _link_manifest_add "$DOT_FILES/nvim/markdownlint.jsonc" "$HOME/.markdownlint.jsonc" required "markdownlint"
