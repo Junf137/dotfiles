@@ -12,7 +12,8 @@ effect only once it reaches `local` in the live checkout.
 ## Layout
 
 - `agent-sessions/`: Claude/Codex session-to-tmux-pane tooling; `bin/` is on `PATH`
-- `agent-skills/`: submodule with the Claude (`claude/`) and Codex (`codex/`) skills
+- `agent-skills/`: submodule with the skills (`skills/`); `claude/` and `codex/` hold one
+  link per skill for each agent
 - `alacritty/`, `tmux/`, `tmuxp/`, `omz_themes/`: Alacritty config, tmux window-name
   overrides, tmuxp layout, Oh My Zsh theme
 - `claude/`: global Claude Code instructions, settings and status line; `settings.json`

@@ -33,14 +33,20 @@ pytest -q
 - When uncertain: ask before large refactors or dependency/tooling changes.
 
 # Git
-- Use the `$git-workflow` skill for git status, staging, commits, stash, reset, checkout, switch, merge, rebase, or commit-message work.
+- Run `git status` before any command that changes the index, history or working tree, and again after staging.
+- Stage explicit paths only, never `git add -A` or `git add .`. Stage what the task changed, and read `git diff -- <path>` for each file first: changes that were already there belong to other work.
+- Commit files whole. If one file mixes concerns, put them in one commit or ask. Use `git add -p` only when asked.
+- Never discard work with reset, restore, checkout, stash, clean or an overwrite unless asked for exactly that.
+- Leave scratch files alone (`plan.md`, `notes.md`, `review.md`, `code_review*.md` and the like): do not commit or delete them unless asked.
+- Write commit messages as `type(scope): summary`, imperative and lowercase, unless `git log` shows the repo uses another style.
+- Ask before going on when unrelated or already staged changes are in the way, when generated files changed unexpectedly, or when "commit everything" would include scratch files.
 
 # Standardized Workflow
 ## Feature and pipeline cleanup
 - After completing a new feature or pipeline, or reaching a reasonably complete version, check for prior smoke-test and intermediate outputs. Recommend cleanup by default, but ask the user for confirmation before deleting them.
 
 ## Responding to code reviews
-- Use the `$code-review-response` skill when addressing review feedback.
+- Use the `$code-review` skill when addressing review feedback.
 
 # Response formatting (readability)
 - Put the answer or conclusion in the first line, with details after it.

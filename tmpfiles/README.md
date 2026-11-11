@@ -4,7 +4,7 @@
 
 ## What it is for
 
-The `handoff` agent skill (`agent-skills/{claude,codex}/handoff/SKILL.md`) writes documents with:
+The `handoff` agent skill (`agent-skills/skills/handoff/SKILL.md`) writes documents with:
 
 ```bash
 mkdir -p ~/hf && f=$(mktemp ~/hf/handoff-XXXXXX) && mv "$f" "$f.md" && echo "$f.md"

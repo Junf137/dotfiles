@@ -10,6 +10,11 @@ multi_agent = true
 memories = true
 goals = true
 
+# The default budget (2% of the context window) cuts each skill description
+# to its first 50 to 150 characters. 10000 is the most Codex accepts.
+[skills]
+max_context_tokens = 10000
+
 [tui]
 status_line = ["thread-title", "git-branch", "model-with-reasoning", "context-used", "five-hour-limit", "weekly-limit"]
 session_picker_view = "comfortable"
