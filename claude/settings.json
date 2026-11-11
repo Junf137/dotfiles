@@ -12,7 +12,6 @@
   "model": "fable",
   "skillOverrides": {
     "production-artifact-provenance": "off",
-    "cva-stats": "off",
     "cva-issue": "off"
   },
   "hooks": {
@@ -56,6 +55,7 @@
       }
     }
   },
+  "outputStyle": "Concise",
   "feedbackDrafts": "off",
   "effortLevel": "xhigh",
   "modelSettings": {
@@ -73,7 +73,9 @@
   },
   "tui": "fullscreen",
   "skipDangerousModePermissionPrompt": true,
+  "skipWorkflowUsageWarning": true,
   "theme": "auto",
+  "switchModelsOnFlag": false,
   "remoteControlAtStartup": true,
   "inputNeededNotifEnabled": true,
   "agentPushNotifEnabled": true,
