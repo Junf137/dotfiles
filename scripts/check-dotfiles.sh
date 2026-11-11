@@ -336,6 +336,7 @@ run_required "bash syntax" check_bash_syntax
 run_required "Codex config bootstrap" bash "$REPO_ROOT/scripts/test-codex-config.sh"
 run_optional zsh "zsh syntax" check_zsh_syntax
 run_required "agent sessions" "$REPO_ROOT/agent-sessions/check.sh"
+run_required "agent skills" "$REPO_ROOT/agent-skills/check-skills.sh"
 run_optional jq "json syntax" check_json
 run_optional jq "agent hook wiring" check_hook_wiring
 run_required "tmux restore hook wiring" check_tmux_restore_hook
