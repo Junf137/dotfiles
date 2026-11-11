@@ -40,7 +40,7 @@ pytest -q
 - After completing a new feature or pipeline, or reaching a reasonably complete version, check for prior smoke-test and intermediate outputs. Recommend cleanup by default, but ask the user for confirmation before deleting them.
 
 ## Responding to code reviews
-- Use the `$code-review-response` skill when addressing review feedback.
+- Use the `$code-review` skill when addressing review feedback.
 
 # Response formatting (readability)
 - Put the answer or conclusion in the first line, with details after it.

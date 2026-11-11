@@ -13,8 +13,7 @@
   "skillOverrides": {
     "production-artifact-provenance": "off",
     "cva-stats": "off",
-    "cva-issue": "off",
-    "sync-agent-skills": "off"
+    "cva-issue": "off"
   },
   "hooks": {
     "SessionStart": [
